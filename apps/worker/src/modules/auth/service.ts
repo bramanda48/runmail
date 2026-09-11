@@ -104,7 +104,7 @@ export async function refresh(
 
   const [user] = await db.select().from(users).where(eq(users.id, claimed.user_id)).limit(1);
 
-  if (!user || !user.is_active) {
+  if (!user?.is_active) {
     return { error: "UNAUTHORIZED" as const };
   }
 
