@@ -222,7 +222,7 @@ Seluruh ID menggunakan UUID v7. Timestamp menggunakan Unix timestamp millisecond
 | --------------- | -------- | ---------------------------------------------- |
 | `id`            | TEXT     | Primary key UUID v7.                           |
 | `username`      | TEXT     | Unique global; regex `[A-Za-z0-9\-_\.]{6,20}`. |
-| `password_hash` | TEXT     | Argon2id password hash.                        |
+| `password_hash` | TEXT     | Bcrypt password hash.                          |
 | `role`          | TEXT     | `admin` atau `member`.                         |
 | `is_active`     | INTEGER  | Boolean 0/1.                                   |
 | `created_at`    | INTEGER  | Unix ms UTC.                                   |
@@ -553,7 +553,7 @@ Penghapusan custom folder menonaktifkan ruleset yang mereferensikan folder terse
 
 # 9. Autentikasi & Otorisasi
 
-Password menggunakan Argon2id. JWT access token ditandatangani dengan HS256 dan berlaku 15 menit. Access token hanya berada di memory frontend dan dikirim sebagai `Authorization: Bearer <access_token>`. Refresh token berlaku 30 hari, disimpan di `localStorage`, dan dikirim melalui request body ke `/auth/refresh`.
+Password menggunakan Bcrypt. JWT access token ditandatangani dengan HS256 dan berlaku 15 menit. Access token hanya berada di memory frontend dan dikirim sebagai `Authorization: Bearer <access_token>`. Refresh token berlaku 30 hari, disimpan di `localStorage`, dan dikirim melalui request body ke `/auth/refresh`.
 
 Setelah reload, frontend menggunakan refresh token untuk mendapatkan access token baru. Beberapa tab memiliki access token memory masing-masing tetapi berbagi refresh token pada `localStorage`. Login dan refresh mengembalikan access token serta refresh token dalam response body.
 
@@ -580,7 +580,7 @@ Seluruh endpoint mailbox-scoped menjalankan authorization middleware terhadap `m
 
 # 11. Keamanan
 
-- **Password :** Argon2id; password 8–128 karakter.
+- **Password :** Bcrypt; password 8–128 karakter.
 - **JWT :** HS256 secret disimpan sebagai Cloudflare secret, bukan repository.
 - **Token Storage :** access token memory; refresh token `localStorage`.
 - **Authorization :** central mailbox authorization middleware.
