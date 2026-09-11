@@ -1,5 +1,5 @@
 import { argon2id, argon2Verify } from "hash-wasm";
-import { jwtVerify, SignJWT } from "jose";
+import { sign, verify } from "hono/jwt";
 import { bytesToHex, toBase64Url } from "../../lib/encoding";
 import { uuidv7 } from "../../lib/ids";
 
@@ -37,27 +37,22 @@ export async function issueAccessToken(
   secret: string,
   ttlSeconds: number,
   user: { id: string; role: string }
-): Promise<string> {
+) {
   const now = Math.floor(Date.now() / 1000);
-  return new SignJWT({ role: user.role })
-    .setProtectedHeader({ alg: "HS256" })
-    .setSubject(user.id)
-    .setIssuedAt(now)
-    .setExpirationTime(now + ttlSeconds)
-    .sign(new TextEncoder().encode(secret));
+  return await sign(
+    { role: user.role, sub: user.id, iat: now, exp: now + ttlSeconds },
+    secret,
+    "HS256"
+  );
 }
 
-export async function verifyAccessToken(
-  secret: string,
-  token: string
-): Promise<{ sub: string; role: string } | null> {
+// hono/jwt: claims (exp/nbf/iat) are validated before the signature, unlike jose.
+// The secret must be a raw string — a "PRIVATE"/"PUBLIC" substring would make
+// hono/jwt treat it as an asymmetric PEM key and fail. All errors map to null.
+export async function verifyAccessToken(secret: string, token: string) {
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(secret), {
-      algorithms: ["HS256"]
-    });
-    if (typeof payload.sub !== "string" || typeof payload.role !== "string") {
-      return null;
-    }
+    const payload = (await verify(token, secret, "HS256")) as { sub?: unknown; role?: unknown };
+    if (typeof payload.sub !== "string" || typeof payload.role !== "string") return null;
     return { sub: payload.sub, role: payload.role };
   } catch {
     return null;

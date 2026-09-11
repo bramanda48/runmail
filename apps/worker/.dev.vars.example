@@ -1,0 +1,4 @@
+# Salin file ini menjadi apps/worker/.dev.vars lalu isi dengan nilai asli.
+# .dev.vars hanya berlaku untuk `wrangler dev` lokal dan tidak pernah di-commit.
+JWT_SIGNING_SECRET=<64 karakter hex — hasilkan dengan: bun -e "console.log([...crypto.getRandomValues(new Uint8Array(32))].map(b=>b.toString(16).padStart(2,'0')).join(''))">
+CLOUDFLARE_API_TOKEN=<token API Cloudflare>
