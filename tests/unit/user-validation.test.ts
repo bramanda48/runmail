@@ -26,7 +26,7 @@ describe("passwordSchema", () => {
     expect(passwordSchema.safeParse("a".repeat(PASSWORD_MAX_LENGTH)).success).toBe(true);
   });
 
-  it("rejects passwords shorter than 8 or longer than 128", () => {
+  it("rejects passwords shorter than 8 or longer than 72", () => {
     expect(passwordSchema.safeParse("a".repeat(PASSWORD_MIN_LENGTH - 1)).success).toBe(false);
     expect(passwordSchema.safeParse("a".repeat(PASSWORD_MAX_LENGTH + 1)).success).toBe(false);
   });
