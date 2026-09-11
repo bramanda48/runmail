@@ -1,0 +1,36 @@
+{
+  "name": "@runmail/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "bun src/icons/build-icon-subset.ts --check && vue-tsc -b && vite build",
+    "build:icons": "bun src/icons/build-icon-subset.ts",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc -b"
+  },
+  "dependencies": {
+    "@iconify-json/lucide": "^1.2.0",
+    "@iconify/vue": "^5.0.0",
+    "@runmail/shared": "workspace:*",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dexie": "^4.4.6",
+    "dompurify": "^3.4.15",
+    "pinia": "^4.0.3",
+    "postal-mime": "^3.0.0",
+    "reka-ui": "^2.0.0",
+    "tailwind-merge": "^2.6.0",
+    "vue": "^3.5.0",
+    "vue-router": "4"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^22.10.0",
+    "@vitejs/plugin-vue": "^5.2.0",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vue-tsc": "^2.2.0"
+  }
+}

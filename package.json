@@ -1,0 +1,22 @@
+{
+  "name": "runmail",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "cd apps/web && bun run dev",
+    "dev:worker": "cd apps/worker && bun run dev",
+    "build": "cd apps/web && bun run build",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "typecheck": "cd apps/web && bun run typecheck && cd ../../apps/worker && bun run typecheck && cd ../../packages/shared && bun run typecheck && cd ../db && bun run typecheck",
+    "test": "bun test",
+    "test:integration": "bun scripts/validate-migrations.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "typescript": "^5.7.0"
+  }
+}
