@@ -1,15 +1,12 @@
-import { argon2id, argon2Verify } from "hash-wasm";
+import { compare as bcryptCompare, hash as bcryptHash } from "bcrypt-ts";
 import { sign, verify } from "hono/jwt";
 import { bytesToHex, toBase64Url } from "../../lib/encoding";
 import { uuidv7 } from "../../lib/ids";
 
 export { uuidv7 };
 
-// Argon2id cost parameters
-const ARGON2_MEMORY_KIB = 4096;
-const ARGON2_ITERATIONS = 2;
-const ARGON2_PARALLELISM = 1;
-const ARGON2_HASH_LENGTH = 32;
+// bcrypt cost factor — OWASP recommends 12+ for 2024+
+const BCRYPT_COST = 12;
 
 export async function sha256Hex(input: string): Promise<string> {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
@@ -17,20 +14,11 @@ export async function sha256Hex(input: string): Promise<string> {
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  return argon2id({
-    password,
-    salt,
-    iterations: ARGON2_ITERATIONS,
-    parallelism: ARGON2_PARALLELISM,
-    memorySize: ARGON2_MEMORY_KIB,
-    hashLength: ARGON2_HASH_LENGTH,
-    outputType: "encoded"
-  });
+  return bcryptHash(password, BCRYPT_COST);
 }
 
 export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return argon2Verify({ password, hash });
+  return bcryptCompare(password, hash);
 }
 
 export async function issueAccessToken(
