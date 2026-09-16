@@ -9,7 +9,7 @@
   },
   "vars": {
     "APP_ENV": "development",
-    "CLOUDFLARE_ACCOUNT_ID": "53c270896dcf8af47953f63550ffbbbf",
+    "CLOUDFLARE_ACCOUNT_ID": "placeholder-account-id",
     "JWT_ACCESS_TTL_SECONDS": "900",
     "REFRESH_TOKEN_TTL_SECONDS": "2592000",
     "TRASH_SPAM_RETENTION_DAYS": "30",
