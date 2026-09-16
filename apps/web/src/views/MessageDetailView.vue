@@ -57,7 +57,7 @@ const isTrash = computed(
 );
 
 function formatDate(ts: number) {
-  return new Date(ts * 1000).toLocaleString("id-ID", {
+  return new Date(ts).toLocaleString("id-ID", {
     weekday: "long",
     year: "numeric",
     month: "long",

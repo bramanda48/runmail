@@ -48,7 +48,7 @@ watch(
           @click="open = false"
         />
         <DialogContent
-          class="relative fixed inset-y-0 left-0 z-50 w-64 bg-surface p-0 outline-none lg:hidden"
+          class="fixed inset-y-0 left-0 z-50 w-64 bg-surface p-0 outline-none lg:hidden"
         >
           <IconButton
             :ariaLabel="'Tutup menu'"

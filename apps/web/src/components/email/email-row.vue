@@ -23,7 +23,7 @@ const emit = defineEmits<{
 const sender = computed(() => props.message.from_name || props.message.from_address);
 
 const displayDate = computed(() => {
-  const date = new Date(props.message.email_date * 1000);
+  const date = new Date(props.message.email_date);
   const now = new Date();
   const isToday =
     date.getDate() === now.getDate() &&
