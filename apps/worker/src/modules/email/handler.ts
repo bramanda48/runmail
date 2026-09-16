@@ -143,11 +143,6 @@ export async function handleInboundEmail(
     subject: parsed.subject ?? "",
     rawHeaders: serializeHeaders(headers)
   });
-  if (!decision.matched) {
-    await message.setReject("No ruleset matched this message");
-    return;
-  }
-
   let finalFolder: { id: string; folder_type: string; name: string } | null = null;
   if (decision.folder_id !== null) {
     const [target] = await db

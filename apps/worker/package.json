@@ -12,6 +12,7 @@
     "@runmail/shared": "workspace:*",
     "drizzle-orm": "^0.44.0",
     "bcrypt-ts": "^9.0.2",
+    "cloudflare": "^7.1.0",
     "hono": "^4.7.0",
     "postal-mime": "^3.0.0",
     "uuid": "^14.0.2",

@@ -167,3 +167,53 @@ export async function deleteFolder(
 
   return { ok: true };
 }
+
+export async function renameFolder(
+  c: AppContext,
+  mailboxId: string,
+  folderId: string,
+  name: string
+): Promise<{ folder: Folder } | FolderError> {
+  if (isReservedFolderName(name)) {
+    return { error: "FOLDER_IS_SYSTEM" };
+  }
+
+  const db = getDb(c);
+
+  const [folder] = await db
+    .select()
+    .from(folders)
+    .where(and(eq(folders.id, folderId), eq(folders.mailbox_id, mailboxId)))
+    .limit(1);
+  if (!folder) return { error: "NOT_FOUND" };
+  if (folder.folder_type === "system") return { error: "FOLDER_IS_SYSTEM" };
+
+  const existing = await db
+    .select({ id: folders.id })
+    .from(folders)
+    .where(
+      and(
+        eq(folders.mailbox_id, mailboxId),
+        sql`lower(${folders.name}) = lower(${name})`,
+        sql`${folders.id} != ${folderId}`
+      )
+    )
+    .limit(1);
+  if (existing.length > 0) {
+    return { error: "FOLDER_NAME_CONFLICT" };
+  }
+
+  const now = Date.now();
+  try {
+    await db.update(folders).set({ name, updated_at: now }).where(eq(folders.id, folderId));
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      return { error: "FOLDER_NAME_CONFLICT" };
+    }
+    throw err;
+  }
+
+  const [row] = await db.select().from(folders).where(eq(folders.id, folderId)).limit(1);
+  if (!row) return { error: "NOT_FOUND" };
+  return { folder: toFolder(row) };
+}
