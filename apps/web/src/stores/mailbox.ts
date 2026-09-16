@@ -9,6 +9,9 @@ import { countPendingMutations, enqueueMutation, flushQueue } from "@/sync/queue
 
 export type MailboxSyncStatus = "idle" | "syncing" | "synced" | "offline" | "error" | "full_resync";
 
+const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+let autoSyncTimer: ReturnType<typeof setInterval> | null = null;
+
 /**
  * Active-mailbox runtime store: which mailbox is open, sync status, and the
  * optimistic mutation entry point. Local data lives in the per-mailbox Dexie
@@ -59,6 +62,20 @@ export const useMailboxStore = defineStore("mailbox", () => {
     }
   }
 
+  function clearAutoSync() {
+    if (autoSyncTimer !== null) {
+      clearInterval(autoSyncTimer);
+      autoSyncTimer = null;
+    }
+  }
+
+  function startAutoSync() {
+    clearAutoSync();
+    autoSyncTimer = setInterval(() => {
+      void runSync();
+    }, AUTO_SYNC_INTERVAL_MS);
+  }
+
   function openMailbox(mailbox: Mailbox): void {
     const access = useMailboxAccessStore();
     access.setCurrent(mailbox);
@@ -66,6 +83,7 @@ export const useMailboxStore = defineStore("mailbox", () => {
     syncStatus.value = "idle";
     pendingCount.value = 0;
     void runSync();
+    startAutoSync();
   }
 
   async function enqueue(mutation: PendingMutation): Promise<void> {
@@ -79,6 +97,7 @@ export const useMailboxStore = defineStore("mailbox", () => {
   }
 
   function closeMailbox(): void {
+    clearAutoSync();
     // Lifecycle: keep all Dexie data + queues; only drop the selection.
     mailboxId.value = null;
     syncStatus.value = "idle";

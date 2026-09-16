@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { Icon } from "@/icons";
-import { ApiError, createFolder, deleteFolder, listFolders } from "@/lib/api";
+import { ApiError, createFolder, deleteFolder, listFolders, renameFolder } from "@/lib/api";
 
 const {
   mailboxStore,
@@ -51,6 +51,13 @@ const createSubmitting = ref(false);
 const deleteOpen = ref(false);
 const folderToDelete = ref<Folder | null>(null);
 const deleteSubmitting = ref(false);
+
+const editOpen = ref(false);
+const folderToEdit = ref<Folder | null>(null);
+const editFolderName = ref("");
+const editNameError = ref("");
+const editInlineError = ref("");
+const editSubmitting = ref(false);
 
 const systemFolders = computed(() =>
   folders.value
@@ -188,6 +195,83 @@ async function confirmDelete() {
   }
 }
 
+function resetEdit() {
+  editFolderName.value = "";
+  editNameError.value = "";
+  editInlineError.value = "";
+}
+
+function openEdit(folder: Folder) {
+  resetEdit();
+  folderToEdit.value = folder;
+  editFolderName.value = folder.name;
+  editOpen.value = true;
+}
+
+function validateEditName(): boolean {
+  editNameError.value = "";
+  const trimmed = editFolderName.value.trim();
+  if (!trimmed) {
+    editNameError.value = "Nama folder wajib diisi";
+    return false;
+  }
+  const parsed = folderNameSchema.safeParse(trimmed);
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    editNameError.value =
+      issue?.message === "Folder name is required"
+        ? "Nama folder wajib diisi"
+        : (issue?.message ?? "Nama folder tidak valid");
+    return false;
+  }
+  if (isReservedFolderName(trimmed)) {
+    editNameError.value = "Nama ini sudah digunakan untuk folder sistem";
+    return false;
+  }
+  return true;
+}
+
+function mapEditError(err: ApiError) {
+  if (err.code === "FOLDER_NAME_CONFLICT") {
+    editNameError.value = "Nama folder sudah digunakan.";
+    return;
+  }
+  if (err.code === "FOLDER_IS_SYSTEM") {
+    editNameError.value = "Nama ini sudah digunakan untuk folder sistem";
+    return;
+  }
+  if (err.code === "VALIDATION_ERROR" && err.details && typeof err.details === "object") {
+    const details = err.details as Record<string, string[]>;
+    if (details.name?.length) {
+      editNameError.value = details.name[0];
+      return;
+    }
+  }
+  editInlineError.value = err.message || "Gagal mengubah nama folder. Coba lagi.";
+}
+
+async function submitEdit() {
+  editInlineError.value = "";
+  if (!folderToEdit.value) return;
+  if (!validateEditName()) return;
+
+  editSubmitting.value = true;
+  try {
+    await renameFolder(mailboxId.value, folderToEdit.value.id, editFolderName.value.trim());
+    editOpen.value = false;
+    await load();
+    void mailboxStore.runSync();
+  } catch (err) {
+    if (err instanceof ApiError) {
+      mapEditError(err);
+    } else {
+      editInlineError.value = "Tidak dapat terhubung ke server. Coba lagi.";
+    }
+  } finally {
+    editSubmitting.value = false;
+  }
+}
+
 onMounted(() => init());
 watch(mailboxId, () => init());
 watchSyncStatus();
@@ -278,14 +362,24 @@ watchSyncStatus();
                 <Icon icon="lucide:folder" class="size-5 shrink-0 text-muted-foreground" />
                 <span class="truncate text-foreground">{{ folder.name }}</span>
               </div>
-              <IconButton
-                :ariaLabel="`Hapus folder ${folder.name}`"
-                variant="ghost"
-                size="md"
-                @click="openDelete(folder)"
-              >
-                <Icon icon="lucide:trash" class="text-destructive" />
-              </IconButton>
+              <div class="flex items-center gap-1">
+                <IconButton
+                  :ariaLabel="`Ubah nama folder ${folder.name}`"
+                  variant="ghost"
+                  size="md"
+                  @click="openEdit(folder)"
+                >
+                  <Icon icon="lucide:pencil" class="size-4 shrink-0 text-muted-foreground" />
+                </IconButton>
+                <IconButton
+                  :ariaLabel="`Hapus folder ${folder.name}`"
+                  variant="ghost"
+                  size="md"
+                  @click="openDelete(folder)"
+                >
+                  <Icon icon="lucide:trash" class="text-destructive" />
+                </IconButton>
+              </div>
             </li>
           </ul>
         </div>
@@ -322,6 +416,41 @@ watchSyncStatus();
           <Button :disabled="createSubmitting" @click="submitCreate">
             <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
             <span>Buat</span>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
+
+    <!-- Edit folder dialog -->
+    <DialogRoot v-model:open="editOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Ubah Nama Folder</DialogTitle>
+        </DialogHeader>
+
+        <div class="space-y-4 py-2">
+          <Alert v-if="editInlineError" variant="error">{{ editInlineError }}</Alert>
+
+          <label class="block space-y-1.5">
+            <span class="text-sm font-medium text-foreground">Nama Folder</span>
+            <Input
+              v-model="editFolderName"
+              placeholder="Contoh: Proyek A"
+              :disabled="editSubmitting"
+              :variant="editNameError ? 'error' : 'default'"
+              maxlength="64"
+            />
+            <p v-if="editNameError" class="text-sm text-destructive">{{ editNameError }}</p>
+          </label>
+        </div>
+
+        <DialogFooter>
+          <Button variant="ghost" :disabled="editSubmitting" @click="editOpen = false">
+            Batal
+          </Button>
+          <Button :disabled="editSubmitting" @click="submitEdit">
+            <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+            <span>Simpan</span>
           </Button>
         </DialogFooter>
       </DialogContent>

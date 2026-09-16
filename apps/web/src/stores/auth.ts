@@ -10,6 +10,7 @@ import {
   setAccessTokenProvider,
   setRefreshHandler
 } from "@/lib/api";
+import { useMailboxStore } from "@/stores/mailbox";
 
 export const REFRESH_TOKEN_KEY = "runmail_refresh_token";
 
@@ -137,6 +138,7 @@ export const useAuthStore = defineStore("auth", () => {
       }
     }
     clearSession();
+    useMailboxStore().closeMailbox();
     try {
       // R6: logout wipes all per-mailbox Dexie DBs + cached raws on this device.
       await wipeLocalData();
@@ -153,6 +155,7 @@ export const useAuthStore = defineStore("auth", () => {
    */
   async function endSessionLocally(): Promise<void> {
     clearSession();
+    useMailboxStore().closeMailbox();
     try {
       await wipeLocalData();
     } catch {

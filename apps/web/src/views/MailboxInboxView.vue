@@ -64,6 +64,8 @@ const folderOptions = computed(() => folders.value.map((f) => ({ value: f.id, la
 
 const trashFolder = computed(() => folders.value.find((f) => f.name.toLowerCase() === "trash"));
 
+const isTrashFolder = computed(() => activeFolder.value?.name.toLowerCase() === "trash");
+
 const showPagination = computed(() => !debouncedSearch.value && totalMessages.value > perPage);
 const paginationTotal = computed(() => Math.ceil(totalMessages.value / perPage) * perPage);
 
@@ -365,6 +367,10 @@ watch(
           <span class="hidden sm:inline">Sinkronkan</span>
         </Button>
       </div>
+
+      <Alert v-if="isTrashFolder" variant="warning" class="mb-4">
+        Pesan di folder Trash akan dihapus otomatis dalam 30 hari.
+      </Alert>
 
       <div v-if="isLoading" class="space-y-2">
         <Skeleton shape="list" :rows="4" />

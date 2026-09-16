@@ -407,6 +407,16 @@ export async function deleteFolder(mailboxId: string, folderId: string): Promise
   return request<{ ok: boolean }>("DELETE", `/mailboxes/${mailboxId}/folders/${folderId}`);
 }
 
+export async function renameFolder(
+  mailboxId: string,
+  folderId: string,
+  name: string
+): Promise<{ folder: Folder }> {
+  return request<{ folder: Folder }>("PATCH", `/mailboxes/${mailboxId}/folders/${folderId}`, {
+    body: { name }
+  });
+}
+
 // --- Rulesets ---
 
 export interface RulesetList {
