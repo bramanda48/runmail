@@ -11,6 +11,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogRoot,
@@ -85,8 +86,12 @@ async function loadFolders() {
   unreadCounts.value = await computeUnreadCounts(db);
 
   if (!activeFolderId.value || !list.some((f) => f.id === activeFolderId.value)) {
+    const fromUrl =
+      folderIdParam.value && list.some((f) => f.id === folderIdParam.value)
+        ? folderIdParam.value
+        : null;
     const inbox = list.find((f) => f.name.toLowerCase() === "inbox");
-    activeFolderId.value = inbox?.id ?? list[0]?.id ?? null;
+    activeFolderId.value = fromUrl ?? inbox?.id ?? list[0]?.id ?? null;
   }
 }
 
@@ -438,16 +443,18 @@ watch(
         <DialogHeader>
           <DialogTitle>Pindahkan Email</DialogTitle>
         </DialogHeader>
-        <div class="space-y-4 py-2">
-          <Select
-            v-model="moveTargetFolderId"
-            label="Folder tujuan"
-            id="select-move-target"
-            placeholder="Pilih folder"
-            :options="folderOptions"
-            :disabled="moveSubmitting"
-          />
-        </div>
+        <DialogDescription>
+          <div class="space-y-4 py-2">
+            <Select
+              v-model="moveTargetFolderId"
+              label="Folder tujuan"
+              id="select-move-target"
+              placeholder="Pilih folder"
+              :options="folderOptions"
+              :disabled="moveSubmitting"
+            />
+          </div>
+        </DialogDescription>
         <DialogFooter>
           <Button variant="ghost" :disabled="moveSubmitting" @click="moveOpen = false">
             Batal
