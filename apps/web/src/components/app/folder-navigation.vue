@@ -57,7 +57,7 @@ function isFolderActive(folder: LocalFolder) {
 </script>
 
 <template>
-  <nav class="space-y-1 p-4" aria-label="Folder">
+  <nav class="flex flex-col gap-1 p-4" aria-label="Folder">
     <NavItem
       v-for="folder in sortedFolders"
       :key="folder.id"

@@ -32,7 +32,7 @@ async function logout() {
       <div class="flex h-full flex-col">
         <div class="p-4">
           <Wordmark size="sm" class="mb-6" />
-          <nav class="space-y-1" aria-label="Navigasi admin">
+          <nav class="flex flex-col gap-1" aria-label="Navigasi admin">
             <NavItem
               v-for="item in adminNav"
               :key="item.to"

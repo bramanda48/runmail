@@ -89,15 +89,15 @@ async function handleSubmit() {
         <CardDescription>Masuk untuk melanjutkan ke kotak surat Anda.</CardDescription>
       </CardHeader>
 
-      <CardContent class="space-y-4">
+      <CardContent class="flex flex-col gap-4">
         <Alert v-if="showRedirectInfo" variant="info">
           Sesi Anda berakhir, silakan masuk kembali.
         </Alert>
 
         <Alert v-if="apiError" variant="error">{{ apiError }}</Alert>
 
-        <form class="space-y-4" @submit.prevent="handleSubmit">
-          <label class="block space-y-1.5">
+        <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Username</span>
             <Input
               v-model="username"
@@ -108,7 +108,7 @@ async function handleSubmit() {
             <p v-if="usernameError" class="text-sm text-destructive">{{ usernameError }}</p>
           </label>
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Kata Sandi</span>
             <PasswordInput
               v-model="password"

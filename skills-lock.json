@@ -67,12 +67,6 @@
       "skillPath": "skills/vite/SKILL.md",
       "computedHash": "c71c7a6c86dfd29311c6d618dd5f86fa27b1512af8a0adc2a171afe26c3e724f"
     },
-    "vitest": {
-      "source": "bramanda48/skills",
-      "sourceType": "github",
-      "skillPath": "skills/vitest/SKILL.md",
-      "computedHash": "f84e5b083d074016f960d72c3c2e101776e509b6c0f53f6f61ffe564129718bf"
-    },
     "vue": {
       "source": "bramanda48/skills",
       "sourceType": "github",

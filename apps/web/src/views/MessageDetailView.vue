@@ -282,7 +282,7 @@ watch(messageId, async () => {
     </template>
 
     <main class="flex flex-1 flex-col p-4 lg:p-8">
-      <div v-if="!message && bodyState === 'loading'" class="space-y-4">
+      <div v-if="!message && bodyState === 'loading'" class="flex flex-col gap-4">
         <Skeleton shape="detail" />
       </div>
 
@@ -291,7 +291,7 @@ watch(messageId, async () => {
         <Button variant="ghost" size="sm" class="ml-2" @click="loadMessage(false)">Coba Lagi</Button>
       </Alert>
 
-      <div v-else-if="message" class="mx-auto w-full max-w-4xl space-y-4">
+      <div v-else-if="message" class="mx-auto w-full max-w-4xl flex flex-col gap-4">
         <!-- Header -->
         <div class="rounded-2xl border bg-surface p-4 lg:p-6">
           <div class="flex flex-wrap items-start justify-between gap-3">
@@ -362,7 +362,7 @@ watch(messageId, async () => {
 
         <!-- Body -->
         <div class="rounded-2xl border bg-surface p-4 lg:p-6">
-          <div v-if="bodyState === 'loading'" class="space-y-3">
+          <div v-if="bodyState === 'loading'" class="flex flex-col gap-3">
             <Skeleton shape="block" />
           </div>
 
@@ -393,9 +393,9 @@ watch(messageId, async () => {
           </Alert>
 
           <!-- Attachments -->
-          <div v-if="attachments.length > 0" class="mt-6 space-y-2">
+          <div v-if="attachments.length > 0" class="mt-6 flex flex-col gap-2">
             <p class="text-sm font-medium text-foreground">Lampiran</p>
-            <ul class="space-y-1">
+            <ul class="flex flex-col gap-1">
               <li
                 v-for="(att, i) in attachments"
                 :key="i"
@@ -416,7 +416,7 @@ watch(messageId, async () => {
           <DialogHeader>
             <DialogTitle>Pindahkan Email</DialogTitle>
           </DialogHeader>
-          <div class="space-y-4 py-2">
+          <div class="flex flex-col gap-4 py-2">
             <Select
               v-model="moveTargetFolderId"
               label="Folder tujuan"

@@ -277,11 +277,11 @@ async function submitEdit() {
         </Button>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
+      <div v-if="isLoading" class="flex flex-col gap-4">
         <Skeleton shape="list" :rows="4" />
       </div>
 
-      <div v-else-if="error" class="space-y-4">
+      <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="error">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
@@ -300,7 +300,7 @@ async function submitEdit() {
         </template>
       </EmptyState>
 
-      <div v-else class="space-y-4">
+      <div v-else class="flex flex-col gap-4">
         <div class="rounded-2xl border bg-surface p-4">
           <Table>
             <TableHeader>
@@ -357,10 +357,10 @@ async function submitEdit() {
           <DialogDescription>Isi detail pengguna baru.</DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="createInlineError" variant="error">{{ createInlineError }}</Alert>
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Username</span>
             <Input
               v-model="createUsername"
@@ -373,7 +373,7 @@ async function submitEdit() {
             </p>
           </label>
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Kata Sandi Awal</span>
             <PasswordInput
               v-model="createPassword"
@@ -415,7 +415,7 @@ async function submitEdit() {
           <DialogDescription>Ubah peran, status, atau kata sandi pengguna.</DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="editInlineError" variant="error">{{ editInlineError }}</Alert>
 
           <div>
@@ -448,7 +448,7 @@ async function submitEdit() {
             />
           </div>
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Kata Sandi Baru (opsional)</span>
             <PasswordInput
               v-model="editNewPassword"

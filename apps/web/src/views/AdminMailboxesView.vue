@@ -388,11 +388,11 @@ async function unlinkUser(user: MailboxLinkedUser) {
         </Button>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
+      <div v-if="isLoading" class="flex flex-col gap-4">
         <Skeleton shape="list" :rows="4" />
       </div>
 
-      <div v-else-if="error" class="space-y-4">
+      <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="error">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
@@ -411,7 +411,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
         </template>
       </EmptyState>
 
-      <div v-else class="space-y-4">
+      <div v-else class="flex flex-col gap-4">
         <div class="rounded-2xl border bg-surface p-4">
           <Table>
             <TableHeader>
@@ -476,7 +476,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
           <DialogDescription>Pilih domain aktif dan isi bagian lokal alamat.</DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="createInlineError" variant="error">{{ createInlineError }}</Alert>
           <Alert v-if="!loadingDomains && activeDomains.length === 0" variant="warning">
             Aktifkan domain terlebih dahulu sebelum membuat mailbox.
@@ -490,7 +490,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
             :disabled="loadingDomains || createSubmitting || activeDomains.length === 0"
           />
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Alamat Email</span>
             <div class="flex items-center gap-2">
               <Input
@@ -531,7 +531,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
           <DialogDescription>Ubah status aktif mailbox.</DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="editInlineError" variant="error">{{ editInlineError }}</Alert>
 
           <div>
@@ -596,7 +596,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
           </DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="manageInlineError" variant="error">{{ manageInlineError }}</Alert>
 
           <div v-if="manageLoading" class="text-sm text-muted-foreground">
@@ -618,7 +618,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
             </Button>
           </div>
 
-          <div v-if="linkedUsers.length > 0" class="space-y-2">
+          <div v-if="linkedUsers.length > 0" class="flex flex-col gap-2">
             <p class="text-sm font-medium text-foreground">
               User terhubung ({{ linkedUsers.length }})
             </p>

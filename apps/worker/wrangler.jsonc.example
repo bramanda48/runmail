@@ -1,7 +1,8 @@
 {
+  // Copy this to wrangler.jsonc and replace with your actual account ID
   "name": "runmail",
   "main": "src/index.ts",
-  "compatibility_date": "2026-09-08",
+  "compatibility_date": "2026-09-15",
   "assets": {
     "directory": "../web/dist",
     "binding": "ASSETS",
@@ -9,7 +10,7 @@
   },
   "vars": {
     "APP_ENV": "development",
-    "CLOUDFLARE_ACCOUNT_ID": "placeholder-account-id",
+    "CLOUDFLARE_ACCOUNT_ID": "YOUR_ACCOUNT_ID_HERE",
     "JWT_ACCESS_TTL_SECONDS": "900",
     "REFRESH_TOKEN_TTL_SECONDS": "2592000",
     "TRASH_SPAM_RETENTION_DAYS": "30",

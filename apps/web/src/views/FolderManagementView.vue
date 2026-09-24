@@ -311,16 +311,16 @@ watchSyncStatus();
         </Button>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
+      <div v-if="isLoading" class="flex flex-col gap-4">
         <Skeleton shape="list" :rows="4" />
       </div>
 
-      <div v-else-if="error" class="space-y-4">
+      <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="error">{{ error }}</Alert>
         <Button variant="ghost" @click="load">Coba Lagi</Button>
       </div>
 
-      <div v-else class="space-y-4">
+      <div v-else class="flex flex-col gap-4">
         <!-- System folders -->
         <div class="rounded-2xl border bg-surface p-4">
           <h2 class="mb-3 text-sm font-semibold text-muted-foreground">Folder Sistem</h2>
@@ -393,10 +393,10 @@ watchSyncStatus();
           <DialogTitle>Buat Folder</DialogTitle>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="createInlineError" variant="error">{{ createInlineError }}</Alert>
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Nama Folder</span>
             <Input
               v-model="newFolderName"
@@ -428,10 +428,10 @@ watchSyncStatus();
           <DialogTitle>Ubah Nama Folder</DialogTitle>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="editInlineError" variant="error">{{ editInlineError }}</Alert>
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Nama Folder</span>
             <Input
               v-model="editFolderName"

@@ -47,7 +47,7 @@ const triggerClasses = computed(() =>
 </script>
 
 <template>
-  <div class="space-y-1.5">
+  <div class="flex flex-col gap-1.5">
     <label v-if="label" :for="id" class="text-sm font-medium text-foreground">{{ label }}</label>
     <SelectRoot
       :model-value="modelValue"

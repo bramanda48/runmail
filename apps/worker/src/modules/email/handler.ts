@@ -15,6 +15,7 @@ import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/alloca
 import type { Bindings } from "../../lib/db";
 import { getDb } from "../../lib/db";
 import { uuidv7 } from "../../lib/ids";
+import { createExecutionLogger } from "../../lib/logger";
 import { deleteRawEmail, putRawEmail, rawObjectKey } from "../../lib/r2";
 import type { EvaluableRuleset } from "../../lib/rules-engine";
 import { evaluateRulesets } from "../../lib/rules-engine";
@@ -33,11 +34,16 @@ export async function handleInboundEmail(
   env: Bindings,
   _ctx: ExecutionContext
 ): Promise<void> {
+  const execution_id = crypto.randomUUID();
+  const logger = createExecutionLogger(execution_id, { event: "email_inbound" });
+
   if (message.rawSize > MAX_EMAIL_BYTES) {
     await message.setReject("Message exceeds 25 MB limit");
     return;
   }
 
+  // Buffered read is intentional: size validation requires the full payload,
+  // PostalMime.parse needs a complete buffer, and the R2 upload takes an ArrayBuffer.
   const rawBuf = new Uint8Array(await new Response(message.raw).arrayBuffer());
   if (rawBuf.byteLength > MAX_EMAIL_BYTES) {
     await message.setReject("Message exceeds 25 MB limit");
@@ -175,12 +181,9 @@ export async function handleInboundEmail(
     finalFolder = inbox ?? null;
   }
   if (!finalFolder) {
-    console.error(
-      JSON.stringify({
-        event: "ingest_inbox_folder_missing",
-        mailbox_id: mailboxId
-      })
-    );
+    logger.error("ingest_inbox_folder_missing", undefined, {
+      mailbox_id: mailboxId
+    });
     await message.setReject("Internal mailbox error, please try again later");
     return;
   }
@@ -283,12 +286,9 @@ export async function handleInboundEmail(
     return;
   }
 
-  console.log(
-    JSON.stringify({
-      event: "email_ingested",
-      mailbox_id: mailboxId,
-      message_id: messageId,
-      folder_id: finalFolder.id
-    })
-  );
+  logger.info("email_ingested", {
+    mailbox_id: mailboxId,
+    message_id: messageId,
+    folder_id: finalFolder.id
+  });
 }

@@ -187,11 +187,11 @@ async function submitAdd() {
         </Button>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
+      <div v-if="isLoading" class="flex flex-col gap-4">
         <Skeleton shape="list" :rows="4" />
       </div>
 
-      <div v-else-if="error" class="space-y-4">
+      <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="error">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
@@ -210,7 +210,7 @@ async function submitAdd() {
         </template>
       </EmptyState>
 
-      <div v-else class="space-y-4">
+      <div v-else class="flex flex-col gap-4">
         <Alert v-if="verifyError" variant="error">{{ verifyError }}</Alert>
 
         <div class="rounded-2xl border bg-surface p-4">
@@ -273,7 +273,7 @@ async function submitAdd() {
           <DialogDescription>Pilih domain Cloudflare yang tersedia.</DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="addInlineError" variant="error">{{ addInlineError }}</Alert>
 
           <div v-if="loadingAvailable" class="text-sm text-muted-foreground">

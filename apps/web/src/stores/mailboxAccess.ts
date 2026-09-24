@@ -1,6 +1,6 @@
 import type { Mailbox } from "@runmail/shared";
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { ApiError, getMailbox } from "@/lib/api";
 
 export type MailboxAccessVerdict = "ok" | "inactive" | "forbidden" | "not_found";
@@ -11,17 +11,17 @@ export type MailboxAccessVerdict = "ok" | "inactive" | "forbidden" | "not_found"
  * mailbox is also kept as runtime context (`current`).
  */
 export const useMailboxAccessStore = defineStore("mailboxAccess", () => {
-  const accessible = ref(new Map<string, { is_active: boolean }>());
+  const accessible = reactive(new Map<string, { is_active: boolean }>());
   const current = ref<Mailbox | null>(null);
 
   async function ensureAccessible(mailboxId: string): Promise<MailboxAccessVerdict> {
-    const cached = accessible.value.get(mailboxId);
+    const cached = accessible.get(mailboxId);
     if (cached) {
       return cached.is_active ? "ok" : "inactive";
     }
     try {
       const { mailbox } = await getMailbox(mailboxId);
-      accessible.value.set(mailboxId, { is_active: mailbox.is_active });
+      accessible.set(mailboxId, { is_active: mailbox.is_active });
       return mailbox.is_active ? "ok" : "inactive";
     } catch (err) {
       if (err instanceof ApiError) {

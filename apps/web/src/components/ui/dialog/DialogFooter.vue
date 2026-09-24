@@ -13,7 +13,7 @@ const props = defineProps<Props>();
   <div
     :class="
       cn(
-        'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:space-x-2',
+        'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
         props.class,
       )
     "

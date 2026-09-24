@@ -126,11 +126,11 @@ function rowClasses(isActive: boolean) {
         <p class="text-sm text-muted-foreground">Pilih mailbox yang ingin Anda akses.</p>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
+      <div v-if="isLoading" class="flex flex-col gap-4">
         <Skeleton shape="list" :rows="4" />
       </div>
 
-      <div v-else-if="error" class="space-y-4">
+      <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="error">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
@@ -148,7 +148,7 @@ function rowClasses(isActive: boolean) {
         </template>
       </EmptyState>
 
-      <div v-else class="space-y-3">
+      <div v-else class="flex flex-col gap-3">
         <button
           v-for="mailbox in mailboxes"
           :key="mailbox.id"

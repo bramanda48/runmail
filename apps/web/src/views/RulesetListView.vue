@@ -240,11 +240,11 @@ watchSyncStatus();
         </Button>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
+      <div v-if="isLoading" class="flex flex-col gap-4">
         <Skeleton shape="list" :rows="4" />
       </div>
 
-      <div v-else-if="error" class="space-y-4">
+      <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="error">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
@@ -263,7 +263,7 @@ watchSyncStatus();
         </template>
       </EmptyState>
 
-      <div v-else class="space-y-4">
+      <div v-else class="flex flex-col gap-4">
         <div class="rounded-2xl border bg-surface p-4">
           <div class="w-full overflow-x-auto">
             <Table>

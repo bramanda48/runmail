@@ -12,7 +12,8 @@ export function retentionDaysFromEnv(raw: string | undefined): number {
 }
 
 export async function runRetentionCleanup(
-  env: Bindings
+  env: Bindings,
+  opts?: { execution_id?: string }
 ): Promise<{ expired_messages: number; pruned_events: number }> {
   const days = retentionDaysFromEnv(env.TRASH_SPAM_RETENTION_DAYS);
   const now = Date.now();
@@ -63,7 +64,9 @@ export async function runRetentionCleanup(
     } catch {
       console.error(
         JSON.stringify({
+          execution_id: opts?.execution_id,
           event: "retention_chunk_failed",
+          level: "error",
           count: chunk.length
         })
       );

@@ -1,18 +1,10 @@
 <script setup lang="ts">
-import {
-  DialogContent,
-  DialogDescription,
-  DialogOverlay,
-  DialogPortal,
-  DialogRoot,
-  DialogTitle
-} from "reka-ui";
-import type { HTMLAttributes } from "vue";
-import { ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
 import { IconButton } from "@/components/ui/icon-button";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
+import type { HTMLAttributes } from "vue";
+import { ref } from "vue";
 
 interface Props {
   class?: HTMLAttributes["class"];
@@ -21,14 +13,6 @@ interface Props {
 const props = defineProps<Props>();
 
 const open = ref(false);
-const route = useRoute();
-
-watch(
-  () => route.fullPath,
-  () => {
-    open.value = false;
-  }
-);
 </script>
 
 <template>
@@ -41,32 +25,9 @@ watch(
     </aside>
 
     <!-- Mobile drawer -->
-    <DialogRoot v-model:open="open">
-      <DialogPortal>
-        <DialogOverlay
-          class="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          @click="open = false"
-        />
-        <DialogContent
-          class="fixed inset-y-0 left-0 z-50 w-64 bg-surface p-0 outline-none lg:hidden"
-        >
-          <IconButton
-            :ariaLabel="'Tutup menu'"
-            variant="ghost"
-            size="sm"
-            class="absolute right-2 top-2"
-            @click="open = false"
-          >
-            <Icon icon="lucide:x" />
-          </IconButton>
-          <DialogTitle class="sr-only">Navigasi</DialogTitle>
-          <DialogDescription class="sr-only">
-            Menu navigasi aplikasi
-          </DialogDescription>
-          <slot name="navigation" />
-        </DialogContent>
-      </DialogPortal>
-    </DialogRoot>
+    <MobileNavDrawer v-model:open="open">
+      <slot name="navigation" />
+    </MobileNavDrawer>
 
     <div class="flex min-h-screen flex-1 flex-col lg:ml-64">
       <header

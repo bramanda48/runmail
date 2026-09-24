@@ -20,10 +20,15 @@ Runmail — SaaS email inbox di Cloudflare Workers (Hono + D1 + R2 + Vue 3).
    ```ini
    JWT_SIGNING_SECRET=<64 karakter hex>
    CLOUDFLARE_API_TOKEN=<token API Cloudflare>
+   CLOUDFLARE_ACCOUNT_ID=<account ID Cloudflare>
    ```
 
    `JWT_SIGNING_SECRET` wajib 64 karakter hex (32 byte). Jangan memakai nilai
    contoh di dokumen ini sebagai secret asli.
+
+   `CLOUDFLARE_ACCOUNT_ID` tidak disimpan di `wrangler.jsonc` — isi di
+   `.dev.vars` untuk lokal, dan via `wrangler secret put CLOUDFLARE_ACCOUNT_ID`
+   untuk produksi.
 
 3. Terapkan migrasi lalu seed user admin awal ke D1 lokal:
 
