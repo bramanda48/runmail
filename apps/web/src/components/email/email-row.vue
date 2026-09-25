@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { IconButton } from "@/components/ui/icon-button";
 import type { LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
+import { computed } from "vue";
 
 interface Props {
   message: LocalMessage;
@@ -23,7 +23,7 @@ const emit = defineEmits<{
 const sender = computed(() => props.message.from_name || props.message.from_address);
 
 const displayDate = computed(() => {
-  const date = new Date(props.message.email_date * 1000);
+  const date = new Date(props.message.email_date);
   const now = new Date();
   const isToday =
     date.getDate() === now.getDate() &&

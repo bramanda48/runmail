@@ -1,35 +1,24 @@
 <script setup lang="ts">
-import Dexie from "dexie";
-import { computed, onMounted, ref, watch } from "vue";
 import AppShell from "@/components/app/app-shell.vue";
-import EmptyState from "@/components/app/empty-state.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
 import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
+import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
 import SyncIndicator from "@/components/app/sync-indicator.vue";
-import EmailRow from "@/components/email/email-row.vue";
-import { Alert } from "@/components/ui/alert";
+import EmailListContainer from "@/components/email/EmailListContainer.vue";
+import EmailMoveDialog from "@/components/email/EmailMoveDialog.vue";
 import { Button } from "@/components/ui/button";
-import {
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
-  DialogTitle
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
-import { Select } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { parseSearchQuery } from "@/lib/search";
 import { computeUnreadCounts } from "@/lib/unread-counts";
+import Dexie from "dexie";
+import { computed, onMounted, ref, watch } from "vue";
 
 const { route, router, mailboxStore, mailboxId, resolveMailbox } = useMailboxWorkspace({
   onResolveError: () => {
     listError.value = "Tidak dapat memuat mailbox. Coba lagi.";
-  }
+  },
 });
 
 const folderIdParam = computed(() => route.params.folder_id as string | undefined);
@@ -49,30 +38,20 @@ const pendingIds = ref<Set<string>>(new Set());
 
 const searchQuery = ref("");
 const debouncedSearch = ref("");
-let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const refreshTick = ref(0);
 
 const moveOpen = ref(false);
 const movingMessage = ref<LocalMessage | null>(null);
-const moveTargetFolderId = ref("");
-const moveSubmitting = ref(false);
 
 const activeFolder = computed(() => folders.value.find((f) => f.id === activeFolderId.value));
-
-const folderOptions = computed(() => folders.value.map((f) => ({ value: f.id, label: f.name })));
 
 const trashFolder = computed(() => folders.value.find((f) => f.name.toLowerCase() === "trash"));
 
 const showPagination = computed(() => !debouncedSearch.value && totalMessages.value > perPage);
-const paginationTotal = computed(() => Math.ceil(totalMessages.value / perPage) * perPage);
 
-function setSearch(value: string) {
-  searchQuery.value = value;
-  if (searchTimeout) clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
-    debouncedSearch.value = value.trim();
-  }, 300);
+function onSearch(value: string) {
+  debouncedSearch.value = value;
 }
 
 async function loadFolders() {
@@ -83,8 +62,12 @@ async function loadFolders() {
   unreadCounts.value = await computeUnreadCounts(db);
 
   if (!activeFolderId.value || !list.some((f) => f.id === activeFolderId.value)) {
+    const fromUrl =
+      folderIdParam.value && list.some((f) => f.id === folderIdParam.value)
+        ? folderIdParam.value
+        : null;
     const inbox = list.find((f) => f.name.toLowerCase() === "inbox");
-    activeFolderId.value = inbox?.id ?? list[0]?.id ?? null;
+    activeFolderId.value = fromUrl ?? inbox?.id ?? list[0]?.id ?? null;
   }
 }
 
@@ -100,7 +83,7 @@ function matchesSearch(message: LocalMessage, filter: ReturnType<typeof parseSea
         message.from_name,
         message.from_address,
         ...message.to_addresses,
-        message.subject
+        message.subject,
       ])
     ) {
       return false;
@@ -139,7 +122,7 @@ async function loadMessages() {
         .limit(50)
         .toArray();
       messages.value = results.sort(
-        (a, b) => b.email_date - a.email_date || b.received_at - a.received_at
+        (a, b) => b.email_date - a.email_date || b.received_at - a.received_at,
       );
       totalMessages.value = messages.value.length;
       return;
@@ -158,7 +141,7 @@ async function loadMessages() {
       .toArray();
 
     messages.value = rows.sort(
-      (a, b) => b.email_date - a.email_date || b.received_at - a.received_at
+      (a, b) => b.email_date - a.email_date || b.received_at - a.received_at,
     );
   } catch (err) {
     listError.value = "Gagal memuat daftar email.";
@@ -207,7 +190,7 @@ function toggleStar(message: LocalMessage) {
   enqueueAndRefresh({
     message_id: message.id,
     mutation_type: "star",
-    mutation_value: !message.is_starred
+    mutation_value: !message.is_starred,
   });
 }
 
@@ -215,25 +198,22 @@ function toggleRead(message: LocalMessage) {
   enqueueAndRefresh({
     message_id: message.id,
     mutation_type: "read",
-    mutation_value: !message.is_read
+    mutation_value: !message.is_read,
   });
 }
 
 function openMove(message: LocalMessage) {
   movingMessage.value = message;
-  moveTargetFolderId.value = "";
   moveOpen.value = true;
 }
 
-async function confirmMove() {
-  if (!movingMessage.value || !moveTargetFolderId.value) return;
-  moveSubmitting.value = true;
+async function confirmMove(targetFolderId: string) {
+  if (!movingMessage.value || !targetFolderId) return;
   await enqueueAndRefresh({
     message_id: movingMessage.value.id,
     mutation_type: "move",
-    mutation_value: moveTargetFolderId.value
+    mutation_value: targetFolderId,
   });
-  moveSubmitting.value = false;
   moveOpen.value = false;
 }
 
@@ -242,22 +222,8 @@ function moveToTrash(message: LocalMessage) {
   enqueueAndRefresh({
     message_id: message.id,
     mutation_type: "move",
-    mutation_value: trashFolder.value.id
+    mutation_value: trashFolder.value.id,
   });
-}
-
-function emptyIcon() {
-  const name = activeFolder.value?.name.toLowerCase() || "inbox";
-  if (name === "trash") return "lucide:trash";
-  if (name === "spam") return "lucide:shield-alert";
-  return "lucide:inbox";
-}
-
-function emptyTitle() {
-  const name = activeFolder.value?.name.toLowerCase() || "inbox";
-  if (name === "trash") return "Trash kosong";
-  if (name === "spam") return "Spam kosong";
-  return "Belum ada email";
 }
 
 onMounted(() => initMailbox());
@@ -297,7 +263,7 @@ watch(
       await loadFolders();
       refresh();
     }
-  }
+  },
 );
 </script>
 
@@ -321,36 +287,23 @@ watch(
           :pending-count="mailboxStore.pendingCount"
         />
         <div class="hidden lg:block">
-          <div class="relative">
-            <Icon
-              icon="lucide:search"
-              class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-            />
-            <Input
-              :model-value="searchQuery"
-              placeholder="Cari from, to, atau subject..."
-              class="h-9 w-64 rounded-full pl-9"
-              @update:model-value="setSearch"
-            />
-          </div>
+          <MailboxSearchBar
+            v-model="searchQuery"
+            placeholder="Cari from, to, atau subject..."
+            class="w-64"
+            @search="onSearch"
+          />
         </div>
       </div>
     </template>
 
     <main class="flex flex-1 flex-col p-4 lg:p-8">
       <div class="mb-4 lg:hidden">
-        <div class="relative">
-          <Icon
-            icon="lucide:search"
-            class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            :model-value="searchQuery"
-            placeholder="Cari from, to, atau subject..."
-            class="h-9 w-full rounded-full pl-9"
-            @update:model-value="setSearch"
-          />
-        </div>
+        <MailboxSearchBar
+          v-model="searchQuery"
+          placeholder="Cari from, to, atau subject..."
+          @search="onSearch"
+        />
       </div>
 
       <div class="mb-4 flex items-center justify-between">
@@ -366,95 +319,33 @@ watch(
         </Button>
       </div>
 
-      <div v-if="isLoading" class="space-y-2">
-        <Skeleton shape="list" :rows="4" />
-      </div>
-
-      <div v-else-if="listError" class="space-y-4">
-        <Alert variant="error">{{ listError }}</Alert>
-        <Button variant="ghost" @click="loadMessages">Coba Lagi</Button>
-      </div>
-
-      <EmptyState
-        v-else-if="messages.length === 0 && debouncedSearch"
-        icon="lucide:search"
-        heading="Tidak ada hasil"
-        :description="`Pencarian untuk '${debouncedSearch}' tidak menemukan email.`"
+      <EmailListContainer
+        :messages="messages"
+        :loading="isLoading"
+        :error="listError"
+        :has-more="showPagination"
+        :total="totalMessages"
+        :page="page"
+        :per-page="perPage"
+        :active-folder="activeFolder"
+        :search-query="debouncedSearch"
+        :pending-ids="pendingIds"
+        @click-message="openMessage"
+        @toggle-star="toggleStar"
+        @toggle-read="toggleRead"
+        @move="openMove"
+        @trash="moveToTrash"
+        @load-more="loadMessages"
+        @prev-page="goPrev"
+        @next-page="goNext"
       />
-
-      <EmptyState
-        v-else-if="messages.length === 0"
-        :icon="emptyIcon()"
-        :heading="emptyTitle()"
-        description="Email yang masuk akan tampil di sini."
-      />
-
-      <div v-else class="space-y-2">
-        <EmailRow
-          v-for="message in messages"
-          :key="message.id"
-          :message="message"
-          :pending="pendingIds.has(message.id)"
-          @click="openMessage(message)"
-          @toggle-star="toggleStar(message)"
-          @toggle-read="toggleRead(message)"
-          @move="openMove(message)"
-          @trash="moveToTrash(message)"
-        />
-
-        <p
-          v-if="debouncedSearch && messages.length >= 50"
-          class="text-sm text-muted-foreground"
-        >
-          Menampilkan 50 hasil pertama.
-        </p>
-
-        <Pagination
-          v-if="showPagination"
-          :page="page"
-          :per-page="perPage"
-          :total="paginationTotal"
-          :disabled="isLoading"
-          @prev="goPrev"
-          @next="goNext"
-        >
-          <template #range>
-            {{ (page - 1) * perPage + 1 }}–
-            {{ Math.min(page * perPage, totalMessages) }} dari {{ totalMessages }}
-          </template>
-        </Pagination>
-      </div>
     </main>
 
-    <!-- Move dialog -->
-    <DialogRoot v-model:open="moveOpen">
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Pindahkan Email</DialogTitle>
-        </DialogHeader>
-        <div class="space-y-4 py-2">
-          <Select
-            v-model="moveTargetFolderId"
-            label="Folder tujuan"
-            id="select-move-target"
-            placeholder="Pilih folder"
-            :options="folderOptions"
-            :disabled="moveSubmitting"
-          />
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" :disabled="moveSubmitting" @click="moveOpen = false">
-            Batal
-          </Button>
-          <Button
-            :disabled="!moveTargetFolderId || moveSubmitting"
-            @click="confirmMove"
-          >
-            <Icon v-if="moveSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>Pindahkan</span>
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </DialogRoot>
+    <EmailMoveDialog
+      v-model:open="moveOpen"
+      :folders="folders"
+      :current-folder-id="activeFolderId || undefined"
+      @move-to-folder="confirmMove"
+    />
   </AppShell>
 </template>

@@ -21,7 +21,7 @@ function detail(overrides: Partial<MessageDetail> = {}): MessageDetail {
     raw_object_key: "raw/m1.eml",
     sync_version: 7,
     updated_at: 1002,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -41,7 +41,7 @@ describe("toLocalMessage", () => {
       folder_id: "inbox",
       folder_entered_at: 1001,
       sync_version: 7,
-      updated_at: 1002
+      updated_at: 1002,
     });
   });
 

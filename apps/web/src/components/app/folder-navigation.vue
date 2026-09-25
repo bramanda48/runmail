@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRoute } from "vue-router";
 import NavItem from "@/components/app/nav-item.vue";
 import type { LocalFolder } from "@/db/mailbox-db";
+import { computed } from "vue";
+import { useRoute } from "vue-router";
 
 interface Props {
   mailboxId: string;
@@ -57,7 +57,7 @@ function isFolderActive(folder: LocalFolder) {
 </script>
 
 <template>
-  <nav class="space-y-1 p-4" aria-label="Folder">
+  <nav class="flex flex-col gap-1 p-4" aria-label="Folder">
     <NavItem
       v-for="folder in sortedFolders"
       :key="folder.id"

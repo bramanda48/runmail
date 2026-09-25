@@ -1,12 +1,6 @@
 import { cva } from "class-variance-authority";
 
-export {
-  DialogClose,
-  DialogOverlay,
-  DialogPortal,
-  DialogRoot,
-  DialogTrigger
-} from "reka-ui";
+export { DialogClose, DialogOverlay, DialogPortal, DialogRoot, DialogTrigger } from "reka-ui";
 export { default as DialogContent } from "./DialogContent.vue";
 export { default as DialogDescription } from "./DialogDescription.vue";
 export { default as DialogFooter } from "./DialogFooter.vue";
@@ -19,18 +13,18 @@ export const dialogContentVariants = cva(
     variants: {
       variant: {
         default: "border-border",
-        destructive: "border-destructive"
+        destructive: "border-destructive",
       },
       size: {
         sm: "max-w-sm rounded-xl",
-        md: "max-w-lg rounded-2xl"
-      }
+        md: "max-w-lg rounded-2xl",
+      },
     },
     defaultVariants: {
       variant: "default",
-      size: "md"
-    }
-  }
+      size: "md",
+    },
+  },
 );
 
 export type DialogContentVariants = typeof dialogContentVariants;

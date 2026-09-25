@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue";
 import { cn } from "@/lib/utils";
+import type { HTMLAttributes } from "vue";
 
 type Shape = "block" | "list" | "detail" | "form";
 
@@ -12,7 +12,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   shape: "block",
-  rows: 3
+  rows: 3,
 });
 </script>
 
@@ -25,7 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
     <template v-else-if="shape === 'list'">
       <div v-for="i in rows" :key="i" class="flex items-center gap-4 py-3">
         <div class="size-10 rounded-full bg-muted" />
-        <div class="flex-1 space-y-2">
+        <div class="flex flex-1 flex-col gap-2">
           <div class="h-4 w-1/3 rounded bg-muted" />
           <div class="h-3 w-2/3 rounded bg-muted" />
         </div>
@@ -33,7 +33,7 @@ const props = withDefaults(defineProps<Props>(), {
     </template>
 
     <template v-else-if="shape === 'detail'">
-      <div class="space-y-4">
+      <div class="flex flex-col gap-4">
         <div class="h-8 w-2/3 rounded bg-muted" />
         <div class="h-4 w-full rounded bg-muted" />
         <div class="h-4 w-5/6 rounded bg-muted" />
@@ -41,8 +41,8 @@ const props = withDefaults(defineProps<Props>(), {
     </template>
 
     <template v-else-if="shape === 'form'">
-      <div class="space-y-4">
-        <div v-for="i in rows" :key="i" class="space-y-2">
+      <div class="flex flex-col gap-4">
+        <div v-for="i in rows" :key="i" class="flex flex-col gap-2">
           <div class="h-4 w-1/4 rounded bg-muted" />
           <div class="h-9 w-full rounded-md bg-muted" />
         </div>

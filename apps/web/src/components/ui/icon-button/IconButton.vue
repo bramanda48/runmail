@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { Icon } from "@/icons";
+import { cn } from "@/lib/utils";
 import type { VariantProps } from "class-variance-authority";
 import type { PrimitiveProps } from "reka-ui";
 import { Primitive } from "reka-ui";
 import type { HTMLAttributes } from "vue";
 import { computed } from "vue";
-import { Icon } from "@/icons";
-import { cn } from "@/lib/utils";
 import { iconButtonVariants } from ".";
 
 interface Props extends PrimitiveProps {
@@ -20,11 +20,11 @@ const props = withDefaults(defineProps<Props>(), {
   as: "button",
   variant: "default",
   size: "md",
-  loading: false
+  loading: false,
 });
 
 const classes = computed(() =>
-  cn(iconButtonVariants({ variant: props.variant, size: props.size }), props.class)
+  cn(iconButtonVariants({ variant: props.variant, size: props.size }), props.class),
 );
 </script>
 

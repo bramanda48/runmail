@@ -1,5 +1,3 @@
-import { defineStore } from "pinia";
-import { computed, ref } from "vue";
 import { wipeLocalData } from "@/db/cleanup";
 import {
   ApiError,
@@ -8,8 +6,11 @@ import {
   refreshRequest,
   type SessionUser,
   setAccessTokenProvider,
-  setRefreshHandler
+  setRefreshHandler,
 } from "@/lib/api";
+import { useMailboxStore } from "@/stores/mailbox";
+import { defineStore } from "pinia";
+import { computed, ref } from "vue";
 
 export const REFRESH_TOKEN_KEY = "runmail_refresh_token";
 
@@ -38,7 +39,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   function applySession(
     payload: { access_token: string; user: SessionUser },
-    refreshToken: string
+    refreshToken: string,
   ): void {
     accessToken.value = payload.access_token;
     user.value = payload.user;
@@ -80,7 +81,7 @@ export const useAuthStore = defineStore("auth", () => {
               () => {
                 clearSession(); // the rotated token was definitively rejected
                 return null;
-              }
+              },
             );
           }
           clearSession(); // definitive auth rejection: token is dead/revoked
@@ -92,7 +93,7 @@ export const useAuthStore = defineStore("auth", () => {
           status.value = "unauthenticated";
         }
         return null;
-      }
+      },
     );
   }
 
@@ -137,6 +138,7 @@ export const useAuthStore = defineStore("auth", () => {
       }
     }
     clearSession();
+    useMailboxStore().closeMailbox();
     try {
       // R6: logout wipes all per-mailbox Dexie DBs + cached raws on this device.
       await wipeLocalData();
@@ -153,6 +155,7 @@ export const useAuthStore = defineStore("auth", () => {
    */
   async function endSessionLocally(): Promise<void> {
     clearSession();
+    useMailboxStore().closeMailbox();
     try {
       await wipeLocalData();
     } catch {
@@ -161,7 +164,7 @@ export const useAuthStore = defineStore("auth", () => {
   }
 
   const isAuthenticated = computed(
-    () => status.value === "authenticated" && accessToken.value !== null
+    () => status.value === "authenticated" && accessToken.value !== null,
   );
   const isAdmin = computed(() => user.value?.role === "admin");
 
@@ -180,6 +183,6 @@ export const useAuthStore = defineStore("auth", () => {
     endSessionLocally,
     refresh,
     isAuthenticated,
-    isAdmin
+    isAdmin,
   };
 });

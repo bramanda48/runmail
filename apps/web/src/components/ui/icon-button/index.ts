@@ -10,18 +10,18 @@ export const iconButtonVariants = cva(
         default:
           "border border-input bg-surface text-foreground hover:bg-accent hover:text-accent-foreground",
         ghost: "hover:bg-accent hover:text-accent-foreground",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
       },
       size: {
         sm: "h-8 w-8",
-        md: "h-9 w-9"
-      }
+        md: "h-9 w-9",
+      },
     },
     defaultVariants: {
       variant: "default",
-      size: "md"
-    }
-  }
+      size: "md",
+    },
+  },
 );
 
 export type IconButtonVariants = typeof iconButtonVariants;

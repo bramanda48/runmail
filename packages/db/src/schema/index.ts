@@ -4,5 +4,6 @@ export * from "./folders";
 export * from "./mailboxes";
 export * from "./messages";
 export * from "./rulesets";
+export * from "./settings";
 export * from "./sync";
 export * from "./users";

@@ -11,11 +11,11 @@ function baseRuleset(overrides: Record<string, unknown> = {}) {
       {
         field: "subject",
         match_type: "contains",
-        condition_value: "promo"
-      }
+        condition_value: "promo",
+      },
     ],
     actions: [{ action_type: "mark_as_read", action_value: null }],
-    ...overrides
+    ...overrides,
   };
 }
 

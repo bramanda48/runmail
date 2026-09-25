@@ -7,7 +7,7 @@ describe("parseSearchQuery", () => {
       general: ["invoice", "acme"],
       from: [],
       to: [],
-      subject: []
+      subject: [],
     });
   });
 
@@ -16,7 +16,7 @@ describe("parseSearchQuery", () => {
       general: [],
       from: ["alice"],
       to: ["bob"],
-      subject: ["hello"]
+      subject: ["hello"],
     });
   });
 
@@ -25,7 +25,7 @@ describe("parseSearchQuery", () => {
       general: ["invoice", "overdue"],
       from: ["alice"],
       to: [],
-      subject: []
+      subject: [],
     });
   });
 
@@ -34,7 +34,7 @@ describe("parseSearchQuery", () => {
       general: [],
       from: ["Alice"],
       to: [],
-      subject: ["Hello"]
+      subject: ["Hello"],
     });
   });
 
@@ -48,7 +48,7 @@ describe("parseSearchQuery", () => {
       general: ["cc:bob", "foo:", "bar:"],
       from: [],
       to: [],
-      subject: []
+      subject: [],
     });
   });
 
@@ -57,7 +57,7 @@ describe("parseSearchQuery", () => {
       general: ["a", "b"],
       from: [],
       to: [],
-      subject: []
+      subject: [],
     });
   });
 });

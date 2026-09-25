@@ -10,13 +10,13 @@ export const alertVariants = cva(
         info: "border-border/50 bg-primary/20 text-primary-foreground",
         success: "border-success/30 bg-success/15 text-success",
         warning: "border-warning/30 bg-warning/15 text-warning",
-        error: "border-destructive/30 bg-destructive/15 text-destructive"
-      }
+        error: "border-destructive/30 bg-destructive/15 text-destructive",
+      },
     },
     defaultVariants: {
-      variant: "info"
-    }
-  }
+      variant: "info",
+    },
+  },
 );
 
 export type AlertVariants = typeof alertVariants;

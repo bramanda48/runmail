@@ -4,7 +4,7 @@ import {
   cursorQuerySchema,
   decodeCursor,
   domainNameSchema,
-  PAGINATION_DEFAULT_LIMIT
+  PAGINATION_DEFAULT_LIMIT,
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -17,8 +17,8 @@ function cloudflareUnavailable() {
   return {
     error: {
       code: API_ERROR_CODES.INTERNAL_ERROR,
-      message: "Gagal menghubungi Cloudflare API"
-    }
+      message: "Gagal menghubungi Cloudflare API",
+    },
   };
 }
 
@@ -35,6 +35,18 @@ domainRoutes.get("/available", async (c) => {
     const { zones } = await service.listAvailableZones(c);
     return c.json({ data: { zones } }, 200);
   } catch (err) {
+    if (err instanceof service.CloudflareOAuthNotConfiguredError) {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
+            message:
+              "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu.",
+          },
+        },
+        400,
+      );
+    }
     if (isCloudflareError(err)) {
       return c.json(cloudflareUnavailable(), 502);
     }
@@ -63,7 +75,7 @@ domainRoutes.get("/", async (c) => {
 });
 
 const createDomainBodySchema = z.object({
-  domain_name: domainNameSchema
+  domain_name: domainNameSchema,
 });
 
 domainRoutes.post("/", async (c) => {
@@ -74,16 +86,28 @@ domainRoutes.post("/", async (c) => {
 
   const result = await service.addDomain(c, parsed.data.domain_name);
   if ("error" in result) {
+    if (result.error === "OAUTH_NOT_CONFIGURED") {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
+            message:
+              "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu.",
+          },
+        },
+        400,
+      );
+    }
     if (result.error === "DOMAIN_EXISTS") {
       return c.json(
         {
           error: {
             code: API_ERROR_CODES.VALIDATION_ERROR,
             message: "Domain sudah terdaftar",
-            details: { field: "domain_name" }
-          }
+            details: { field: "domain_name" },
+          },
         },
-        409
+        409,
       );
     }
     if (result.error === "DOMAIN_NOT_AVAILABLE") {
@@ -92,20 +116,20 @@ domainRoutes.post("/", async (c) => {
           error: {
             code: API_ERROR_CODES.VALIDATION_ERROR,
             message: "Domain tidak tersedia pada akun Cloudflare",
-            details: { field: "domain_name" }
-          }
+            details: { field: "domain_name" },
+          },
         },
-        400
+        400,
       );
     }
     return c.json(
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Domain tidak ditemukan"
-        }
+          message: "Domain tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
 
@@ -116,14 +140,26 @@ domainRoutes.post("/:domain_id/verify", async (c) => {
   try {
     const result = await service.verifyDomain(c, c.req.param("domain_id") ?? "");
     if ("error" in result) {
+      if (result.error === "OAUTH_NOT_CONFIGURED") {
+        return c.json(
+          {
+            error: {
+              code: API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
+              message:
+                "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu.",
+            },
+          },
+          400,
+        );
+      }
       return c.json(
         {
           error: {
             code: API_ERROR_CODES.NOT_FOUND,
-            message: "Domain tidak ditemukan"
-          }
+            message: "Domain tidak ditemukan",
+          },
         },
-        404
+        404,
       );
     }
     return c.json({ data: result }, 200);

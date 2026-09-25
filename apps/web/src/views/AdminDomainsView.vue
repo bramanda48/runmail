@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { ApiMeta, Domain, DomainVerificationStatus } from "@runmail/shared";
-import { computed, onMounted, ref } from "vue";
 import AdminShell from "@/components/app/admin-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
 import { Alert } from "@/components/ui/alert";
@@ -12,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogRoot,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { IconButton } from "@/components/ui/icon-button";
 import { Pagination } from "@/components/ui/pagination";
@@ -24,10 +22,27 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
+import { useCloudflareOAuth } from "@/composables/useCloudflareOAuth";
 import { Icon } from "@/icons";
 import { ApiError, addDomain, listAvailableDomains, listDomains, verifyDomain } from "@/lib/api";
+import type { ApiMeta, Domain, DomainVerificationStatus } from "@runmail/shared";
+import { computed, onMounted, ref } from "vue";
+
+const {
+  configured,
+  checking,
+  statusError,
+  reconnect,
+  connecting,
+  redirecting,
+  notice,
+  canUseCloudflare,
+  checkStatus,
+  connect,
+  handleOperationError,
+} = useCloudflareOAuth();
 
 const perPage = 10;
 
@@ -45,7 +60,7 @@ const start = computed(() => pageIndex.value * perPage + 1);
 const end = computed(() => start.value + domains.value.length - 1);
 const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
 const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage
+  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
 );
 
 async function load(cursor?: string) {
@@ -63,6 +78,7 @@ async function load(cursor?: string) {
       cursors.value.push(meta.value.next_cursor);
     }
   } catch (err) {
+    handleOperationError(err);
     if (err instanceof ApiError) {
       error.value = err.message;
     } else {
@@ -102,6 +118,7 @@ function statusLabel(status: DomainVerificationStatus) {
 }
 
 async function handleVerify(domain: Domain) {
+  if (!canUseCloudflare.value || verifyingId.value) return;
   verifyingId.value = domain.id;
   verifyError.value = "";
   try {
@@ -111,6 +128,7 @@ async function handleVerify(domain: Domain) {
       domains.value[index] = result.domain;
     }
   } catch (err) {
+    if (handleOperationError(err)) return;
     if (err instanceof ApiError) {
       verifyError.value = err.message;
     } else {
@@ -130,7 +148,9 @@ const addInlineError = ref("");
 const addSubmitting = ref(false);
 
 async function openAddDialog() {
+  if (!canUseCloudflare.value) return;
   addOpen.value = true;
+  availableDomains.value = [];
   selectedDomain.value = "";
   addInlineError.value = "";
   loadingAvailable.value = true;
@@ -138,6 +158,10 @@ async function openAddDialog() {
     const { zones } = await listAvailableDomains();
     availableDomains.value = zones.map((z) => ({ value: z.name, label: z.name }));
   } catch (err) {
+    if (handleOperationError(err)) {
+      addOpen.value = false;
+      return;
+    }
     if (err instanceof ApiError) {
       addInlineError.value = err.message;
     } else {
@@ -149,6 +173,7 @@ async function openAddDialog() {
 }
 
 async function submitAdd() {
+  if (!canUseCloudflare.value || addSubmitting.value) return;
   addInlineError.value = "";
   if (!selectedDomain.value) {
     addInlineError.value = "Pilih domain terlebih dahulu";
@@ -160,6 +185,10 @@ async function submitAdd() {
     addOpen.value = false;
     await load(cursors.value[pageIndex.value]);
   } catch (err) {
+    if (handleOperationError(err)) {
+      addOpen.value = false;
+      return;
+    }
     if (err instanceof ApiError) {
       addInlineError.value = err.message;
     } else {
@@ -173,7 +202,7 @@ async function submitAdd() {
 
 <template>
   <AdminShell>
-    <main class="p-4 lg:p-8">
+    <main class="p-4 lg:p-8" :inert="redirecting">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 class="text-2xl font-semibold text-foreground">Manajemen Domain</h1>
@@ -181,17 +210,75 @@ async function submitAdd() {
             Tambahkan domain Cloudflare dan pantau status verifikasinya.
           </p>
         </div>
-        <Button @click="openAddDialog">
+        <Button :disabled="!canUseCloudflare" @click="openAddDialog">
           <Icon icon="lucide:plus" />
           <span>Tambah Domain</span>
         </Button>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
+      <p
+        v-if="checking"
+        role="status"
+        class="mb-6 flex items-center gap-2 text-sm text-muted-foreground"
+      >
+        <Icon
+          icon="lucide:loader-circle"
+          class="animate-spin motion-reduce:animate-none"
+          aria-hidden="true"
+        />
+        Memeriksa koneksi Cloudflare...
+      </p>
+      <Alert v-else-if="statusError" variant="warning" class="mb-6 [&>div]:min-w-0 [&>div]:flex-1">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p>{{ statusError }}</p>
+          <Button variant="outline" class="min-h-11 shrink-0 text-foreground" @click="checkStatus"
+            >Periksa lagi</Button
+          >
+        </div>
+      </Alert>
+      <Alert
+        v-else-if="configured === false"
+        :variant="reconnect ? 'warning' : 'info'"
+        aria-live="polite"
+        class="mb-6 [&>div]:min-w-0 [&>div]:flex-1"
+        aria-labelledby="cloudflare-connection-title"
+      >
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 id="cloudflare-connection-title" class="font-semibold">
+              {{ reconnect ? "Hubungkan ulang Cloudflare" : "Hubungkan akun Cloudflare" }}
+            </h2>
+            <p class="mt-1">Hubungkan Cloudflare untuk menambahkan dan memverifikasi domain.</p>
+            <p class="mt-1">Anda akan diarahkan ke Cloudflare untuk memberi izin akses.</p>
+          </div>
+          <Button
+            class="min-h-11 w-full shrink-0 md:w-auto"
+            :disabled="connecting || redirecting"
+            :aria-busy="connecting || redirecting"
+            @click="connect"
+          >
+            <Icon
+              v-if="connecting || redirecting"
+              icon="lucide:loader-circle"
+              class="animate-spin motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+            {{
+              redirecting
+                ? "Membuka Cloudflare..."
+                : connecting
+                  ? "Menghubungkan..."
+                  : "Hubungkan Cloudflare"
+            }}
+          </Button>
+        </div>
+      </Alert>
+
+      <div v-if="isLoading" class="flex flex-col gap-4">
         <Skeleton shape="list" :rows="4" />
       </div>
 
-      <div v-else-if="error" class="space-y-4">
+      <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="error">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
@@ -203,14 +290,14 @@ async function submitAdd() {
         description="Tambahkan domain Cloudflare yang tersedia."
       >
         <template #action>
-          <Button class="mt-4" @click="openAddDialog">
+          <Button class="mt-4" :disabled="!canUseCloudflare" @click="openAddDialog">
             <Icon icon="lucide:plus" />
             <span>Tambah Domain</span>
           </Button>
         </template>
       </EmptyState>
 
-      <div v-else class="space-y-4">
+      <div v-else class="flex flex-col gap-4">
         <Alert v-if="verifyError" variant="error">{{ verifyError }}</Alert>
 
         <div class="rounded-2xl border bg-surface p-4">
@@ -236,7 +323,9 @@ async function submitAdd() {
                     variant="ghost"
                     size="sm"
                     :disabled="
-                      domain.verification_status === 'active' || verifyingId === domain.id
+                      !canUseCloudflare ||
+                      domain.verification_status === 'active' ||
+                      verifyingId !== null
                     "
                     @click="handleVerify(domain)"
                   >
@@ -265,6 +354,48 @@ async function submitAdd() {
       </div>
     </main>
 
+    <div
+      class="fixed bottom-4 right-4 left-4 z-50 sm:left-auto sm:w-96"
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      <Alert
+        v-if="notice"
+        :variant="notice.variant"
+        class="shadow-lg [&>div]:min-w-0 [&>div]:flex-1 bg-surface"
+      >
+        <div class="flex items-start gap-2">
+          <p class="flex-1">{{ notice.message }}</p>
+          <Button
+            variant="ghost"
+            class="min-h-11 min-w-11 shrink-0 text-foreground"
+            aria-label="Tutup notifikasi"
+            @click="notice = null"
+          >
+            <Icon icon="lucide:x" aria-hidden="true" />
+          </Button>
+        </div>
+      </Alert>
+    </div>
+
+    <div
+      v-if="redirecting"
+      role="status"
+      class="fixed inset-0 z-40 flex items-center justify-center bg-background/95 p-6"
+    >
+      <div class="max-w-sm text-center">
+        <Icon
+          icon="lucide:loader-circle"
+          class="mx-auto mb-4 size-6 animate-spin motion-reduce:animate-none"
+          aria-hidden="true"
+        />
+        <p class="font-semibold">Membuka Cloudflare...</p>
+        <p class="mt-2 text-sm text-muted-foreground">
+          Selesaikan pemberian izin di Cloudflare untuk kembali ke Manajemen Domain.
+        </p>
+      </div>
+    </div>
+
     <!-- Add domain dialog -->
     <DialogRoot v-model:open="addOpen">
       <DialogContent>
@@ -273,23 +404,20 @@ async function submitAdd() {
           <DialogDescription>Pilih domain Cloudflare yang tersedia.</DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="addInlineError" variant="error">{{ addInlineError }}</Alert>
 
           <div v-if="loadingAvailable" class="text-sm text-muted-foreground">
             Memuat domain yang tersedia...
           </div>
-          <Alert
-            v-else-if="availableDomains.length === 0 && !addInlineError"
-            variant="info"
-          >
+          <Alert v-else-if="availableDomains.length === 0 && !addInlineError" variant="info">
             Tidak ada domain Cloudflare yang tersedia.
           </Alert>
           <Select
             v-else
+            id="select-domain"
             v-model="selectedDomain"
             label="Domain"
-            id="select-domain"
             placeholder="Pilih domain"
             :options="availableDomains"
             :disabled="loadingAvailable || addSubmitting"

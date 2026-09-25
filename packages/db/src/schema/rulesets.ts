@@ -14,7 +14,7 @@ export const matchTypes = [
   "not equal",
   "start with",
   "end with",
-  "match regex"
+  "match regex",
 ] as const;
 export type MatchType = (typeof matchTypes)[number];
 
@@ -31,7 +31,7 @@ export const rulesets = sqliteTable("rulesets", {
   logic_operator: text("logic_operator", { enum: logicOperators }).notNull().default("AND"),
   is_enabled: integer("is_enabled", { mode: "boolean" }).notNull().default(true),
   created_at: integer("created_at").notNull(),
-  updated_at: integer("updated_at").notNull()
+  updated_at: integer("updated_at").notNull(),
 });
 
 export type Ruleset = typeof rulesets.$inferSelect;
@@ -45,7 +45,7 @@ export const rulesetConditions = sqliteTable("ruleset_conditions", {
   field: text("field", { enum: ruleFields }).notNull(),
   match_type: text("match_type", { enum: matchTypes }).notNull(),
   condition_value: text("condition_value").notNull(),
-  condition_order: integer("condition_order").notNull()
+  condition_order: integer("condition_order").notNull(),
 });
 
 export type RulesetCondition = typeof rulesetConditions.$inferSelect;
@@ -58,7 +58,7 @@ export const rulesetActions = sqliteTable("ruleset_actions", {
     .references(() => rulesets.id),
   action_type: text("action_type", { enum: actionTypes }).notNull(),
   action_value: text("action_value"),
-  action_order: integer("action_order").notNull()
+  action_order: integer("action_order").notNull(),
 });
 
 export type RulesetAction = typeof rulesetActions.$inferSelect;

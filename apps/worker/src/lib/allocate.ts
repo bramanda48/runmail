@@ -1,4 +1,4 @@
-import { mailboxSyncCounters, type SyncEventType, syncEvents } from "@runmail/db";
+import { mailboxSyncCounters, syncEvents, type SyncEventType } from "@runmail/db";
 import { type SQL, sql } from "drizzle-orm";
 import type { Db } from "./db";
 
@@ -16,7 +16,7 @@ export function bumpCounterStmt(db: Db, mailboxId: string) {
     .values({ mailbox_id: mailboxId, last_version: 1 })
     .onConflictDoUpdate({
       target: mailboxSyncCounters.mailbox_id,
-      set: { last_version: sql`last_version + 1` }
+      set: { last_version: sql`last_version + 1` },
     });
 }
 
@@ -42,6 +42,6 @@ export function emitEventStmt(db: Db, params: EmitEventParams) {
     event_type: params.event_type,
     message_id: params.message_id,
     payload: params.payload,
-    created_at: params.created_at
+    created_at: params.created_at,
   });
 }

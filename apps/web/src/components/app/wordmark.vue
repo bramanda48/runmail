@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
+import { computed } from "vue";
 
 type Size = "sm" | "lg";
 
@@ -11,7 +11,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  size: "sm"
+  size: "sm",
 });
 
 const iconClass = computed(() => (props.size === "lg" ? "size-7" : "size-5"));

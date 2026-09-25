@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue";
-import { computed } from "vue";
 import { IconButton } from "@/components/ui/icon-button";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
+import type { HTMLAttributes } from "vue";
+import { computed } from "vue";
 
 interface Props {
   page: number;
@@ -14,7 +14,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  disabled: false
+  disabled: false,
 });
 
 const emit = defineEmits<{
@@ -41,10 +41,7 @@ function next() {
 </script>
 
 <template>
-  <nav
-    :class="cn('flex items-center gap-3', props.class)"
-    aria-label="Navigasi halaman"
-  >
+  <nav :class="cn('flex items-center gap-3', props.class)" aria-label="Navigasi halaman">
     <IconButton
       :ariaLabel="'Halaman sebelumnya'"
       variant="ghost"

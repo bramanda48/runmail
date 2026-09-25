@@ -8,7 +8,7 @@ import {
   hashPassword,
   issueAccessToken,
   sha256Hex,
-  verifyPassword
+  verifyPassword,
 } from "./helpers";
 
 export type TokenErrorCode = "TOKEN_EXPIRED" | "TOKEN_REUSED" | "UNAUTHORIZED";
@@ -28,7 +28,7 @@ const getDummyHash = () => (dummyHashPromise ??= hashPassword("timing-equalizer"
 export async function login(
   c: AppContext,
   username: string,
-  password: string
+  password: string,
 ): Promise<AuthResult | null> {
   const db = getDb(c);
 
@@ -52,26 +52,26 @@ export async function login(
     user_id: user.id,
     token_hash,
     expires_at: now + ttlMs,
-    created_at: now
+    created_at: now,
   });
 
   const access_token = await issueAccessToken(
     c.env.JWT_SIGNING_SECRET,
     parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    { id: user.id, role: user.role }
+    { id: user.id, role: user.role },
   );
 
   return {
     access_token,
     refresh_token,
     expires_in: parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    user: { id: user.id, username: user.username, role: user.role }
+    user: { id: user.id, username: user.username, role: user.role },
   };
 }
 
 export async function refresh(
   c: AppContext,
-  refreshToken: string
+  refreshToken: string,
 ): Promise<AuthResult | AuthError> {
   const db = getDb(c);
   const tokenHash = await sha256Hex(refreshToken);
@@ -85,8 +85,8 @@ export async function refresh(
       and(
         eq(refreshTokens.token_hash, tokenHash),
         isNull(refreshTokens.revoked_at),
-        gt(refreshTokens.expires_at, now)
-      )
+        gt(refreshTokens.expires_at, now),
+      ),
     )
     .returning({ id: refreshTokens.id, user_id: refreshTokens.user_id });
 
@@ -117,20 +117,20 @@ export async function refresh(
     user_id: user.id,
     token_hash: newHash,
     expires_at: issuedAt + ttlMs,
-    created_at: issuedAt
+    created_at: issuedAt,
   });
 
   const access_token = await issueAccessToken(
     c.env.JWT_SIGNING_SECRET,
     parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    { id: user.id, role: user.role }
+    { id: user.id, role: user.role },
   );
 
   return {
     access_token,
     refresh_token,
     expires_in: parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    user: { id: user.id, username: user.username, role: user.role }
+    user: { id: user.id, username: user.username, role: user.role },
   };
 }
 
@@ -144,8 +144,8 @@ export async function logout(c: AppContext, userId: string, refreshToken: string
       and(
         eq(refreshTokens.token_hash, token_hash),
         eq(refreshTokens.user_id, userId),
-        isNull(refreshTokens.revoked_at)
-      )
+        isNull(refreshTokens.revoked_at),
+      ),
     );
 }
 
@@ -153,7 +153,7 @@ export async function changePassword(
   c: AppContext,
   userId: string,
   currentPassword: string,
-  newPassword: string
+  newPassword: string,
 ): Promise<{ ok: true } | AuthError> {
   const db = getDb(c);
 
@@ -171,7 +171,7 @@ export async function changePassword(
     db
       .update(refreshTokens)
       .set({ revoked_at: now })
-      .where(and(eq(refreshTokens.user_id, userId), isNull(refreshTokens.revoked_at)))
+      .where(and(eq(refreshTokens.user_id, userId), isNull(refreshTokens.revoked_at))),
   ]);
 
   return { ok: true };

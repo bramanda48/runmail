@@ -10,13 +10,13 @@ export const badgeVariants = cva(
         success: "border-success/20 bg-success/15 text-success",
         inactive: "border-transparent bg-muted text-muted-foreground",
         pending: "border-warning/20 bg-warning/15 text-warning",
-        error: "border-destructive/20 bg-destructive/15 text-destructive"
-      }
+        error: "border-destructive/20 bg-destructive/15 text-destructive",
+      },
     },
     defaultVariants: {
-      variant: "inactive"
-    }
-  }
+      variant: "inactive",
+    },
+  },
 );
 
 export type BadgeVariants = typeof badgeVariants;

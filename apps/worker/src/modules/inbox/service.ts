@@ -7,7 +7,7 @@ import { type Db, getDb } from "../../lib/db";
 import type { AppContext } from "../../lib/env";
 import type {
   deleteRawEmail as deleteRawEmailFn,
-  getRawEmail as getRawEmailFn
+  getRawEmail as getRawEmailFn,
 } from "../../lib/r2";
 import { deleteRawEmail, getRawEmail as getRawEmailFromR2 } from "../../lib/r2";
 
@@ -41,7 +41,7 @@ function toMessage(row: MessageRow, toAddresses: string[] = []): MessageWithReci
     raw_object_key: row.raw_object_key,
     sync_version: row.sync_version,
     updated_at: row.updated_at,
-    to_addresses: toAddresses
+    to_addresses: toAddresses,
   };
 }
 
@@ -52,14 +52,14 @@ async function loadToAddresses(db: Db, messageIds: string[]): Promise<Map<string
   const rows = await db
     .select({
       message_id: messageRecipients.message_id,
-      email_address: messageRecipients.email_address
+      email_address: messageRecipients.email_address,
     })
     .from(messageRecipients)
     .where(
       and(
         inArray(messageRecipients.message_id, messageIds),
-        eq(messageRecipients.recipient_type, "to")
-      )
+        eq(messageRecipients.recipient_type, "to"),
+      ),
     );
   for (const row of rows) {
     const list = map.get(row.message_id);
@@ -72,7 +72,7 @@ async function loadToAddresses(db: Db, messageIds: string[]): Promise<Map<string
 async function loadMessage(
   db: Db,
   mailboxId: string,
-  messageId: string
+  messageId: string,
 ): Promise<MessageRow | null> {
   const [row] = await db
     .select()
@@ -91,7 +91,7 @@ export async function listMessages(
   c: AppContext,
   mailboxId: string,
   limit: number,
-  cursor?: MessageCursorPayload
+  cursor?: MessageCursorPayload,
 ): Promise<{ messages: MessageWithRecipients[]; meta: PageMeta }> {
   const db = getDb(c);
   const keyset = cursor
@@ -101,29 +101,29 @@ export async function listMessages(
     .select()
     .from(messages)
     .where(
-      keyset ? and(eq(messages.mailbox_id, mailboxId), keyset) : eq(messages.mailbox_id, mailboxId)
+      keyset ? and(eq(messages.mailbox_id, mailboxId), keyset) : eq(messages.mailbox_id, mailboxId),
     )
     .orderBy(desc(messages.email_date), desc(messages.id))
     .limit(limit + 1);
 
   const meta = buildPageMeta(rows, limit, (row) => ({
-    ...buildMessageCursor({ email_date: row.email_date, message_id: row.id })
+    ...buildMessageCursor({ email_date: row.email_date, message_id: row.id }),
   }));
   const page = rows.slice(0, limit);
   const toMap = await loadToAddresses(
     db,
-    page.map((row) => row.id)
+    page.map((row) => row.id),
   );
   return {
     messages: page.map((row) => toMessage(row, toMap.get(row.id) ?? [])),
-    meta
+    meta,
   };
 }
 
 export async function getMessageDetail(
   c: AppContext,
   mailboxId: string,
-  messageId: string
+  messageId: string,
 ): Promise<{ message: MessageWithRecipients } | InboxError> {
   const db = getDb(c);
   const row = await loadMessage(db, mailboxId, messageId);
@@ -134,23 +134,23 @@ export async function getMessageDetail(
 export async function getRawEmail(
   c: AppContext,
   mailboxId: string,
-  messageId: string
+  messageId: string,
 ): Promise<{ response: Response } | InboxError> {
   const db = getDb(c);
   const row = await loadMessage(db, mailboxId, messageId);
   if (!row) return { error: "NOT_FOUND" };
   const object: Awaited<ReturnType<typeof getRawEmailFn>> = await getRawEmailFromR2(
     c.env,
-    row.raw_object_key
+    row.raw_object_key,
   );
   if (!object) return { error: "NOT_FOUND" };
   return {
     response: new Response(object.body, {
       headers: {
         "content-type": "message/rfc822",
-        "content-length": String(object.size)
-      }
-    })
+        "content-length": String(object.size),
+      },
+    }),
   };
 }
 
@@ -159,7 +159,7 @@ async function setFlag(
   mailboxId: string,
   messageId: string,
   field: "is_read" | "is_starred",
-  value: boolean
+  value: boolean,
 ): Promise<{ message: MessageWithRecipients } | InboxError> {
   const db = getDb(c);
   const row = await loadMessage(db, mailboxId, messageId);
@@ -170,7 +170,7 @@ async function setFlag(
   const now = Date.now();
   const versionSql = nextVersionSql(mailboxId);
   const changesJson = JSON.stringify(
-    field === "is_read" ? { is_read: value } : { is_starred: value }
+    field === "is_read" ? { is_read: value } : { is_starred: value },
   );
   await db.batch([
     bumpCounterStmt(db, mailboxId),
@@ -179,7 +179,7 @@ async function setFlag(
       .set({
         ...(field === "is_read" ? { is_read: value } : { is_starred: value }),
         sync_version: versionSql as unknown as number,
-        updated_at: now
+        updated_at: now,
       })
       .where(eq(messages.id, messageId)),
     emitEventStmt(db, {
@@ -188,8 +188,8 @@ async function setFlag(
       message_id: messageId,
       payload: sql`json_object('message_id', ${messageId}, 'sync_version', ${versionSql}, 'timestamp', ${now}, 'changes', json(${changesJson}))`,
       sync_version_sql: versionSql,
-      created_at: now
-    })
+      created_at: now,
+    }),
   ] as unknown as Parameters<typeof db.batch>[0]);
 
   const updated = await loadMessage(db, mailboxId, messageId);
@@ -201,7 +201,7 @@ export async function setMessageRead(
   c: AppContext,
   mailboxId: string,
   messageId: string,
-  isRead: boolean
+  isRead: boolean,
 ): Promise<{ message: MessageWithRecipients } | InboxError> {
   return setFlag(c, mailboxId, messageId, "is_read", isRead);
 }
@@ -210,7 +210,7 @@ export async function setMessageStarred(
   c: AppContext,
   mailboxId: string,
   messageId: string,
-  isStarred: boolean
+  isStarred: boolean,
 ): Promise<{ message: MessageWithRecipients } | InboxError> {
   return setFlag(c, mailboxId, messageId, "is_starred", isStarred);
 }
@@ -219,7 +219,7 @@ export async function moveMessage(
   c: AppContext,
   mailboxId: string,
   messageId: string,
-  targetFolderId: string
+  targetFolderId: string,
 ): Promise<{ message: MessageWithRecipients } | InboxError> {
   const db = getDb(c);
   const row = await loadMessage(db, mailboxId, messageId);
@@ -256,7 +256,7 @@ export async function moveMessage(
         folder_id: targetFolderId,
         folder_entered_at: folderEnteredAt,
         sync_version: versionSql as unknown as number,
-        updated_at: now
+        updated_at: now,
       })
       .where(eq(messages.id, messageId)),
     emitEventStmt(db, {
@@ -265,8 +265,8 @@ export async function moveMessage(
       message_id: messageId,
       payload: sql`json_object('message_id', ${messageId}, 'folder_id', ${targetFolderId}, 'sync_version', ${versionSql}, 'timestamp', ${now}, 'folder_entered_at', ${folderEnteredAt})`,
       sync_version_sql: versionSql,
-      created_at: now
-    })
+      created_at: now,
+    }),
   ] as unknown as Parameters<typeof db.batch>[0]);
 
   const updated = await loadMessage(db, mailboxId, messageId);
@@ -278,7 +278,7 @@ export async function permanentDelete(
   c: AppContext,
   mailboxId: string,
   messageId: string,
-  env: R2Env
+  env: R2Env,
 ): Promise<{ ok: true } | InboxError> {
   const db = getDb(c);
   const row = await loadMessage(db, mailboxId, messageId);
@@ -306,10 +306,10 @@ export async function permanentDelete(
       message_id: messageId,
       payload: sql`json_object('message_id', ${messageId}, 'sync_version', ${versionSql}, 'timestamp', ${now})`,
       sync_version_sql: versionSql,
-      created_at: now
+      created_at: now,
     }),
     db.delete(messageRecipients).where(eq(messageRecipients.message_id, messageId)),
-    db.delete(messages).where(eq(messages.id, messageId))
+    db.delete(messages).where(eq(messages.id, messageId)),
   ] as unknown as Parameters<typeof db.batch>[0]);
 
   await deleteRawEmail(env, rawKey);
@@ -334,7 +334,7 @@ export type SyncDelta = {
 export async function getSyncDelta(
   c: AppContext,
   mailboxId: string,
-  opts: { last_sync_version?: number; last_sync_timestamp?: number }
+  opts: { last_sync_version?: number; last_sync_timestamp?: number },
 ): Promise<SyncDelta> {
   const db = getDb(c);
   let cursor = opts.last_sync_version ?? 0;
@@ -347,8 +347,8 @@ export async function getSyncDelta(
       .where(
         and(
           eq(syncEvents.mailbox_id, mailboxId),
-          sql`${syncEvents.created_at} <= ${opts.last_sync_timestamp}`
-        )
+          sql`${syncEvents.created_at} <= ${opts.last_sync_timestamp}`,
+        ),
       );
     cursor = anchor?.v ?? 0;
   }
@@ -365,7 +365,7 @@ export async function getSyncDelta(
       last_sync_version: cursor,
       has_more: false,
       full_resync_required: true,
-      min_version: minVersion
+      min_version: minVersion,
     };
   }
 
@@ -381,10 +381,10 @@ export async function getSyncDelta(
       sync_version: row.sync_version,
       event_type: row.event_type,
       message_id: row.message_id,
-      payload: JSON.parse(row.payload) as unknown
+      payload: JSON.parse(row.payload) as unknown,
     })),
     last_sync_version: rows.length > 0 ? rows[rows.length - 1].sync_version : cursor,
-    has_more: rows.length === SYNC_DELTA_LIMIT
+    has_more: rows.length === SYNC_DELTA_LIMIT,
   };
 }
 
@@ -397,7 +397,7 @@ export type MutationResult = {
 export async function processMutations(
   c: AppContext,
   mailboxId: string,
-  mutations: SyncMutationItem[]
+  mutations: SyncMutationItem[],
 ): Promise<{ results: MutationResult[] }> {
   const results: MutationResult[] = [];
   // FIFO: each mutation is independent; definitive rejections never abort
@@ -413,7 +413,7 @@ export async function processMutations(
           c,
           mailboxId,
           mutation.message_id,
-          mutation.mutation_value
+          mutation.mutation_value,
         );
       } else {
         outcome = await moveMessage(c, mailboxId, mutation.message_id, mutation.mutation_value);
@@ -422,7 +422,7 @@ export async function processMutations(
         results.push({
           mutation_id: i,
           status: "rejected",
-          error: outcome.error
+          error: outcome.error,
         });
       } else {
         results.push({ mutation_id: i, status: "ok" });
@@ -431,7 +431,7 @@ export async function processMutations(
       results.push({
         mutation_id: i,
         status: "rejected",
-        error: "INTERNAL_ERROR"
+        error: "INTERNAL_ERROR",
       });
     }
   }

@@ -15,7 +15,7 @@ folderRoutes.get("/:mailbox_id/folders", jwtAuth, requireMailboxAccess, async (c
 });
 
 const createFolderBodySchema = z.object({
-  name: folderNameSchema
+  name: folderNameSchema,
 });
 
 folderRoutes.post("/:mailbox_id/folders", jwtAuth, requireMailboxAccess, async (c) => {
@@ -31,10 +31,10 @@ folderRoutes.post("/:mailbox_id/folders", jwtAuth, requireMailboxAccess, async (
         {
           error: {
             code: API_ERROR_CODES.FOLDER_IS_SYSTEM,
-            message: "Nama folder tidak boleh sama dengan folder sistem"
-          }
+            message: "Nama folder tidak boleh sama dengan folder sistem",
+          },
         },
-        400
+        400,
       );
     }
     if (result.error === "FOLDER_NAME_CONFLICT") {
@@ -42,20 +42,20 @@ folderRoutes.post("/:mailbox_id/folders", jwtAuth, requireMailboxAccess, async (
         {
           error: {
             code: API_ERROR_CODES.FOLDER_NAME_CONFLICT,
-            message: "Nama folder sudah digunakan"
-          }
+            message: "Nama folder sudah digunakan",
+          },
         },
-        409
+        409,
       );
     }
     return c.json(
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Folder tidak ditemukan"
-        }
+          message: "Folder tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
 
@@ -66,7 +66,7 @@ folderRoutes.delete("/:mailbox_id/folders/:folder_id", jwtAuth, requireMailboxAc
   const result = await service.deleteFolder(
     c,
     c.get("mailbox").mailbox_id,
-    c.req.param("folder_id") ?? ""
+    c.req.param("folder_id") ?? "",
   );
   if ("error" in result) {
     if (result.error === "FOLDER_IS_SYSTEM") {
@@ -74,21 +74,74 @@ folderRoutes.delete("/:mailbox_id/folders/:folder_id", jwtAuth, requireMailboxAc
         {
           error: {
             code: API_ERROR_CODES.FOLDER_IS_SYSTEM,
-            message: "Folder sistem tidak dapat dihapus"
-          }
+            message: "Folder sistem tidak dapat dihapus",
+          },
         },
-        400
+        400,
       );
     }
     return c.json(
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Folder tidak ditemukan"
-        }
+          message: "Folder tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
   return c.json({ data: { ok: true } }, 200);
+});
+
+const renameFolderBodySchema = z.object({
+  name: folderNameSchema,
+});
+
+folderRoutes.patch("/:mailbox_id/folders/:folder_id", jwtAuth, requireMailboxAccess, async (c) => {
+  const parsed = renameFolderBodySchema.safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success) {
+    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+  }
+
+  const result = await service.renameFolder(
+    c,
+    c.get("mailbox").mailbox_id,
+    c.req.param("folder_id") ?? "",
+    parsed.data.name,
+  );
+  if ("error" in result) {
+    if (result.error === "FOLDER_IS_SYSTEM") {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.FOLDER_IS_SYSTEM,
+            message: "Folder sistem tidak dapat diubah namanya",
+          },
+        },
+        400,
+      );
+    }
+    if (result.error === "FOLDER_NAME_CONFLICT") {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.FOLDER_NAME_CONFLICT,
+            message: "Nama folder sudah digunakan",
+          },
+        },
+        409,
+      );
+    }
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.NOT_FOUND,
+          message: "Folder tidak ditemukan",
+        },
+      },
+      404,
+    );
+  }
+
+  return c.json({ data: { folder: result.folder } }, 200);
 });

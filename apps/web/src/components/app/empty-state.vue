@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
+import type { HTMLAttributes } from "vue";
 
 interface Props {
   icon: string;

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import type { VariantProps } from "class-variance-authority";
-import type { HTMLAttributes } from "vue";
-import { computed, ref } from "vue";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input, type inputVariants } from "@/components/ui/input";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
+import type { VariantProps } from "class-variance-authority";
+import type { HTMLAttributes } from "vue";
+import { computed, ref } from "vue";
 
 interface Props {
   modelValue?: string;

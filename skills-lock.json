@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "skills": {
+    "cloudflare": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloudflare/SKILL.md",
+      "computedHash": "300bd37bb1e40490acc65ac7ebd5a10f29b78b230a62921536acc077e42380d9"
+    },
+    "cloudflare-agents-sdk": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloudflare-agents-sdk/SKILL.md",
+      "computedHash": "4b66c838ec5319088bd9d910fa5c989079b34147314308fbec7fdcd1768d1d98"
+    },
+    "cloudflare-workers-best-practices": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloudflare-workers-best-practices/SKILL.md",
+      "computedHash": "4eeff768c46e13d1565657f17732e27bf20573f109e49b6881942d05d00617a1"
+    },
+    "cloudflare-wrangler": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/cloudflare-wrangler/SKILL.md",
+      "computedHash": "d1a0d53f06dcca80199605f65f4951ee8bf1db9b567586557b4391eaf83337a8"
+    },
+    "hono": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/hono/SKILL.md",
+      "computedHash": "40f35b5a9e86f95e710cb22fefded91ecf989c8bddc4e6af6e0d00ba68e52b04"
+    },
+    "hono-third-party": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/hono-third-party/SKILL.md",
+      "computedHash": "c8cd1810e5e94fa56dd360820def4ab850ea0dc163998282f2e442092844b572"
+    },
+    "iconify": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/iconify/SKILL.md",
+      "computedHash": "e4f8e9c79c9b8bc2d08b355543c91403d7ed73c794373917f775270962cb34ca"
+    },
+    "pinia": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/pinia/SKILL.md",
+      "computedHash": "ed4164681f2505f9b5eb1dbee7736cf0423de62b7dfe3175a8163a28f118a05b"
+    },
+    "shadcn-vue": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn-vue/SKILL.md",
+      "computedHash": "b6502f4cd142f43590f0269c492dae1aba2a77e1871d428fdca3fca8de20e2fc"
+    },
+    "turborepo": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/turborepo/SKILL.md",
+      "computedHash": "eaad8f1bd744d73cf91fc7d758716a2c00f8183a47c118872571fd939a25791d"
+    },
+    "vite": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vite/SKILL.md",
+      "computedHash": "c71c7a6c86dfd29311c6d618dd5f86fa27b1512af8a0adc2a171afe26c3e724f"
+    },
+    "vue": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vue/SKILL.md",
+      "computedHash": "0c26b30a670e78bb221a4696d7b32e899dad191ec54559a8253eecd08b6c123e"
+    },
+    "vue-best-practices": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vue-best-practices/SKILL.md",
+      "computedHash": "3fe4e5a82037d3d1012946eb478937830ae00ac09ca83f7e8da3003d965b034b"
+    },
+    "vue-router-best-practices": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vue-router-best-practices/SKILL.md",
+      "computedHash": "4ccda745f651c2491a07b1a0a6cee79bfdffd8a0e962a5a3639d7e40ccf77897"
+    },
+    "vue-testing-best-practices": {
+      "source": "bramanda48/skills",
+      "sourceType": "github",
+      "skillPath": "skills/vue-testing-best-practices/SKILL.md",
+      "computedHash": "38b286272e855e0dd31825aaed168014b24f88af3407bef745745e7440d5658c"
+    }
+  }
+}

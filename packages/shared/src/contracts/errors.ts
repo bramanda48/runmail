@@ -15,10 +15,11 @@ export const API_ERROR_CODES = {
   FOLDER_IS_SYSTEM: "FOLDER_IS_SYSTEM",
   RULESET_INVALID_REGEX: "RULESET_INVALID_REGEX",
   RULESET_INVALID_DEPENDENCY: "RULESET_INVALID_DEPENDENCY",
+  OAUTH_NOT_CONFIGURED: "OAUTH_NOT_CONFIGURED",
   CURSOR_INVALID: "CURSOR_INVALID",
   FULL_RESYNC_REQUIRED: "FULL_RESYNC_REQUIRED",
   RATE_LIMITED: "RATE_LIMITED",
-  INTERNAL_ERROR: "INTERNAL_ERROR"
+  INTERNAL_ERROR: "INTERNAL_ERROR",
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];
@@ -26,7 +27,7 @@ export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES
 export function apiError(
   code: ApiErrorCode,
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): ApiError {
   return { error: { code, message, ...(details ? { details } : {}) } };
 }

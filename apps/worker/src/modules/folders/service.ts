@@ -19,13 +19,13 @@ function toFolder(row: typeof folders.$inferSelect): Folder {
     name: row.name,
     folder_type: row.folder_type,
     created_at: row.created_at,
-    updated_at: row.updated_at
+    updated_at: row.updated_at,
   };
 }
 
 export async function listFolders(
   c: AppContext,
-  mailboxId: string
+  mailboxId: string,
 ): Promise<{ folders: Folder[] }> {
   const db = getDb(c);
   const rows = await db
@@ -39,7 +39,7 @@ export async function listFolders(
 export async function createFolder(
   c: AppContext,
   mailboxId: string,
-  name: string
+  name: string,
 ): Promise<{ folder: Folder } | FolderError> {
   if (isReservedFolderName(name)) {
     return { error: "FOLDER_IS_SYSTEM" };
@@ -64,7 +64,7 @@ export async function createFolder(
       name,
       folder_type: "custom",
       created_at: now,
-      updated_at: now
+      updated_at: now,
     });
   } catch (err) {
     if (isUniqueViolation(err)) {
@@ -81,7 +81,7 @@ export async function createFolder(
 export async function deleteFolder(
   c: AppContext,
   mailboxId: string,
-  folderId: string
+  folderId: string,
 ): Promise<{ ok: true } | FolderError> {
   const db = getDb(c);
 
@@ -98,7 +98,7 @@ export async function deleteFolder(
     .from(folders)
     .where(and(eq(folders.mailbox_id, mailboxId), eq(folders.folder_type, "system")));
   const inbox = systemFolders.find(
-    (f) => f.name.toLowerCase() === "inbox" && isSystemFolder(f.name)
+    (f) => f.name.toLowerCase() === "inbox" && isSystemFolder(f.name),
   );
   if (!inbox) return { error: "NOT_FOUND" };
 
@@ -133,9 +133,9 @@ export async function deleteFolder(
             folder_id: inbox.id,
             folder_entered_at: null,
             sync_version: versionSql as unknown as number,
-            updated_at: now
+            updated_at: now,
           })
-          .where(eq(messages.id, msg.id))
+          .where(eq(messages.id, msg.id)),
       );
       stmts.push(
         emitEventStmt(db, {
@@ -144,8 +144,8 @@ export async function deleteFolder(
           message_id: msg.id,
           payload: sql`json_object('message_id', ${msg.id}, 'folder_id', ${inbox.id}, 'sync_version', ${versionSql}, 'timestamp', ${now}, 'folder_entered_at', ${folderEnteredAt})`,
           sync_version_sql: versionSql,
-          created_at: now
-        })
+          created_at: now,
+        }),
       );
     }
 
@@ -155,8 +155,8 @@ export async function deleteFolder(
           .update(rulesets)
           .set({ is_enabled: false, updated_at: now })
           .where(
-            sql`${rulesets.id} IN (SELECT ${rulesetActions.ruleset_id} FROM ${rulesetActions} WHERE ${rulesetActions.action_type} = 'move_to_folder' AND ${rulesetActions.action_value} = ${folderId})`
-          )
+            sql`${rulesets.id} IN (SELECT ${rulesetActions.ruleset_id} FROM ${rulesetActions} WHERE ${rulesetActions.action_type} = 'move_to_folder' AND ${rulesetActions.action_value} = ${folderId})`,
+          ),
       );
       stmts.push(db.delete(folders).where(eq(folders.id, folderId)));
     }
@@ -166,4 +166,54 @@ export async function deleteFolder(
   } while (offset < moved.length);
 
   return { ok: true };
+}
+
+export async function renameFolder(
+  c: AppContext,
+  mailboxId: string,
+  folderId: string,
+  name: string,
+): Promise<{ folder: Folder } | FolderError> {
+  if (isReservedFolderName(name)) {
+    return { error: "FOLDER_IS_SYSTEM" };
+  }
+
+  const db = getDb(c);
+
+  const [folder] = await db
+    .select()
+    .from(folders)
+    .where(and(eq(folders.id, folderId), eq(folders.mailbox_id, mailboxId)))
+    .limit(1);
+  if (!folder) return { error: "NOT_FOUND" };
+  if (folder.folder_type === "system") return { error: "FOLDER_IS_SYSTEM" };
+
+  const existing = await db
+    .select({ id: folders.id })
+    .from(folders)
+    .where(
+      and(
+        eq(folders.mailbox_id, mailboxId),
+        sql`lower(${folders.name}) = lower(${name})`,
+        sql`${folders.id} != ${folderId}`,
+      ),
+    )
+    .limit(1);
+  if (existing.length > 0) {
+    return { error: "FOLDER_NAME_CONFLICT" };
+  }
+
+  const now = Date.now();
+  try {
+    await db.update(folders).set({ name, updated_at: now }).where(eq(folders.id, folderId));
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      return { error: "FOLDER_NAME_CONFLICT" };
+    }
+    throw err;
+  }
+
+  const [row] = await db.select().from(folders).where(eq(folders.id, folderId)).limit(1);
+  if (!row) return { error: "NOT_FOUND" };
+  return { folder: toFolder(row) };
 }

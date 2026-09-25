@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { Icon } from "@/icons";
+import { cn } from "@/lib/utils";
 import type { HTMLAttributes } from "vue";
 import { computed } from "vue";
 import type { RouteLocationRaw } from "vue-router";
 import { RouterLink } from "vue-router";
-import { Icon } from "@/icons";
-import { cn } from "@/lib/utils";
 
 interface Props {
   label: string;
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  active: false
+  active: false,
 });
 
 const baseClasses =
@@ -25,7 +25,7 @@ const baseClasses =
 const stateClasses = computed(() =>
   props.active
     ? "bg-primary text-primary-foreground"
-    : "text-foreground hover:bg-accent hover:text-accent-foreground"
+    : "text-foreground hover:bg-accent hover:text-accent-foreground",
 );
 
 const classes = computed(() => cn(baseClasses, stateClasses.value, props.class));
@@ -35,8 +35,8 @@ const countClasses = computed(() =>
     "ml-auto rounded-full px-2 py-0.5 text-xs font-medium",
     props.active
       ? "bg-primary-foreground/10 text-primary-foreground"
-      : "bg-muted text-muted-foreground"
-  )
+      : "bg-muted text-muted-foreground",
+  ),
 );
 </script>
 

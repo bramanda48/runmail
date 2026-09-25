@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import type { ApiMeta, Mailbox } from "@runmail/shared";
-import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
 import EmptyState from "@/components/app/empty-state.vue";
 import Wordmark from "@/components/app/wordmark.vue";
 import { Alert } from "@/components/ui/alert";
@@ -13,6 +10,9 @@ import { Icon } from "@/icons";
 import { ApiError, listMailboxes } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
+import type { ApiMeta, Mailbox } from "@runmail/shared";
+import { computed, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -33,7 +33,7 @@ const end = computed(() => start.value + mailboxes.value.length - 1);
 const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
 
 const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage
+  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
 );
 
 async function load(cursor?: string) {
@@ -98,7 +98,7 @@ onMounted(() => load(undefined));
 function rowClasses(isActive: boolean) {
   return cn(
     "flex w-full items-center gap-4 rounded-2xl border bg-surface p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-    isActive ? "hover:bg-accent cursor-pointer" : "cursor-not-allowed opacity-60"
+    isActive ? "hover:bg-accent cursor-pointer" : "cursor-not-allowed opacity-60",
   );
 }
 </script>
@@ -126,11 +126,11 @@ function rowClasses(isActive: boolean) {
         <p class="text-sm text-muted-foreground">Pilih mailbox yang ingin Anda akses.</p>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
+      <div v-if="isLoading" class="flex flex-col gap-4">
         <Skeleton shape="list" :rows="4" />
       </div>
 
-      <div v-else-if="error" class="space-y-4">
+      <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="error">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
@@ -148,7 +148,7 @@ function rowClasses(isActive: boolean) {
         </template>
       </EmptyState>
 
-      <div v-else class="space-y-3">
+      <div v-else class="flex flex-col gap-3">
         <button
           v-for="mailbox in mailboxes"
           :key="mailbox.id"
@@ -165,19 +165,10 @@ function rowClasses(isActive: boolean) {
           </div>
 
           <div class="min-w-0 flex-1">
-            <p
-              :class="
-                cn(
-                  'truncate font-medium',
-                  !mailbox.is_active && 'text-muted-foreground',
-                )
-              "
-            >
+            <p :class="cn('truncate font-medium', !mailbox.is_active && 'text-muted-foreground')">
               {{ mailbox.address }}
             </p>
-            <p v-if="!mailbox.is_active" class="text-xs text-muted-foreground">
-              Mailbox nonaktif
-            </p>
+            <p v-if="!mailbox.is_active" class="text-xs text-muted-foreground">Mailbox nonaktif</p>
           </div>
 
           <Badge :variant="mailbox.is_active ? 'success' : 'inactive'">

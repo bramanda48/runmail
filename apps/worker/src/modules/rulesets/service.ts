@@ -23,7 +23,7 @@ type ActionRow = typeof rulesetActions.$inferSelect;
 function toDetail(
   row: RulesetRow,
   conditions: ConditionRow[],
-  actions: ActionRow[]
+  actions: ActionRow[],
 ): RulesetDetail {
   return {
     id: row.id,
@@ -43,7 +43,7 @@ function toDetail(
         field: c.field,
         match_type: c.match_type,
         condition_value: c.condition_value,
-        condition_order: c.condition_order
+        condition_order: c.condition_order,
       })),
     actions: actions
       .slice()
@@ -53,8 +53,8 @@ function toDetail(
         ruleset_id: a.ruleset_id,
         action_type: a.action_type,
         action_value: a.action_value,
-        action_order: a.action_order
-      }))
+        action_order: a.action_order,
+      })),
   };
 }
 
@@ -71,7 +71,7 @@ function validateRegexConditions(input: RulesetInput): RulesetError | null {
 async function validateMoveToFolderActions(
   c: AppContext,
   mailboxId: string,
-  input: RulesetInput
+  input: RulesetInput,
 ): Promise<RulesetError | null> {
   const refs: Array<{ index: number; folderId: string }> = [];
   for (let i = 0; i < input.actions.length; i++) {
@@ -94,9 +94,9 @@ async function validateMoveToFolderActions(
         eq(folders.mailbox_id, mailboxId),
         inArray(
           folders.id,
-          refs.map((r) => r.folderId)
-        )
-      )
+          refs.map((r) => r.folderId),
+        ),
+      ),
     );
   const found = new Set(rows.map((r) => r.id));
   for (const ref of refs) {
@@ -110,7 +110,7 @@ async function validateMoveToFolderActions(
 async function validateInput(
   c: AppContext,
   mailboxId: string,
-  input: RulesetInput
+  input: RulesetInput,
 ): Promise<RulesetError | null> {
   const regexErr = validateRegexConditions(input);
   if (regexErr) return regexErr;
@@ -121,7 +121,7 @@ export async function listRulesets(
   c: AppContext,
   mailboxId: string,
   limit: number,
-  cursorId: string | undefined
+  cursorId: string | undefined,
 ): Promise<{ rulesets: RulesetDetail[]; meta: PageMeta }> {
   const db = getDb(c);
   const rows = await db
@@ -138,7 +138,7 @@ export async function listRulesets(
 
   const window = rows.slice(start, start + limit + 1);
   const meta = buildPageMeta(window, limit, (row) => ({
-    ...buildIdCursor(row)
+    ...buildIdCursor(row),
   }));
   const page = window.slice(0, limit);
   if (page.length === 0) return { rulesets: [], meta };
@@ -154,7 +154,7 @@ export async function listRulesets(
       .select()
       .from(rulesetActions)
       .where(inArray(rulesetActions.ruleset_id, ids))
-      .orderBy(asc(rulesetActions.action_order))
+      .orderBy(asc(rulesetActions.action_order)),
   ]);
 
   const conditionsByRuleset = new Map<string, ConditionRow[]>();
@@ -172,16 +172,16 @@ export async function listRulesets(
 
   return {
     rulesets: page.map((row) =>
-      toDetail(row, conditionsByRuleset.get(row.id) ?? [], actionsByRuleset.get(row.id) ?? [])
+      toDetail(row, conditionsByRuleset.get(row.id) ?? [], actionsByRuleset.get(row.id) ?? []),
     ),
-    meta
+    meta,
   };
 }
 
 export async function getRuleset(
   c: AppContext,
   mailboxId: string,
-  rulesetId: string
+  rulesetId: string,
 ): Promise<{ ruleset: RulesetDetail } | RulesetError> {
   const db = getDb(c);
   const [row] = await db
@@ -201,7 +201,7 @@ export async function getRuleset(
       .select()
       .from(rulesetActions)
       .where(eq(rulesetActions.ruleset_id, rulesetId))
-      .orderBy(asc(rulesetActions.action_order))
+      .orderBy(asc(rulesetActions.action_order)),
   ]);
 
   return { ruleset: toDetail(row, conditionRows, actionRows) };
@@ -210,7 +210,7 @@ export async function getRuleset(
 export async function createRuleset(
   c: AppContext,
   mailboxId: string,
-  input: RulesetInput
+  input: RulesetInput,
 ): Promise<{ ruleset: RulesetDetail } | RulesetError> {
   const invalid = await validateInput(c, mailboxId, input);
   if (invalid) return invalid;
@@ -225,14 +225,14 @@ export async function createRuleset(
     field: cond.field,
     match_type: cond.match_type,
     condition_value: cond.condition_value,
-    condition_order: index
+    condition_order: index,
   }));
   const actionValues = input.actions.map((action, index) => ({
     id: uuidv7(),
     ruleset_id: id,
     action_type: action.action_type,
     action_value: action.action_value,
-    action_order: index
+    action_order: index,
   }));
 
   await db.batch([
@@ -244,10 +244,10 @@ export async function createRuleset(
       logic_operator: input.logic_operator,
       is_enabled: input.is_enabled,
       created_at: now,
-      updated_at: now
+      updated_at: now,
     }),
     ...conditionValues.map((values) => db.insert(rulesetConditions).values(values)),
-    ...actionValues.map((values) => db.insert(rulesetActions).values(values))
+    ...actionValues.map((values) => db.insert(rulesetActions).values(values)),
   ] as unknown as Parameters<typeof db.batch>[0]);
 
   return {
@@ -260,11 +260,11 @@ export async function createRuleset(
         logic_operator: input.logic_operator,
         is_enabled: input.is_enabled,
         created_at: now,
-        updated_at: now
+        updated_at: now,
       },
       conditionValues.map((v) => ({ ...v }) as ConditionRow),
-      actionValues.map((v) => ({ ...v }) as ActionRow)
-    )
+      actionValues.map((v) => ({ ...v }) as ActionRow),
+    ),
   };
 }
 
@@ -272,7 +272,7 @@ export async function updateRuleset(
   c: AppContext,
   mailboxId: string,
   rulesetId: string,
-  input: RulesetInput
+  input: RulesetInput,
 ): Promise<{ ruleset: RulesetDetail } | RulesetError> {
   const invalid = await validateInput(c, mailboxId, input);
   if (invalid) return invalid;
@@ -292,14 +292,14 @@ export async function updateRuleset(
     field: cond.field,
     match_type: cond.match_type,
     condition_value: cond.condition_value,
-    condition_order: index
+    condition_order: index,
   }));
   const actionValues = input.actions.map((action, index) => ({
     id: uuidv7(),
     ruleset_id: rulesetId,
     action_type: action.action_type,
     action_value: action.action_value,
-    action_order: index
+    action_order: index,
   }));
 
   await db.batch([
@@ -310,13 +310,13 @@ export async function updateRuleset(
         priority: input.priority,
         logic_operator: input.logic_operator,
         is_enabled: input.is_enabled,
-        updated_at: now
+        updated_at: now,
       })
       .where(eq(rulesets.id, rulesetId)),
     db.delete(rulesetConditions).where(eq(rulesetConditions.ruleset_id, rulesetId)),
     db.delete(rulesetActions).where(eq(rulesetActions.ruleset_id, rulesetId)),
     ...conditionValues.map((values) => db.insert(rulesetConditions).values(values)),
-    ...actionValues.map((values) => db.insert(rulesetActions).values(values))
+    ...actionValues.map((values) => db.insert(rulesetActions).values(values)),
   ] as unknown as Parameters<typeof db.batch>[0]);
 
   return {
@@ -327,18 +327,18 @@ export async function updateRuleset(
         priority: input.priority,
         logic_operator: input.logic_operator,
         is_enabled: input.is_enabled,
-        updated_at: now
+        updated_at: now,
       },
       conditionValues.map((v) => ({ ...v }) as ConditionRow),
-      actionValues.map((v) => ({ ...v }) as ActionRow)
-    )
+      actionValues.map((v) => ({ ...v }) as ActionRow),
+    ),
   };
 }
 
 export async function deleteRuleset(
   c: AppContext,
   mailboxId: string,
-  rulesetId: string
+  rulesetId: string,
 ): Promise<{ ok: true } | RulesetError> {
   const db = getDb(c);
   const [existing] = await db
@@ -351,7 +351,7 @@ export async function deleteRuleset(
   await db.batch([
     db.delete(rulesetConditions).where(eq(rulesetConditions.ruleset_id, rulesetId)),
     db.delete(rulesetActions).where(eq(rulesetActions.ruleset_id, rulesetId)),
-    db.delete(rulesets).where(eq(rulesets.id, rulesetId))
+    db.delete(rulesets).where(eq(rulesets.id, rulesetId)),
   ]);
 
   return { ok: true };

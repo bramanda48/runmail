@@ -6,5 +6,5 @@ export const usernameSchema = z
   .string()
   .regex(
     USERNAME_PATTERN,
-    "Username must be 6-20 characters using letters, digits, hyphen, underscore, or dot"
+    "Username must be 6-20 characters using letters, digits, hyphen, underscore, or dot",
   );

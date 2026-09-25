@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Icon } from "@/icons";
+import { cn } from "@/lib/utils";
 import {
   SelectContent,
   SelectItem,
@@ -8,12 +10,10 @@ import {
   SelectRoot,
   SelectTrigger,
   SelectValue,
-  SelectViewport
+  SelectViewport,
 } from "reka-ui";
 import type { HTMLAttributes } from "vue";
 import { computed } from "vue";
-import { Icon } from "@/icons";
-import { cn } from "@/lib/utils";
 
 interface Option {
   value: string;
@@ -41,18 +41,15 @@ const triggerClasses = computed(() =>
   cn(
     "flex h-9 w-full items-center justify-between rounded-md border bg-surface px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
     props.error ? "border-destructive" : "border-input",
-    props.class
-  )
+    props.class,
+  ),
 );
 </script>
 
 <template>
-  <div class="space-y-1.5">
+  <div class="flex flex-col gap-1.5">
     <label v-if="label" :for="id" class="text-sm font-medium text-foreground">{{ label }}</label>
-    <SelectRoot
-      :model-value="modelValue"
-      @update:model-value="emit('update:modelValue', $event)"
-    >
+    <SelectRoot :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
       <SelectTrigger :id="id" :aria-label="ariaLabel" :disabled="disabled" :class="triggerClasses">
         <SelectValue :placeholder="placeholder" class="truncate" />
         <Icon icon="lucide:chevron-down" class="size-4 shrink-0 opacity-50" />

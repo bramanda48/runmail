@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { ApiMeta, Role, User } from "@runmail/shared";
-import { computed, onMounted, ref } from "vue";
 import AdminShell from "@/components/app/admin-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
 import { Alert } from "@/components/ui/alert";
@@ -12,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogRoot,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
@@ -27,10 +25,12 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { Icon } from "@/icons";
 import { ApiError, createUser, listUsers, updateUser } from "@/lib/api";
+import type { ApiMeta, Role, User } from "@runmail/shared";
+import { computed, onMounted, ref } from "vue";
 
 const perPage = 10;
 
@@ -46,7 +46,7 @@ const start = computed(() => pageIndex.value * perPage + 1);
 const end = computed(() => start.value + users.value.length - 1);
 const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
 const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage
+  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
 );
 
 async function load(cursor?: string) {
@@ -106,7 +106,7 @@ const createSubmitting = ref(false);
 
 const roleOptions = [
   { value: "member", label: "Member" },
-  { value: "admin", label: "Admin" }
+  { value: "admin", label: "Admin" },
 ];
 
 function resetCreate() {
@@ -162,7 +162,7 @@ async function submitCreate() {
     await createUser({
       username: createUsername.value.trim(),
       password: createPassword.value,
-      role: createRole.value
+      role: createRole.value,
     });
     createOpen.value = false;
     await load(cursors.value[pageIndex.value]);
@@ -243,7 +243,7 @@ async function submitEdit() {
   try {
     const body: { role?: Role; is_active?: boolean; password?: string } = {
       role: editRole.value,
-      is_active: editIsActive.value
+      is_active: editIsActive.value,
     };
     if (editNewPassword.value) {
       body.password = editNewPassword.value;
@@ -277,11 +277,11 @@ async function submitEdit() {
         </Button>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
+      <div v-if="isLoading" class="flex flex-col gap-4">
         <Skeleton shape="list" :rows="4" />
       </div>
 
-      <div v-else-if="error" class="space-y-4">
+      <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="error">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
@@ -300,7 +300,7 @@ async function submitEdit() {
         </template>
       </EmptyState>
 
-      <div v-else class="space-y-4">
+      <div v-else class="flex flex-col gap-4">
         <div class="rounded-2xl border bg-surface p-4">
           <Table>
             <TableHeader>
@@ -357,10 +357,10 @@ async function submitEdit() {
           <DialogDescription>Isi detail pengguna baru.</DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="createInlineError" variant="error">{{ createInlineError }}</Alert>
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Username</span>
             <Input
               v-model="createUsername"
@@ -373,7 +373,7 @@ async function submitEdit() {
             </p>
           </label>
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Kata Sandi Awal</span>
             <PasswordInput
               v-model="createPassword"
@@ -387,9 +387,9 @@ async function submitEdit() {
           </label>
 
           <Select
+            id="select-create-role"
             v-model="createRole"
             label="Peran"
-            id="select-create-role"
             :options="roleOptions"
             :disabled="createSubmitting"
           />
@@ -415,7 +415,7 @@ async function submitEdit() {
           <DialogDescription>Ubah peran, status, atau kata sandi pengguna.</DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
+        <div class="flex flex-col gap-4 py-2">
           <Alert v-if="editInlineError" variant="error">{{ editInlineError }}</Alert>
 
           <div>
@@ -424,9 +424,9 @@ async function submitEdit() {
           </div>
 
           <Select
+            id="select-edit-role"
             v-model="editRole"
             label="Peran"
-            id="select-edit-role"
             :options="roleOptions"
             :disabled="editSubmitting"
             :error="Boolean(editRoleError)"
@@ -448,7 +448,7 @@ async function submitEdit() {
             />
           </div>
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Kata Sandi Baru (opsional)</span>
             <PasswordInput
               v-model="editNewPassword"

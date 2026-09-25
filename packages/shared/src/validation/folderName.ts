@@ -9,7 +9,7 @@ export const RESERVED_FOLDER_NAMES: readonly string[] = [
   "sent",
   "spam",
   "archive",
-  "trash"
+  "trash",
 ];
 
 /**
@@ -34,7 +34,7 @@ export const folderNameSchema = z
   .string()
   .refine(
     (value) => value === value.trim(),
-    "Folder name must not have leading or trailing whitespace"
+    "Folder name must not have leading or trailing whitespace",
   )
   .trim()
   .min(FOLDER_NAME_MIN_LENGTH, "Folder name is required")

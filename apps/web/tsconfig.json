@@ -2,9 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["es2022", "dom", "dom.iterable"],
-    "types": ["vite/client"],
+    "types": ["vite/client", "bun"],
     "paths": { "@/*": ["./src/*"] },
     "jsx": "preserve"
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "vite.config.ts"]
+  "include": ["src/**/*.ts", "src/**/*.vue"]
 }

@@ -10,17 +10,17 @@ export const inputVariants = cva(
         default: "",
         focus: "border-ring ring-1 ring-ring",
         disabled: "pointer-events-none cursor-not-allowed opacity-50",
-        error: "border-destructive ring-1 ring-destructive"
+        error: "border-destructive ring-1 ring-destructive",
       },
       size: {
-        md: "h-9"
-      }
+        md: "h-9",
+      },
     },
     defaultVariants: {
       variant: "default",
-      size: "md"
-    }
-  }
+      size: "md",
+    },
+  },
 );
 
 export type InputVariants = typeof inputVariants;

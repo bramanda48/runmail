@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "rimraf dist",
     "dev": "vite",
     "build": "bun src/icons/build-icon-subset.ts --check && vue-tsc -b && vite build",
     "build:icons": "bun src/icons/build-icon-subset.ts",
@@ -28,6 +29,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^22.10.0",
     "@vitejs/plugin-vue": "^5.2.0",
+    "rimraf": "^6.0.0",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.0",
     "vite": "^6.0.0",

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,12 +10,14 @@ import {
   DialogHeader,
   DialogRoot,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Icon } from "@/icons";
 import { ApiError, changePassword } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -111,7 +111,7 @@ async function confirmLogout() {
 
 <template>
   <main class="flex min-h-screen flex-col items-center justify-center bg-background p-6">
-    <div class="w-full max-w-2xl space-y-6">
+    <div class="w-full max-w-2xl flex flex-col gap-6">
       <div>
         <h1 class="text-2xl font-semibold text-foreground">Akun</h1>
         <p class="text-sm text-muted-foreground">Kelola informasi akun dan keamanan Anda.</p>
@@ -122,7 +122,7 @@ async function confirmLogout() {
           <CardTitle>Profil</CardTitle>
           <CardDescription>Informasi akun Anda saat ini.</CardDescription>
         </CardHeader>
-        <CardContent class="space-y-4">
+        <CardContent class="flex flex-col gap-4">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm text-muted-foreground">Username</p>
@@ -164,12 +164,12 @@ async function confirmLogout() {
             Setelah berhasil, Anda harus masuk kembali karena semua sesi akan diakhiri.
           </CardDescription>
         </CardHeader>
-        <CardContent class="space-y-4">
+        <CardContent class="flex flex-col gap-4">
           <Alert v-if="inlineError" variant="error">{{ inlineError }}</Alert>
           <Alert v-if="successMessage" variant="success">{{ successMessage }}</Alert>
 
-          <form class="space-y-4" @submit.prevent="handleChangePassword">
-            <label class="block space-y-1.5">
+          <form class="flex flex-col gap-4" @submit.prevent="handleChangePassword">
+            <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Kata Sandi Saat Ini</span>
               <PasswordInput
                 v-model="currentPassword"
@@ -182,7 +182,7 @@ async function confirmLogout() {
               </p>
             </label>
 
-            <label class="block space-y-1.5">
+            <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Kata Sandi Baru</span>
               <PasswordInput
                 v-model="newPassword"
@@ -196,7 +196,7 @@ async function confirmLogout() {
               </p>
             </label>
 
-            <label class="block space-y-1.5">
+            <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Konfirmasi Kata Sandi Baru</span>
               <PasswordInput
                 v-model="confirmPassword"

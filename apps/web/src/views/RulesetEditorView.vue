@@ -1,49 +1,23 @@
 <script setup lang="ts">
-import type {
-  ActionType,
-  Folder,
-  LogicOperator,
-  MatchType,
-  RuleField,
-  RulesetDetail
-} from "@runmail/shared";
-import {
-  ACTION_TYPES,
-  LOGIC_OPERATORS,
-  MATCH_TYPES,
-  RULE_FIELDS,
-  rulesetSchema,
-  validateRegexSafe
-} from "@runmail/shared";
-import { computed, onMounted, reactive, ref, watch } from "vue";
 import AppShell from "@/components/app/app-shell.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
 import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
+import RulesetActionRow, { type ActionRow } from "@/components/app/RulesetActionRow.vue";
+import RulesetConditionRow, { type ConditionRow } from "@/components/app/RulesetConditionRow.vue";
 import SyncIndicator from "@/components/app/sync-indicator.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { Icon } from "@/icons";
-import { ApiError, createRuleset, getRuleset, listFolders, updateRuleset } from "@/lib/api";
-
-interface ConditionRow {
-  id: string;
-  field: RuleField;
-  match_type: MatchType;
-  condition_value: string;
-}
-
-interface ActionRow {
-  id: string;
-  action_type: ActionType;
-  action_value: string;
-}
+import { ApiError, createRuleset, getRuleset, updateRuleset } from "@/lib/api";
+import type { LogicOperator, RulesetDetail } from "@runmail/shared";
+import { LOGIC_OPERATORS, rulesetSchema, validateRegexSafe } from "@runmail/shared";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 
 interface FormErrors {
   name?: string;
@@ -62,11 +36,11 @@ const {
   unreadCounts,
   resolveMailbox,
   loadLocalFolders,
-  watchSyncStatus
+  watchSyncStatus,
 } = useMailboxWorkspace({
   onResolveError: () => {
     notFound.value = true;
-  }
+  },
 });
 
 const rulesetId = computed(() => route.params.ruleset_id as string);
@@ -75,7 +49,6 @@ const isCreate = computed(() => rulesetId.value === "new");
 const isLoading = ref(false);
 const isSaving = ref(false);
 const notFound = ref(false);
-const folders = ref<Folder[]>([]);
 
 const form = reactive({
   name: "",
@@ -83,38 +56,19 @@ const form = reactive({
   logic_operator: "AND" as LogicOperator,
   is_enabled: true,
   conditions: [] as ConditionRow[],
-  actions: [] as ActionRow[]
+  actions: [] as ActionRow[],
 });
 
 const errors = reactive<FormErrors>({
   conditions: [],
-  actions: []
+  actions: [],
 });
 
-const folderOptions = computed(() => folders.value.map((f) => ({ value: f.id, label: f.name })));
-
-const fieldOptions = computed(() => RULE_FIELDS.map((v) => ({ value: v, label: v })));
-
-const matchTypeOptions = computed(() => MATCH_TYPES.map((v) => ({ value: v, label: v })));
-
 const logicOperatorOptions = computed(() => LOGIC_OPERATORS.map((v) => ({ value: v, label: v })));
-
-const actionTypeOptions = computed(() =>
-  ACTION_TYPES.map((v) => ({
-    value: v,
-    label:
-      v === "move_to_folder"
-        ? "Pindah ke folder"
-        : v === "mark_as_star"
-          ? "Tandai bintang"
-          : "Tandai sudah dibaca"
-  }))
-);
 
 async function init() {
   await resolveMailbox();
   if (mailboxStore.mailboxId === mailboxId.value) {
-    await loadFolders();
     await loadLocalFolders();
     await loadRuleset();
   }
@@ -125,7 +79,12 @@ function generateId() {
 }
 
 function createCondition(): ConditionRow {
-  return { id: generateId(), field: "from", match_type: "contains", condition_value: "" };
+  return {
+    id: generateId(),
+    field: "from",
+    match_type: "contains",
+    condition_value: "",
+  };
 }
 
 function createAction(): ActionRow {
@@ -150,15 +109,6 @@ function clearErrors() {
   errors.actions = form.actions.map(() => undefined);
 }
 
-async function loadFolders() {
-  try {
-    const { folders: list } = await listFolders(mailboxId.value);
-    folders.value = list;
-  } catch {
-    // Folders are only needed for action value select; failures are surfaced at save.
-  }
-}
-
 function populateDetail(detail: RulesetDetail) {
   form.name = detail.name;
   form.priority = String(detail.priority);
@@ -171,7 +121,7 @@ function populateDetail(detail: RulesetDetail) {
       id: generateId(),
       field: c.field,
       match_type: c.match_type,
-      condition_value: c.condition_value
+      condition_value: c.condition_value,
     }));
   form.actions = detail.actions
     .slice()
@@ -179,7 +129,7 @@ function populateDetail(detail: RulesetDetail) {
     .map((a) => ({
       id: generateId(),
       action_type: a.action_type,
-      action_value: a.action_value ?? ""
+      action_value: a.action_value ?? "",
     }));
   clearErrors();
 }
@@ -274,12 +224,12 @@ function validateForm(): boolean {
     conditions: form.conditions.map((c) => ({
       field: c.field,
       match_type: c.match_type,
-      condition_value: c.condition_value
+      condition_value: c.condition_value,
     })),
     actions: form.actions.map((a) => ({
       action_type: a.action_type,
-      action_value: a.action_type === "move_to_folder" ? a.action_value || null : null
-    }))
+      action_value: a.action_type === "move_to_folder" ? a.action_value || null : null,
+    })),
   });
 
   if (!parsed.success) {
@@ -363,12 +313,12 @@ async function submit() {
     conditions: form.conditions.map((c) => ({
       field: c.field,
       match_type: c.match_type,
-      condition_value: c.condition_value
+      condition_value: c.condition_value,
     })),
     actions: form.actions.map((a) => ({
       action_type: a.action_type,
-      action_value: a.action_type === "move_to_folder" ? a.action_value : null
-    }))
+      action_value: a.action_type === "move_to_folder" ? a.action_value : null,
+    })),
   };
 
   try {
@@ -421,12 +371,7 @@ watchSyncStatus();
     </template>
 
     <main class="flex flex-1 flex-col p-4 lg:p-8">
-      <Button
-        variant="ghost"
-        size="sm"
-        class="mb-4 w-fit"
-        @click="goBack"
-      >
+      <Button variant="ghost" size="sm" class="mb-4 w-fit" @click="goBack">
         <Icon icon="lucide:arrow-left" />
         <span>Kembali ke Ruleset</span>
       </Button>
@@ -435,16 +380,14 @@ watchSyncStatus();
         <h1 class="text-2xl font-semibold text-foreground">
           {{ isCreate ? "Ruleset Baru" : "Ubah Ruleset" }}
         </h1>
-        <p class="text-sm text-muted-foreground">
-          Atur kondisi dan aksi pemrosesan email.
-        </p>
+        <p class="text-sm text-muted-foreground">Atur kondisi dan aksi pemrosesan email.</p>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
+      <div v-if="isLoading" class="flex flex-col gap-4">
         <Skeleton shape="form" :rows="6" />
       </div>
 
-      <div v-else-if="notFound" class="space-y-4">
+      <div v-else-if="notFound" class="flex flex-col gap-4">
         <Alert variant="error">Ruleset tidak ditemukan.</Alert>
         <Button variant="ghost" @click="goBack">Kembali ke daftar ruleset</Button>
       </div>
@@ -453,11 +396,11 @@ watchSyncStatus();
         <CardHeader>
           <CardTitle>Detail Ruleset</CardTitle>
         </CardHeader>
-        <CardContent class="space-y-6">
+        <CardContent class="flex flex-col gap-6">
           <Alert v-if="errors.inline" variant="error">{{ errors.inline }}</Alert>
 
           <div class="grid gap-4 md:grid-cols-2">
-            <label class="block space-y-1.5">
+            <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Nama Ruleset</span>
               <Input
                 v-model="form.name"
@@ -468,7 +411,7 @@ watchSyncStatus();
               <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
             </label>
 
-            <label class="block space-y-1.5">
+            <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Prioritas</span>
               <Input
                 v-model="form.priority"
@@ -479,16 +422,18 @@ watchSyncStatus();
                 :disabled="isSaving"
                 :variant="errors.priority ? 'error' : 'default'"
               />
-              <p class="text-xs text-muted-foreground">Angka lebih kecil dieksekusi lebih dahulu.</p>
+              <p class="text-xs text-muted-foreground">
+                Angka lebih kecil dieksekusi lebih dahulu.
+              </p>
               <p v-if="errors.priority" class="text-sm text-destructive">{{ errors.priority }}</p>
             </label>
           </div>
 
           <div class="grid gap-4 md:grid-cols-2">
             <Select
+              id="select-logic-operator"
               v-model="form.logic_operator"
               label="Logika Kondisi"
-              id="select-logic-operator"
               :options="logicOperatorOptions"
               :disabled="isSaving"
             />
@@ -508,71 +453,21 @@ watchSyncStatus();
           </div>
 
           <!-- Conditions -->
-          <div class="space-y-3">
+          <div class="flex flex-col gap-3">
             <h3 class="text-sm font-semibold text-foreground">Kondisi</h3>
-            <div
-              v-for="(condition, index) in form.conditions"
-              :key="condition.id"
-              class="rounded-xl border bg-background p-3"
-            >
-              <div class="flex flex-col gap-3 md:flex-row md:items-start">
-                <div class="flex-1 space-y-3 md:space-y-0 md:flex md:gap-3">
-                  <Select
-                    v-model="condition.field"
-                    :options="fieldOptions"
-                    :disabled="isSaving"
-                    class="md:w-32"
-                    ariaLabel="Field kondisi"
-                  />
-                  <Select
-                    v-model="condition.match_type"
-                    :options="matchTypeOptions"
-                    :disabled="isSaving"
-                    class="md:w-40"
-                    ariaLabel="Jenis pencocokan"
-                  />
-                  <div class="flex-1">
-                    <Input
-                      v-model="condition.condition_value"
-                      placeholder="Nilai yang dicocokkan"
-                      :disabled="isSaving"
-                      :variant="errors.conditions[index] ? 'error' : 'default'"
-                    />
-                    <p v-if="errors.conditions[index]" class="mt-1 text-sm text-destructive">
-                      {{ errors.conditions[index] }}
-                    </p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1">
-                  <IconButton
-                    :ariaLabel="`Pindah kondisi ke atas`"
-                    variant="ghost"
-                    size="md"
-                    :disabled="isSaving || index === 0"
-                    @click="moveCondition(index, -1)"
-                  >
-                    <Icon icon="lucide:chevron-up" />
-                  </IconButton>
-                  <IconButton
-                    :ariaLabel="`Pindah kondisi ke bawah`"
-                    variant="ghost"
-                    size="md"
-                    :disabled="isSaving || index === form.conditions.length - 1"
-                    @click="moveCondition(index, 1)"
-                  >
-                    <Icon icon="lucide:chevron-down" />
-                  </IconButton>
-                  <IconButton
-                    :ariaLabel="`Hapus kondisi`"
-                    variant="ghost"
-                    size="md"
-                    :disabled="isSaving || form.conditions.length <= 1"
-                    @click="removeCondition(index)"
-                  >
-                    <Icon icon="lucide:x" />
-                  </IconButton>
-                </div>
-              </div>
+            <div v-for="(condition, index) in form.conditions" :key="condition.id">
+              <RulesetConditionRow
+                v-model:condition="form.conditions[index]"
+                :condition-index="index"
+                :is-saving="isSaving"
+                :error="errors.conditions[index]"
+                :can-move-up="index > 0"
+                :can-move-down="index < form.conditions.length - 1"
+                :can-remove="form.conditions.length > 1"
+                @remove="removeCondition(index)"
+                @move-up="moveCondition(index, -1)"
+                @move-down="moveCondition(index, 1)"
+              />
             </div>
             <Button
               type="button"
@@ -587,67 +482,22 @@ watchSyncStatus();
           </div>
 
           <!-- Actions -->
-          <div class="space-y-3">
+          <div class="flex flex-col gap-3">
             <h3 class="text-sm font-semibold text-foreground">Aksi</h3>
-            <div
-              v-for="(action, index) in form.actions"
-              :key="action.id"
-              class="rounded-xl border bg-background p-3"
-            >
-              <div class="flex flex-col gap-3 md:flex-row md:items-start">
-                <div class="flex-1 space-y-3 md:space-y-0 md:flex md:gap-3">
-                  <Select
-                    v-model="action.action_type"
-                    :options="actionTypeOptions"
-                    :disabled="isSaving"
-                    class="md:w-48"
-                    ariaLabel="Tipe aksi"
-                  />
-                  <div class="flex-1">
-                    <Select
-                      v-if="action.action_type === 'move_to_folder'"
-                      v-model="action.action_value"
-                      :options="folderOptions"
-                      placeholder="Pilih folder tujuan"
-                      :disabled="isSaving"
-                      :error="Boolean(errors.actions[index])"
-                      ariaLabel="Folder tujuan aksi"
-                    />
-                    <p v-if="errors.actions[index]" class="mt-1 text-sm text-destructive">
-                      {{ errors.actions[index] }}
-                    </p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1">
-                  <IconButton
-                    :ariaLabel="`Pindah aksi ke atas`"
-                    variant="ghost"
-                    size="md"
-                    :disabled="isSaving || index === 0"
-                    @click="moveAction(index, -1)"
-                  >
-                    <Icon icon="lucide:chevron-up" />
-                  </IconButton>
-                  <IconButton
-                    :ariaLabel="`Pindah aksi ke bawah`"
-                    variant="ghost"
-                    size="md"
-                    :disabled="isSaving || index === form.actions.length - 1"
-                    @click="moveAction(index, 1)"
-                  >
-                    <Icon icon="lucide:chevron-down" />
-                  </IconButton>
-                  <IconButton
-                    :ariaLabel="`Hapus aksi`"
-                    variant="ghost"
-                    size="md"
-                    :disabled="isSaving || form.actions.length <= 1"
-                    @click="removeAction(index)"
-                  >
-                    <Icon icon="lucide:x" />
-                  </IconButton>
-                </div>
-              </div>
+            <div v-for="(action, index) in form.actions" :key="action.id">
+              <RulesetActionRow
+                v-model:action="form.actions[index]"
+                :action-index="index"
+                :folders="localFolders"
+                :is-saving="isSaving"
+                :error="errors.actions[index]"
+                :can-move-up="index > 0"
+                :can-move-down="index < form.actions.length - 1"
+                :can-remove="form.actions.length > 1"
+                @remove="removeAction(index)"
+                @move-up="moveAction(index, -1)"
+                @move-down="moveAction(index, 1)"
+              />
             </div>
             <p class="text-xs text-muted-foreground">
               Jika ada beberapa aksi move, move terakhir menentukan folder akhir.
@@ -665,9 +515,7 @@ watchSyncStatus();
           </div>
 
           <div class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
-            <Button variant="ghost" :disabled="isSaving" @click="goBack">
-              Batal
-            </Button>
+            <Button variant="ghost" :disabled="isSaving" @click="goBack"> Batal </Button>
             <Button :disabled="isSaving" @click="submit">
               <Icon v-if="isSaving" icon="lucide:loader-circle" class="animate-spin" />
               <span>Simpan</span>
