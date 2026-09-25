@@ -418,9 +418,9 @@ watch(messageId, async () => {
           </DialogHeader>
           <div class="flex flex-col gap-4 py-2">
             <Select
+              id="select-move-target"
               v-model="moveTargetFolderId"
               label="Folder tujuan"
-              id="select-move-target"
               placeholder="Pilih folder"
               :options="folderOptions"
               :disabled="moveSubmitting"

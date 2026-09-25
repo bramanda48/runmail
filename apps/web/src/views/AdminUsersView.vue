@@ -387,9 +387,9 @@ async function submitEdit() {
           </label>
 
           <Select
+            id="select-create-role"
             v-model="createRole"
             label="Peran"
-            id="select-create-role"
             :options="roleOptions"
             :disabled="createSubmitting"
           />
@@ -424,9 +424,9 @@ async function submitEdit() {
           </div>
 
           <Select
+            id="select-edit-role"
             v-model="editRole"
             label="Peran"
-            id="select-edit-role"
             :options="roleOptions"
             :disabled="editSubmitting"
             :error="Boolean(editRoleError)"

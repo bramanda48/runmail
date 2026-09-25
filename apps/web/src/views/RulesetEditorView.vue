@@ -442,9 +442,9 @@ watchSyncStatus();
 
           <div class="grid gap-4 md:grid-cols-2">
             <Select
+              id="select-logic-operator"
               v-model="form.logic_operator"
               label="Logika Kondisi"
-              id="select-logic-operator"
               :options="logicOperatorOptions"
               :disabled="isSaving"
             />

@@ -9,16 +9,25 @@
     "dev:web": "cd apps/web && bun run dev",
     "dev:worker": "cd apps/worker && bun run dev",
     "build": "cd apps/web && bun run build",
-    "lint": "biome check .",
-    "format": "biome format --write .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "cd apps/web && bun run typecheck && cd ../../apps/worker && bun run typecheck && cd ../../packages/shared && bun run typecheck && cd ../db && bun run typecheck",
     "test": "bun test",
     "test:integration": "bun scripts/validate-migrations.ts",
     "seed:admin": "bun scripts/seed-admin.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.0.0",
+    "@eslint/js": "^10.0.1",
     "@types/bun": "^1.4.2",
-    "typescript": "^5.7.0"
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.0",
+    "eslint-plugin-vue": "^10.11.0",
+    "prettier": "^3.9.9",
+    "prettier-plugin-organize-imports": "^4.0.0",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.70.1",
+    "vue-eslint-parser": "^10.4.1"
   }
 }

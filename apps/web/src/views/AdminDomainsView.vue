@@ -363,9 +363,9 @@ async function submitAdd() {
           </Alert>
           <Select
             v-else
+            id="select-domain"
             v-model="selectedDomain"
             label="Domain"
-            id="select-domain"
             placeholder="Pilih domain"
             :options="availableDomains"
             :disabled="loadingAvailable || addSubmitting"
