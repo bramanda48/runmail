@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "build": "wrangler types && wrangler deploy --dry-run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "wrangler": "wrangler"
   },
   "dependencies": {
     "@runmail/db": "workspace:*",

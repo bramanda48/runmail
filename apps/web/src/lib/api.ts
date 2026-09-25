@@ -282,7 +282,30 @@ export async function updateUser(userId: string, body: UpdateUserInput): Promise
   return request<{ user: User }>("PATCH", `/users/${userId}`, { body });
 }
 
-// --- Domains (admin) ---
+// --- Cloudflare Integration (admin) ---
+
+export function getCloudflareOAuthStatus(): Promise<{ configured: boolean }> {
+  return request<{ configured: boolean }>("GET", "/integrations/cloudflare/status");
+}
+
+export function authorizeCloudflareOAuth(redirect_uri: string): Promise<{ authorization_url: string; state: string }> {
+  return request<{ authorization_url: string; state: string }>("POST", "/integrations/cloudflare/authorize", {
+    body: { redirect_uri }
+  });
+}
+
+export function callbackCloudflareOAuth(code: string, state: string): Promise<{ message: string }> {
+  return request<{ message: string }>("POST", "/integrations/cloudflare/callback", {
+    body: { code, state }
+  });
+}
+
+export function completeCloudflareOAuthCallback(
+  code: string,
+  state: string
+): Promise<{ message: string }> {
+  return callbackCloudflareOAuth(code, state);
+}
 
 export interface AvailableZone {
   id: string;

@@ -11,7 +11,8 @@ interface __BaseEnv_Env {
 	TRASH_SPAM_RETENTION_DAYS: "30";
 	SYNC_RETENTION_DAYS: "30";
 	JWT_SIGNING_SECRET: string;
-	CLOUDFLARE_API_TOKEN: string;
+	CLOUDFLARE_OAUTH_CLIENT_ID: string;
+	CLOUDFLARE_OAUTH_CLIENT_SECRET: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
@@ -24,7 +25,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "APP_ENV" | "JWT_ACCESS_TTL_SECONDS" | "REFRESH_TOKEN_TTL_SECONDS" | "TRASH_SPAM_RETENTION_DAYS" | "SYNC_RETENTION_DAYS" | "JWT_SIGNING_SECRET" | "CLOUDFLARE_API_TOKEN">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "APP_ENV" | "JWT_ACCESS_TTL_SECONDS" | "REFRESH_TOKEN_TTL_SECONDS" | "TRASH_SPAM_RETENTION_DAYS" | "SYNC_RETENTION_DAYS" | "JWT_SIGNING_SECRET" | "CLOUDFLARE_OAUTH_CLIENT_ID" | "CLOUDFLARE_OAUTH_CLIENT_SECRET">> {}
 }
 
 // Begin runtime types

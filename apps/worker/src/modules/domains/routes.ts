@@ -35,6 +35,17 @@ domainRoutes.get("/available", async (c) => {
     const { zones } = await service.listAvailableZones(c);
     return c.json({ data: { zones } }, 200);
   } catch (err) {
+    if (err instanceof service.CloudflareOAuthNotConfiguredError) {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
+            message: "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu."
+          }
+        },
+        400
+      );
+    }
     if (isCloudflareError(err)) {
       return c.json(cloudflareUnavailable(), 502);
     }
@@ -74,6 +85,17 @@ domainRoutes.post("/", async (c) => {
 
   const result = await service.addDomain(c, parsed.data.domain_name);
   if ("error" in result) {
+    if (result.error === "OAUTH_NOT_CONFIGURED") {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
+            message: "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu."
+          }
+        },
+        400
+      );
+    }
     if (result.error === "DOMAIN_EXISTS") {
       return c.json(
         {
@@ -116,6 +138,17 @@ domainRoutes.post("/:domain_id/verify", async (c) => {
   try {
     const result = await service.verifyDomain(c, c.req.param("domain_id") ?? "");
     if ("error" in result) {
+      if (result.error === "OAUTH_NOT_CONFIGURED") {
+        return c.json(
+          {
+            error: {
+              code: API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
+              message: "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu."
+            }
+          },
+          400
+        );
+      }
       return c.json(
         {
           error: {

@@ -1,10 +1,8 @@
 import { EmailRouting } from "cloudflare/resources/email-routing/email-routing";
 import { Zones } from "cloudflare/resources/zones/zones";
 import { createClient } from "cloudflare/tree-shakable";
-
-export interface CloudflareEnv {
-  CLOUDFLARE_API_TOKEN: string;
-}
+import type { AppContext } from "./env";
+import { getCloudflareAccessToken } from "./oauth";
 
 export interface ZoneSummary {
   id: string;
@@ -16,13 +14,30 @@ export interface EmailRoutingStatus {
   status: string;
 }
 
-export async function listZones(env: CloudflareEnv): Promise<ZoneSummary[]> {
-  const client = createClient({
+export class CloudflareOAuthNotConfiguredError extends Error {
+  constructor() {
+    super("CLOUDFLARE_OAUTH_NOT_CONFIGURED");
+    this.name = "CloudflareOAuthNotConfiguredError";
+  }
+}
+
+async function createCloudflareClient(c: AppContext) {
+  const accessToken = await getCloudflareAccessToken(c);
+
+  if (!accessToken) {
+    throw new CloudflareOAuthNotConfiguredError();
+  }
+
+  return createClient({
     resources: [Zones, EmailRouting],
-    apiToken: env.CLOUDFLARE_API_TOKEN,
+    apiToken: accessToken,
     logLevel: "off",
     timeout: 10_000
   });
+}
+
+export async function listZones(c: AppContext): Promise<ZoneSummary[]> {
+  const client = await createCloudflareClient(c);
 
   const zones: ZoneSummary[] = [];
   for await (const zone of client.zones.list({ per_page: 50 })) {
@@ -33,14 +48,10 @@ export async function listZones(env: CloudflareEnv): Promise<ZoneSummary[]> {
 }
 
 export async function getEmailRoutingStatus(
-  env: CloudflareEnv,
+  c: AppContext,
   zoneId: string
 ): Promise<EmailRoutingStatus | null> {
-  const client = createClient({
-    resources: [Zones, EmailRouting],
-    apiToken: env.CLOUDFLARE_API_TOKEN,
-    logLevel: "off"
-  });
+  const client = await createCloudflareClient(c);
 
   try {
     const settings = await client.emailRouting.get({ zone_id: zoneId });

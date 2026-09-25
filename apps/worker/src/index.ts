@@ -11,6 +11,7 @@ import { handleInboundEmail } from "./modules/email";
 import { folderRoutes } from "./modules/folders";
 import { inboxRoutes } from "./modules/inbox";
 import { mailboxRoutes } from "./modules/mailboxes";
+import { oauthRoutes } from "./modules/oauth";
 import { runRetentionCleanup } from "./modules/retention";
 import { rulesetRoutes } from "./modules/rulesets";
 import { syncRoutes } from "./modules/sync";
@@ -30,6 +31,7 @@ app.route("/api/v1/mailboxes", folderRoutes);
 app.route("/api/v1/mailboxes", rulesetRoutes);
 app.route("/api/v1/mailboxes", inboxRoutes);
 app.route("/api/v1/mailboxes", syncRoutes);
+app.route("/api/v1/integrations/cloudflare", oauthRoutes);
 
 app.onError((err, c) => {
   const logger = createLogger(c);

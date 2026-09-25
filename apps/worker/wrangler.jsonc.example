@@ -9,8 +9,10 @@
     "not_found_handling": "single-page-application"
   },
   "vars": {
+    // Cloudflare OAuth credentials are stored as secrets, not vars
+    // Use: wrangler secret put CLOUDFLARE_OAUTH_CLIENT_ID
+    // Use: wrangler secret put CLOUDFLARE_OAUTH_CLIENT_SECRET
     "APP_ENV": "development",
-    "CLOUDFLARE_ACCOUNT_ID": "YOUR_ACCOUNT_ID_HERE",
     "JWT_ACCESS_TTL_SECONDS": "900",
     "REFRESH_TOKEN_TTL_SECONDS": "2592000",
     "TRASH_SPAM_RETENTION_DAYS": "30",

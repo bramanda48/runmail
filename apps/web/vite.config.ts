@@ -6,5 +6,6 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
   resolve: { alias: { "@": path.resolve(import.meta.dirname, "./src") } },
-  server: { proxy: { "/api/v1": "http://localhost:8787" } }
+  build: { outDir: "dist", sourcemap: true },
+  server: { proxy: { "/api/v1": "http://localhost:8787" } },
 });

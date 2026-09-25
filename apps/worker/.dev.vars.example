@@ -1,10 +1,5 @@
 # Salin file ini menjadi apps/worker/.dev.vars lalu isi dengan nilai asli.
 # .dev.vars hanya berlaku untuk `wrangler dev` lokal dan tidak pernah di-commit.
 JWT_SIGNING_SECRET=<64 karakter hex — hasilkan dengan: bun -e "console.log([...crypto.getRandomValues(new Uint8Array(32))].map(b=>b.toString(16).padStart(2,'0')).join(''))">
-CLOUDFLARE_API_TOKEN=<token API Cloudflare>
-
-# Cloudflare Configuration
-# IMPORTANT: This account ID is NOT in wrangler.jsonc vars
-# Local dev: Copy this file to .dev.vars and replace with your actual account ID
-# Production: Set via `wrangler secret put CLOUDFLARE_ACCOUNT_ID`
-CLOUDFLARE_ACCOUNT_ID=YOUR_ACCOUNT_ID_HERE
+CLOUDFLARE_OAUTH_CLIENT_ID=<your_cloudflare_oauth_client_id>
+CLOUDFLARE_OAUTH_CLIENT_SECRET=<your_cloudflare_oauth_client_secret>
