@@ -19,7 +19,7 @@ export const API_ERROR_CODES = {
   CURSOR_INVALID: "CURSOR_INVALID",
   FULL_RESYNC_REQUIRED: "FULL_RESYNC_REQUIRED",
   RATE_LIMITED: "RATE_LIMITED",
-  INTERNAL_ERROR: "INTERNAL_ERROR"
+  INTERNAL_ERROR: "INTERNAL_ERROR",
 } as const;
 
 export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES];
@@ -27,7 +27,7 @@ export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES
 export function apiError(
   code: ApiErrorCode,
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): ApiError {
   return { error: { code, message, ...(details ? { details } : {}) } };
 }

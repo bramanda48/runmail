@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue";
 import { cn } from "@/lib/utils";
+import type { HTMLAttributes } from "vue";
 
 type Shape = "block" | "list" | "detail" | "form";
 
@@ -12,7 +12,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   shape: "block",
-  rows: 3
+  rows: 3,
 });
 </script>
 

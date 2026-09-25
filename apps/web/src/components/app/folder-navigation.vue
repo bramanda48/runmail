@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRoute } from "vue-router";
 import NavItem from "@/components/app/nav-item.vue";
 import type { LocalFolder } from "@/db/mailbox-db";
+import { computed } from "vue";
+import { useRoute } from "vue-router";
 
 interface Props {
   mailboxId: string;

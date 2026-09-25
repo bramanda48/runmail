@@ -20,7 +20,7 @@ watch(
   () => props.modelValue,
   (newValue) => {
     searchQuery.value = newValue;
-  }
+  },
 );
 
 function onInput(value: string) {

@@ -1,6 +1,6 @@
+import { ApiError, authorizeCloudflareOAuth, getCloudflareOAuthStatus } from "@/lib/api";
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ApiError, authorizeCloudflareOAuth, getCloudflareOAuthStatus } from "@/lib/api";
 
 export function useCloudflareOAuth() {
   const route = useRoute();
@@ -60,7 +60,7 @@ export function useCloudflareOAuth() {
       redirecting.value = false;
       notice.value = {
         variant: "error",
-        message: "Tidak dapat membuka koneksi Cloudflare. Coba hubungkan lagi."
+        message: "Tidak dapat membuka koneksi Cloudflare. Coba hubungkan lagi.",
       };
     } finally {
       connecting.value = false;
@@ -82,7 +82,7 @@ export function useCloudflareOAuth() {
     } else if (oauth === "error" || oauth === "failed" || route.query.error) {
       notice.value = {
         variant: "error",
-        message: "Koneksi Cloudflare tidak selesai. Periksa status koneksi, lalu coba lagi."
+        message: "Koneksi Cloudflare tidak selesai. Periksa status koneksi, lalu coba lagi.",
       };
     }
     if (oauth || route.query.error) {
@@ -100,8 +100,18 @@ export function useCloudflareOAuth() {
   });
 
   return {
-    configured, checking, statusError, reconnect, connecting, redirecting, notice,
-    canUseCloudflare: computed(() => configured.value === true && !connecting.value && !redirecting.value),
-    checkStatus, connect, handleOperationError
+    configured,
+    checking,
+    statusError,
+    reconnect,
+    connecting,
+    redirecting,
+    notice,
+    canUseCloudflare: computed(
+      () => configured.value === true && !connecting.value && !redirecting.value,
+    ),
+    checkStatus,
+    connect,
+    handleOperationError,
   };
 }

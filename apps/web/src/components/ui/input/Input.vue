@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { cn } from "@/lib/utils";
 import type { VariantProps } from "class-variance-authority";
 import type { HTMLAttributes, InputHTMLAttributes } from "vue";
 import { computed } from "vue";
-import { cn } from "@/lib/utils";
 import { inputVariants } from ".";
 
 interface Props {
@@ -18,13 +18,13 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   type: "text",
   variant: "default",
-  size: "md"
+  size: "md",
 });
 
 const emit = defineEmits<(e: "update:modelValue", value: string) => void>();
 
 const classes = computed(() =>
-  cn(inputVariants({ variant: props.variant, size: props.size }), props.class)
+  cn(inputVariants({ variant: props.variant, size: props.size }), props.class),
 );
 
 function onInput(event: Event) {

@@ -6,7 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogRoot,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/select";
 import type { LocalFolder } from "@/db/mailbox-db";
@@ -30,7 +30,7 @@ const moveSubmitting = ref(false);
 const folderOptions = computed(() =>
   props.folders
     .filter((f) => f.id !== props.currentFolderId)
-    .map((f) => ({ value: f.id, label: f.name }))
+    .map((f) => ({ value: f.id, label: f.name })),
 );
 
 watch(
@@ -40,7 +40,7 @@ watch(
       moveTargetFolderId.value = "";
       moveSubmitting.value = false;
     }
-  }
+  },
 );
 
 function onOpenChange(value: boolean) {
@@ -75,22 +75,11 @@ async function confirmMove() {
         </div>
       </DialogDescription>
       <DialogFooter>
-        <Button
-          variant="ghost"
-          :disabled="moveSubmitting"
-          @click="onOpenChange(false)"
-        >
+        <Button variant="ghost" :disabled="moveSubmitting" @click="onOpenChange(false)">
           Batal
         </Button>
-        <Button
-          :disabled="!moveTargetFolderId || moveSubmitting"
-          @click="confirmMove"
-        >
-          <Icon
-            v-if="moveSubmitting"
-            icon="lucide:loader-circle"
-            class="animate-spin"
-          />
+        <Button :disabled="!moveTargetFolderId || moveSubmitting" @click="confirmMove">
+          <Icon v-if="moveSubmitting" icon="lucide:loader-circle" class="animate-spin" />
           <span>Pindahkan</span>
         </Button>
       </DialogFooter>

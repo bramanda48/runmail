@@ -20,7 +20,7 @@ export interface ExecutionLogger {
 
 export function createExecutionLogger(
   execution_id: string,
-  context: Record<string, unknown>
+  context: Record<string, unknown>,
 ): ExecutionLogger {
   const base = { execution_id, ...context };
   return {
@@ -33,9 +33,9 @@ export function createExecutionLogger(
           level: "error",
           message,
           error: error instanceof Error ? error.message : String(error),
-          ...data
-        })
-      )
+          ...data,
+        }),
+      ),
   };
 }
 export function getRequestId(c: Context): string {
@@ -52,7 +52,7 @@ export function createLogger(c: Context): Logger {
   const base: LogContext = {
     request_id,
     method: c.req.method,
-    url: c.req.url
+    url: c.req.url,
   };
 
   return {
@@ -69,8 +69,8 @@ export function createLogger(c: Context): Logger {
           level: "error",
           message,
           error: error instanceof Error ? error.message : String(error),
-          ...data
-        })
-      )
+          ...data,
+        }),
+      ),
   };
 }

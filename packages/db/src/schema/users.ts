@@ -12,9 +12,9 @@ export const users = sqliteTable(
     role: text("role", { enum: userRoles }).notNull().default("member"),
     is_active: integer("is_active", { mode: "boolean" }).notNull().default(true),
     created_at: integer("created_at").notNull(),
-    updated_at: integer("updated_at").notNull()
+    updated_at: integer("updated_at").notNull(),
   },
-  (t) => [uniqueIndex("users_username_unique").on(t.username)]
+  (t) => [uniqueIndex("users_username_unique").on(t.username)],
 );
 
 export type User = typeof users.$inferSelect;

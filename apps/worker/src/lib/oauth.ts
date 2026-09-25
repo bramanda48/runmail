@@ -1,6 +1,6 @@
 import { sign, verify } from "hono/jwt";
-import type { AppContext } from "./env";
 import { deleteSetting, getSetting, SETTING_NAMES } from "../modules/settings/service";
+import type { AppContext } from "./env";
 
 type OAuthStatePayload = {
   type: "oauth_state";
@@ -17,7 +17,7 @@ export async function generateOAuthState(secret: string, redirectUri: string): P
     type: "oauth_state",
     nonce,
     redirectUri,
-    exp
+    exp,
   };
 
   return await sign(payload, secret, "HS256");
@@ -25,7 +25,7 @@ export async function generateOAuthState(secret: string, redirectUri: string): P
 
 export async function verifyOAuthState(
   secret: string,
-  state: string
+  state: string,
 ): Promise<{ valid: true; nonce: string; redirectUri: string } | { valid: false }> {
   try {
     const payload = (await verify(state, secret, "HS256")) as unknown;
@@ -70,15 +70,15 @@ export async function exchangeAuthorizationCode(params: {
     code: params.code,
     redirect_uri: params.redirectUri,
     client_id: params.clientId,
-    client_secret: params.clientSecret
+    client_secret: params.clientSecret,
   });
 
   const response = await fetch(tokenUrl, {
     method: "POST",
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: body.toString()
+    body: body.toString(),
   });
 
   if (!response.ok) {
@@ -100,15 +100,15 @@ export async function exchangeRefreshToken(params: {
     grant_type: "refresh_token",
     refresh_token: params.refreshToken,
     client_id: params.clientId,
-    client_secret: params.clientSecret
+    client_secret: params.clientSecret,
   });
 
   const response = await fetch(tokenUrl, {
     method: "POST",
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: body.toString()
+    body: body.toString(),
   });
 
   if (!response.ok) {
@@ -176,7 +176,7 @@ export async function getCloudflareAccessToken(c: AppContext): Promise<string | 
         const tokenData = await exchangeRefreshToken({
           refreshToken: setting.value,
           clientId: env.CLOUDFLARE_OAUTH_CLIENT_ID,
-          clientSecret: env.CLOUDFLARE_OAUTH_CLIENT_SECRET
+          clientSecret: env.CLOUDFLARE_OAUTH_CLIENT_SECRET,
         });
 
         setCachedAccessToken(tokenData.access_token, tokenData.expires_in);

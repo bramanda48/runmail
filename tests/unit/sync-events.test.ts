@@ -18,7 +18,7 @@ function makeTables(seed: LocalMessage[] = []): {
     },
     deleteMessage: async (id) => {
       store.delete(id);
-    }
+    },
   };
   return { tables, store };
 }
@@ -39,7 +39,7 @@ function baseMessage(overrides: Partial<LocalMessage> = {}): LocalMessage {
     folder_entered_at: 1001,
     sync_version: 1,
     updated_at: 1001,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -57,7 +57,7 @@ function snapshot(overrides: Record<string, unknown> = {}): Record<string, unkno
     folder_id: "inbox",
     folder_entered_at: 1001,
     sync_version: 7,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -68,7 +68,7 @@ describe("applySyncEvent", () => {
       sync_version: 7,
       event_type: "message_created",
       message_id: "m1",
-      payload: { message_id: "m1", sync_version: 7, message: snapshot() }
+      payload: { message_id: "m1", sync_version: 7, message: snapshot() },
     };
     await applySyncEvent(tables, event);
     const row = store.get("m1");
@@ -77,7 +77,7 @@ describe("applySyncEvent", () => {
       subject: "Hi",
       to_addresses: ["bob@example.com"],
       folder_entered_at: 1001,
-      sync_version: 7
+      sync_version: 7,
     });
   });
 
@@ -87,7 +87,7 @@ describe("applySyncEvent", () => {
       sync_version: 8,
       event_type: "message_updated",
       message_id: "m1",
-      payload: { message_id: "m1", changes: { is_read: true, is_starred: true } }
+      payload: { message_id: "m1", changes: { is_read: true, is_starred: true } },
     });
     expect(store.get("m1")).toMatchObject({ is_read: true, is_starred: true, sync_version: 8 });
   });
@@ -98,7 +98,7 @@ describe("applySyncEvent", () => {
       sync_version: 8,
       event_type: "message_updated",
       message_id: "ghost",
-      payload: { message_id: "ghost", changes: { is_read: true } }
+      payload: { message_id: "ghost", changes: { is_read: true } },
     });
     expect(store.has("ghost")).toBe(false);
   });
@@ -109,12 +109,12 @@ describe("applySyncEvent", () => {
       sync_version: 9,
       event_type: "message_moved",
       message_id: "m1",
-      payload: { message_id: "m1", folder_id: "trash", folder_entered_at: 2000 }
+      payload: { message_id: "m1", folder_id: "trash", folder_entered_at: 2000 },
     });
     expect(store.get("m1")).toMatchObject({
       folder_id: "trash",
       folder_entered_at: 2000,
-      sync_version: 9
+      sync_version: 9,
     });
   });
 
@@ -124,7 +124,7 @@ describe("applySyncEvent", () => {
       sync_version: 10,
       event_type: "message_deleted",
       message_id: "m1",
-      payload: { message_id: "m1" }
+      payload: { message_id: "m1" },
     });
     expect(store.has("m1")).toBe(false);
   });
@@ -135,7 +135,7 @@ describe("applySyncEvent", () => {
       sync_version: 11,
       event_type: "message_reacted",
       message_id: "m1",
-      payload: { message_id: "m1" }
+      payload: { message_id: "m1" },
     });
     expect(store.get("m1")).toMatchObject({ subject: "Hi", sync_version: 1 });
   });
@@ -149,16 +149,16 @@ describe("applySyncEvent", () => {
         sync_version: 1,
         event_type: "message_created",
         message_id: "m1",
-        payload: { message: { subject: "no required fields" } }
+        payload: { message: { subject: "no required fields" } },
       },
       { sync_version: 1, event_type: "message_updated", message_id: "m1", payload: {} },
       {
         sync_version: 1,
         event_type: "message_updated",
         message_id: "m1",
-        payload: { changes: {} }
+        payload: { changes: {} },
       },
-      { sync_version: 1, event_type: "message_moved", message_id: "m1", payload: {} }
+      { sync_version: 1, event_type: "message_moved", message_id: "m1", payload: {} },
     ];
     for (const event of bad) {
       await applySyncEvent(tables, event);

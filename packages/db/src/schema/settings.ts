@@ -5,7 +5,7 @@ export const settings = sqliteTable("settings", {
   name: text("name").notNull().unique(),
   value: text("value").notNull(),
   created_at: integer("created_at").notNull(),
-  updated_at: integer("updated_at").notNull()
+  updated_at: integer("updated_at").notNull(),
 });
 
 export type Setting = typeof settings.$inferSelect;

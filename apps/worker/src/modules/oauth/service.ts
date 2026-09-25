@@ -5,7 +5,7 @@ import {
   generateOAuthState,
   setCachedAccessToken,
   verifyOAuthState,
-  type CloudflareTokenResponse
+  type CloudflareTokenResponse,
 } from "../../lib/oauth";
 import { deleteSetting, getSetting, SETTING_NAMES, upsertSetting } from "../settings";
 
@@ -14,7 +14,7 @@ const CLOUDFLARE_OAUTH_SCOPES = [
   "zone-settings.read",
   "zone-settings.write",
   "email-routing-rule.read",
-  "offline_access"
+  "offline_access",
 ].join(" ");
 
 export async function getAuthorizationUrl(
@@ -22,7 +22,7 @@ export async function getAuthorizationUrl(
     CLOUDFLARE_OAUTH_CLIENT_ID: string;
     JWT_SIGNING_SECRET: string;
   },
-  redirectUri: string
+  redirectUri: string,
 ): Promise<{ url: string; state: string }> {
   const state = await generateOAuthState(env.JWT_SIGNING_SECRET, redirectUri);
 
@@ -42,7 +42,7 @@ export async function handleOAuthCallback(
     code: string;
     state: string;
     redirectUri?: string;
-  }
+  },
 ): Promise<{ success: true } | { success: false; error: string }> {
   const env = c.env as {
     CLOUDFLARE_OAUTH_CLIENT_ID: string;
@@ -67,7 +67,7 @@ export async function handleOAuthCallback(
       code: params.code,
       clientId: env.CLOUDFLARE_OAUTH_CLIENT_ID,
       clientSecret: env.CLOUDFLARE_OAUTH_CLIENT_SECRET,
-      redirectUri
+      redirectUri,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";

@@ -18,9 +18,7 @@ const open = ref(false);
 <template>
   <div class="flex min-h-screen bg-background">
     <!-- Desktop sidebar -->
-    <aside
-      class="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r bg-surface lg:flex"
-    >
+    <aside class="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r bg-surface lg:flex">
       <slot name="navigation" />
     </aside>
 
@@ -45,11 +43,7 @@ const open = ref(false);
         <slot name="topbar" />
       </header>
 
-      <main
-        :class="
-          cn('flex-1 overflow-y-auto bg-background p-4 lg:p-8', props.class)
-        "
-      >
+      <main :class="cn('flex-1 overflow-y-auto bg-background p-4 lg:p-8', props.class)">
         <slot />
       </main>
     </div>

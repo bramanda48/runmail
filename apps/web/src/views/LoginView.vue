@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
 import Wordmark from "@/components/app/wordmark.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -10,6 +8,8 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Icon } from "@/icons";
 import { ApiError, listMailboxes } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
+import { computed, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const auth = useAuthStore();
 const router = useRouter();

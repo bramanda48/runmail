@@ -5,7 +5,7 @@ import {
   issueAccessToken,
   uuidv7,
   verifyAccessToken,
-  verifyPassword
+  verifyPassword,
 } from "../../apps/worker/src/modules/auth/helpers";
 
 const UUIDV7_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -63,7 +63,7 @@ describe("issueAccessToken / verifyAccessToken", () => {
   it("roundtrips a token", async () => {
     const token = await issueAccessToken(SECRET, 3600, {
       id: "user-1",
-      role: "member"
+      role: "member",
     });
     const payload = await verifyAccessToken(SECRET, token);
     expect(payload).toEqual({ sub: "user-1", role: "member" });
@@ -72,7 +72,7 @@ describe("issueAccessToken / verifyAccessToken", () => {
   it("returns null for a tampered token", async () => {
     const token = await issueAccessToken(SECRET, 3600, {
       id: "user-1",
-      role: "member"
+      role: "member",
     });
     const parts = token.split(".");
     const flipped = parts[2][0] === "a" ? `b${parts[2].slice(1)}` : `a${parts[2].slice(1)}`;
@@ -84,7 +84,7 @@ describe("issueAccessToken / verifyAccessToken", () => {
   it("returns null when ttl is 0 (already expired)", async () => {
     const token = await issueAccessToken(SECRET, 0, {
       id: "user-1",
-      role: "member"
+      role: "member",
     });
     expect(await verifyAccessToken(SECRET, token)).toBe(null);
   });
@@ -92,7 +92,7 @@ describe("issueAccessToken / verifyAccessToken", () => {
   it("returns null for a wrong secret", async () => {
     const token = await issueAccessToken(SECRET, 3600, {
       id: "user-1",
-      role: "member"
+      role: "member",
     });
     expect(await verifyAccessToken("other-secret", token)).toBe(null);
   });

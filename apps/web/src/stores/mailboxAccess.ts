@@ -1,7 +1,7 @@
+import { ApiError, getMailbox } from "@/lib/api";
 import type { Mailbox } from "@runmail/shared";
 import { defineStore } from "pinia";
 import { computed, reactive, ref } from "vue";
-import { ApiError, getMailbox } from "@/lib/api";
 
 export type MailboxAccessVerdict = "ok" | "inactive" | "forbidden" | "not_found";
 
@@ -45,6 +45,6 @@ export const useMailboxAccessStore = defineStore("mailboxAccess", () => {
     current,
     ensureAccessible,
     setCurrent,
-    currentMailboxId
+    currentMailboxId,
   };
 });

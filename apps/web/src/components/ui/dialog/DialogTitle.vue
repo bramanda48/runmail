@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { cn } from "@/lib/utils";
 import { DialogTitle } from "reka-ui";
 import type { HTMLAttributes } from "vue";
-import { cn } from "@/lib/utils";
 
 interface Props {
   class?: HTMLAttributes["class"];
@@ -9,7 +9,7 @@ interface Props {
 
 const props = defineProps<Props>();
 </script>
- 
+
 <template>
   <DialogTitle
     as="h2"

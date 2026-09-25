@@ -1,11 +1,11 @@
-import type { Mailbox } from "@runmail/shared";
-import { defineStore } from "pinia";
-import { computed, ref } from "vue";
 import { getMailboxDb } from "@/db/mailbox-db";
 import { useMailboxAccessStore } from "@/stores/mailboxAccess";
 import { runDeltaSync } from "@/sync/engine";
 import type { PendingMutation } from "@/sync/queue";
 import { countPendingMutations, enqueueMutation, flushQueue } from "@/sync/queue";
+import type { Mailbox } from "@runmail/shared";
+import { defineStore } from "pinia";
+import { computed, ref } from "vue";
 
 export type MailboxSyncStatus = "idle" | "syncing" | "synced" | "offline" | "error" | "full_resync";
 
@@ -113,6 +113,6 @@ export const useMailboxStore = defineStore("mailbox", () => {
     runSync,
     enqueue,
     closeMailbox,
-    refreshPendingCount
+    refreshPendingCount,
   };
 });

@@ -6,8 +6,7 @@ import { applySyncEvent, type EventTables } from "./events";
 import { toLocalMessage } from "./mapping";
 
 export type SyncRunResult =
-  | { ok: true; last_sync_version: number }
-  | { ok: false; error: "network" | "auth" };
+  { ok: true; last_sync_version: number } | { ok: false; error: "network" | "auth" };
 
 /** In-flight runs per mailbox — concurrent callers share one promise. */
 const inflightRuns = new Map<string, Promise<SyncRunResult>>();
@@ -63,7 +62,7 @@ async function doRunDeltaSync(mailboxId: string): Promise<SyncRunResult> {
       last_sync_timestamp: 0,
       latest_message_id: null,
       last_full_sync_at: null,
-      updated_at: now
+      updated_at: now,
     };
     await db.sync_state.put(state);
   }
@@ -73,7 +72,7 @@ async function doRunDeltaSync(mailboxId: string): Promise<SyncRunResult> {
     getMessage: (id) => db.messages.get(id),
     putMessage: (msg: LocalMessage) => db.messages.put(msg).then(() => undefined),
     updateMessage: (id, changes) => db.messages.update(id, changes).then(() => undefined),
-    deleteMessage: (id) => db.messages.delete(id)
+    deleteMessage: (id) => db.messages.delete(id),
   };
 
   // Event loop: follow has_more until the delta is fully consumed.
@@ -116,7 +115,7 @@ async function doRunDeltaSync(mailboxId: string): Promise<SyncRunResult> {
         ...state,
         last_sync_version: watermark,
         last_full_sync_at: now,
-        updated_at: now
+        updated_at: now,
       };
       await db.sync_state.put(state);
       continue;
@@ -140,8 +139,8 @@ async function doRunDeltaSync(mailboxId: string): Promise<SyncRunResult> {
         id: f.id,
         name: f.name,
         folder_type: f.folder_type,
-        updated_at: now
-      }))
+        updated_at: now,
+      })),
     );
   } catch (err) {
     if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {

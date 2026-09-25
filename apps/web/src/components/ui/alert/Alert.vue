@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { Icon } from "@/icons";
+import { cn } from "@/lib/utils";
 import type { VariantProps } from "class-variance-authority";
 import type { HTMLAttributes } from "vue";
 import { computed } from "vue";
-import { Icon } from "@/icons";
-import { cn } from "@/lib/utils";
 // biome-ignore lint/style/useImportType: used as a runtime function in the template
 import { alertVariants } from ".";
 
@@ -13,11 +13,11 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  variant: "info"
+  variant: "info",
 });
 
 const role = computed(() =>
-  props.variant === "error" || props.variant === "warning" ? "alert" : undefined
+  props.variant === "error" || props.variant === "warning" ? "alert" : undefined,
 );
 
 const icon = computed(() => {

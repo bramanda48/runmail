@@ -13,7 +13,7 @@ export function retentionDaysFromEnv(raw: string | undefined): number {
 
 export async function runRetentionCleanup(
   env: Bindings,
-  opts?: { execution_id?: string }
+  opts?: { execution_id?: string },
 ): Promise<{ expired_messages: number; pruned_events: number }> {
   const days = retentionDaysFromEnv(env.TRASH_SPAM_RETENTION_DAYS);
   const now = Date.now();
@@ -25,7 +25,7 @@ export async function runRetentionCleanup(
     .select({
       id: messages.id,
       mailbox_id: messages.mailbox_id,
-      raw_object_key: messages.raw_object_key
+      raw_object_key: messages.raw_object_key,
     })
     .from(messages)
     .innerJoin(folders, eq(messages.folder_id, folders.id))
@@ -34,8 +34,8 @@ export async function runRetentionCleanup(
         eq(folders.folder_type, "system"),
         sql`lower(${folders.name}) IN ('trash','spam')`,
         isNotNull(messages.folder_entered_at),
-        lt(messages.folder_entered_at, cutoff)
-      )
+        lt(messages.folder_entered_at, cutoff),
+      ),
     );
 
   let totalMessagesDeleted = 0;
@@ -51,10 +51,10 @@ export async function runRetentionCleanup(
           message_id: msg.id,
           payload: sql`json_object('message_id', ${msg.id}, 'sync_version', ${versionSql}, 'timestamp', ${now})`,
           sync_version_sql: versionSql,
-          created_at: now
+          created_at: now,
         }),
         db.delete(messageRecipients).where(eq(messageRecipients.message_id, msg.id)),
-        db.delete(messages).where(eq(messages.id, msg.id))
+        db.delete(messages).where(eq(messages.id, msg.id)),
       ];
     });
     try {
@@ -67,8 +67,8 @@ export async function runRetentionCleanup(
           execution_id: opts?.execution_id,
           event: "retention_chunk_failed",
           level: "error",
-          count: chunk.length
-        })
+          count: chunk.length,
+        }),
       );
     }
   }
@@ -84,6 +84,6 @@ export async function runRetentionCleanup(
 
   return {
     expired_messages: totalMessagesDeleted,
-    pruned_events: prunedEvents
+    pruned_events: prunedEvents,
   };
 }

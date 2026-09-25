@@ -8,10 +8,7 @@ import { uuidv7 } from "../../lib/ids";
 import { isUniqueViolation } from "../../lib/sqlite";
 
 export type MailboxErrorCode =
-  | "DOMAIN_NOT_ACTIVE"
-  | "MAILBOX_ADDRESS_ALREADY_EXISTS"
-  | "NOT_FOUND"
-  | "ALREADY_LINKED";
+  "DOMAIN_NOT_ACTIVE" | "MAILBOX_ADDRESS_ALREADY_EXISTS" | "NOT_FOUND" | "ALREADY_LINKED";
 
 export type MailboxError = { error: MailboxErrorCode };
 
@@ -25,7 +22,7 @@ function toMailbox(row: MailboxRow): Mailbox {
     is_active: row.is_active,
     address: `${row.local_part}@${row.domain_name}`,
     created_at: row.created_at,
-    updated_at: row.updated_at
+    updated_at: row.updated_at,
   };
 }
 
@@ -33,7 +30,7 @@ export async function listMailboxesForUser(
   c: AppContext,
   userId: string,
   limit: number,
-  cursorId: string | undefined
+  cursorId: string | undefined,
 ): Promise<{ mailboxes: Mailbox[]; meta: PageMeta }> {
   const db = getDb(c);
   const rows = await db
@@ -44,7 +41,7 @@ export async function listMailboxesForUser(
       domain_name: domains.domain_name,
       is_active: mailboxes.is_active,
       created_at: mailboxes.created_at,
-      updated_at: mailboxes.updated_at
+      updated_at: mailboxes.updated_at,
     })
     .from(mailboxUsers)
     .innerJoin(mailboxes, eq(mailboxUsers.mailbox_id, mailboxes.id))
@@ -60,7 +57,7 @@ export async function listMailboxesForUser(
 
   const window = rows.slice(start, start + limit + 1);
   const meta = buildPageMeta(window, limit, (row) => ({
-    ...buildIdCursor(row)
+    ...buildIdCursor(row),
   }));
   return { mailboxes: window.slice(0, limit).map(toMailbox), meta };
 }
@@ -68,7 +65,7 @@ export async function listMailboxesForUser(
 export async function listAllMailboxes(
   c: AppContext,
   limit: number,
-  cursorId: string | undefined
+  cursorId: string | undefined,
 ): Promise<{ mailboxes: Mailbox[]; meta: PageMeta }> {
   const db = getDb(c);
   const rows = await db
@@ -79,7 +76,7 @@ export async function listAllMailboxes(
       domain_name: domains.domain_name,
       is_active: mailboxes.is_active,
       created_at: mailboxes.created_at,
-      updated_at: mailboxes.updated_at
+      updated_at: mailboxes.updated_at,
     })
     .from(mailboxes)
     .innerJoin(domains, eq(mailboxes.domain_id, domains.id))
@@ -93,7 +90,7 @@ export async function listAllMailboxes(
 
   const window = rows.slice(start, start + limit + 1);
   const meta = buildPageMeta(window, limit, (row) => ({
-    ...buildIdCursor(row)
+    ...buildIdCursor(row),
   }));
   return { mailboxes: window.slice(0, limit).map(toMailbox), meta };
 }
@@ -105,7 +102,7 @@ export type CreateMailboxInput = {
 
 export async function createMailbox(
   c: AppContext,
-  input: CreateMailboxInput
+  input: CreateMailboxInput,
 ): Promise<{ mailbox: Mailbox } | MailboxError> {
   const db = getDb(c);
 
@@ -125,7 +122,7 @@ export async function createMailbox(
         local_part: input.local_part,
         is_active: true,
         created_at: now,
-        updated_at: now
+        updated_at: now,
       }),
       ...SYSTEM_FOLDER_NAMES.map((name) =>
         db.insert(folders).values({
@@ -134,9 +131,9 @@ export async function createMailbox(
           name,
           folder_type: "system",
           created_at: now,
-          updated_at: now
-        })
-      )
+          updated_at: now,
+        }),
+      ),
     ]);
   } catch (err) {
     if (isUniqueViolation(err)) {
@@ -162,7 +159,7 @@ export async function getMailboxDetail(c: AppContext, mailboxId: string): Promis
       domain_name: domains.domain_name,
       is_active: mailboxes.is_active,
       created_at: mailboxes.created_at,
-      updated_at: mailboxes.updated_at
+      updated_at: mailboxes.updated_at,
     })
     .from(mailboxes)
     .innerJoin(domains, eq(mailboxes.domain_id, domains.id))
@@ -179,7 +176,7 @@ export type UpdateMailboxInput = {
 export async function updateMailbox(
   c: AppContext,
   mailboxId: string,
-  input: UpdateMailboxInput
+  input: UpdateMailboxInput,
 ): Promise<{ mailbox: Mailbox } | MailboxError> {
   const db = getDb(c);
 
@@ -191,7 +188,7 @@ export async function updateMailbox(
   if (!existing) return { error: "NOT_FOUND" };
 
   const set: Partial<typeof mailboxes.$inferInsert> = {
-    updated_at: Date.now()
+    updated_at: Date.now(),
   };
   if (input.local_part !== undefined) set.local_part = input.local_part;
   if (input.is_active !== undefined) set.is_active = input.is_active;
@@ -213,7 +210,7 @@ export async function updateMailbox(
 export async function linkUser(
   c: AppContext,
   mailboxId: string,
-  userId: string
+  userId: string,
 ): Promise<{ ok: true } | MailboxError> {
   const db = getDb(c);
 
@@ -232,7 +229,7 @@ export async function linkUser(
       id: uuidv7(),
       mailbox_id: mailboxId,
       user_id: userId,
-      created_at: Date.now()
+      created_at: Date.now(),
     });
   } catch (err) {
     if (isUniqueViolation(err)) {
@@ -247,7 +244,7 @@ export async function linkUser(
 export async function unlinkUser(
   c: AppContext,
   mailboxId: string,
-  userId: string
+  userId: string,
 ): Promise<{ ok: true } | MailboxError> {
   const db = getDb(c);
 
@@ -264,7 +261,7 @@ export async function listMailboxUsers(
   c: AppContext,
   mailboxId: string,
   limit: number,
-  cursorId: string | undefined
+  cursorId: string | undefined,
 ): Promise<{ users: MailboxLinkedUser[]; meta: PageMeta } | MailboxError> {
   const db = getDb(c);
 
@@ -280,7 +277,7 @@ export async function listMailboxUsers(
       id: users.id,
       username: users.username,
       role: users.role,
-      is_active: users.is_active
+      is_active: users.is_active,
     })
     .from(mailboxUsers)
     .innerJoin(users, eq(mailboxUsers.user_id, users.id))
@@ -295,15 +292,15 @@ export async function listMailboxUsers(
 
   const window = rows.slice(start, start + limit + 1);
   const meta = buildPageMeta(window, limit, (row) => ({
-    ...buildIdCursor(row)
+    ...buildIdCursor(row),
   }));
   return {
     users: window.slice(0, limit).map((row) => ({
       user_id: row.id,
       username: row.username,
       role: row.role,
-      is_active: row.is_active
+      is_active: row.is_active,
     })),
-    meta
+    meta,
   };
 }

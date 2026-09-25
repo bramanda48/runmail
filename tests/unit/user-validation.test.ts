@@ -3,7 +3,7 @@ import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   passwordSchema,
-  usernameSchema
+  usernameSchema,
 } from "../../packages/shared/src/index";
 
 describe("usernameSchema", () => {

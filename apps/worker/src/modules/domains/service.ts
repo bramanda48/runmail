@@ -2,7 +2,11 @@ import { domains } from "@runmail/db";
 import type { Domain, PageMeta, VerifyDomainResponse } from "@runmail/shared";
 import { buildIdCursor, buildPageMeta } from "@runmail/shared";
 import { desc, eq } from "drizzle-orm";
-import { CloudflareOAuthNotConfiguredError, getEmailRoutingStatus, listZones } from "../../lib/cloudflare";
+import {
+  CloudflareOAuthNotConfiguredError,
+  getEmailRoutingStatus,
+  listZones,
+} from "../../lib/cloudflare";
 import { getDb } from "../../lib/db";
 import type { AppContext } from "../../lib/env";
 import { uuidv7 } from "../../lib/ids";
@@ -11,7 +15,8 @@ import { isUniqueViolation } from "../../lib/sqlite";
 // Re-export for routes error handling
 export { CloudflareOAuthNotConfiguredError };
 
-export type DomainErrorCode = "DOMAIN_EXISTS" | "DOMAIN_NOT_AVAILABLE" | "NOT_FOUND" | "OAUTH_NOT_CONFIGURED";
+export type DomainErrorCode =
+  "DOMAIN_EXISTS" | "DOMAIN_NOT_AVAILABLE" | "NOT_FOUND" | "OAUTH_NOT_CONFIGURED";
 
 export type DomainError = { error: DomainErrorCode };
 
@@ -21,14 +26,14 @@ function toDomain(row: typeof domains.$inferSelect): Domain {
     domain_name: row.domain_name,
     verification_status: row.verification_status === "active" ? "active" : "pending_verification",
     created_at: row.created_at,
-    updated_at: row.updated_at
+    updated_at: row.updated_at,
   };
 }
 
 export async function listDomains(
   c: AppContext,
   limit: number,
-  cursorId: string | undefined
+  cursorId: string | undefined,
 ): Promise<{ domains: Domain[]; meta: PageMeta }> {
   const db = getDb(c);
   const rows = await db.select().from(domains).orderBy(desc(domains.created_at), desc(domains.id));
@@ -41,13 +46,13 @@ export async function listDomains(
 
   const window = rows.slice(start, start + limit + 1);
   const meta = buildPageMeta(window, limit, (row) => ({
-    ...buildIdCursor(row)
+    ...buildIdCursor(row),
   }));
   return { domains: window.slice(0, limit).map(toDomain), meta };
 }
 
 export async function listAvailableZones(
-  c: AppContext
+  c: AppContext,
 ): Promise<{ zones: Array<{ id: string; name: string }> }> {
   try {
     const zones = await listZones(c);
@@ -67,7 +72,7 @@ export async function listAvailableZones(
 
 export async function addDomain(
   c: AppContext,
-  domainName: string
+  domainName: string,
 ): Promise<{ domain: Domain } | DomainError> {
   try {
     const zones = await listZones(c);
@@ -85,7 +90,7 @@ export async function addDomain(
         domain_name: domainName,
         verification_status: "pending_verification",
         created_at: now,
-        updated_at: now
+        updated_at: now,
       });
     } catch (err) {
       if (isUniqueViolation(err)) {
@@ -109,7 +114,7 @@ export type VerifyDomainResult = VerifyDomainResponse;
 
 export async function verifyDomain(
   c: AppContext,
-  domainId: string
+  domainId: string,
 ): Promise<VerifyDomainResult | DomainError> {
   const db = getDb(c);
   const [row] = await db.select().from(domains).where(eq(domains.id, domainId)).limit(1);
@@ -123,7 +128,7 @@ export async function verifyDomain(
         domain: toDomain(row),
         cf_status: null,
         verification_checked: false,
-        reason: "zone_not_found"
+        reason: "zone_not_found",
       };
     }
 
@@ -139,7 +144,7 @@ export async function verifyDomain(
     return {
       domain: toDomain(fresh),
       cf_status: cfStatus?.status ?? null,
-      verification_checked: true
+      verification_checked: true,
     };
   } catch (err) {
     if (err instanceof CloudflareOAuthNotConfiguredError) {

@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import Dexie from "dexie";
-import { computed, onMounted, ref, watch } from "vue";
 import AppShell from "@/components/app/app-shell.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
-import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
 import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
+import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
 import SyncIndicator from "@/components/app/sync-indicator.vue";
 import EmailListContainer from "@/components/email/EmailListContainer.vue";
 import EmailMoveDialog from "@/components/email/EmailMoveDialog.vue";
@@ -14,11 +12,13 @@ import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-
 import { Icon } from "@/icons";
 import { parseSearchQuery } from "@/lib/search";
 import { computeUnreadCounts } from "@/lib/unread-counts";
+import Dexie from "dexie";
+import { computed, onMounted, ref, watch } from "vue";
 
 const { route, router, mailboxStore, mailboxId, resolveMailbox } = useMailboxWorkspace({
   onResolveError: () => {
     listError.value = "Tidak dapat memuat mailbox. Coba lagi.";
-  }
+  },
 });
 
 const folderIdParam = computed(() => route.params.folder_id as string | undefined);
@@ -83,7 +83,7 @@ function matchesSearch(message: LocalMessage, filter: ReturnType<typeof parseSea
         message.from_name,
         message.from_address,
         ...message.to_addresses,
-        message.subject
+        message.subject,
       ])
     ) {
       return false;
@@ -122,7 +122,7 @@ async function loadMessages() {
         .limit(50)
         .toArray();
       messages.value = results.sort(
-        (a, b) => b.email_date - a.email_date || b.received_at - a.received_at
+        (a, b) => b.email_date - a.email_date || b.received_at - a.received_at,
       );
       totalMessages.value = messages.value.length;
       return;
@@ -141,7 +141,7 @@ async function loadMessages() {
       .toArray();
 
     messages.value = rows.sort(
-      (a, b) => b.email_date - a.email_date || b.received_at - a.received_at
+      (a, b) => b.email_date - a.email_date || b.received_at - a.received_at,
     );
   } catch (err) {
     listError.value = "Gagal memuat daftar email.";
@@ -190,7 +190,7 @@ function toggleStar(message: LocalMessage) {
   enqueueAndRefresh({
     message_id: message.id,
     mutation_type: "star",
-    mutation_value: !message.is_starred
+    mutation_value: !message.is_starred,
   });
 }
 
@@ -198,7 +198,7 @@ function toggleRead(message: LocalMessage) {
   enqueueAndRefresh({
     message_id: message.id,
     mutation_type: "read",
-    mutation_value: !message.is_read
+    mutation_value: !message.is_read,
   });
 }
 
@@ -212,7 +212,7 @@ async function confirmMove(targetFolderId: string) {
   await enqueueAndRefresh({
     message_id: movingMessage.value.id,
     mutation_type: "move",
-    mutation_value: targetFolderId
+    mutation_value: targetFolderId,
   });
   moveOpen.value = false;
 }
@@ -222,7 +222,7 @@ function moveToTrash(message: LocalMessage) {
   enqueueAndRefresh({
     message_id: message.id,
     mutation_type: "move",
-    mutation_value: trashFolder.value.id
+    mutation_value: trashFolder.value.id,
   });
 }
 
@@ -263,7 +263,7 @@ watch(
       await loadFolders();
       refresh();
     }
-  }
+  },
 );
 </script>
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { SwitchRoot, SwitchThumb } from "reka-ui";
 import { cn } from "@/lib/utils";
+import { SwitchRoot, SwitchThumb } from "reka-ui";
 
 interface Props {
   modelValue: boolean;

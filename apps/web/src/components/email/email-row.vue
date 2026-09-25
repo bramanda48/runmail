@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { IconButton } from "@/components/ui/icon-button";
 import type { LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
+import { computed } from "vue";
 
 interface Props {
   message: LocalMessage;

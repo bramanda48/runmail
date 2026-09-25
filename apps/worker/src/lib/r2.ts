@@ -5,7 +5,7 @@ export function rawObjectKey(mailboxId: string, messageId: string): string {
 export async function putRawEmail(
   env: { RAW_EMAIL_BUCKET: R2Bucket },
   objectKey: string,
-  value: ReadableStream | ArrayBuffer | string | Blob
+  value: ReadableStream | ArrayBuffer | string | Blob,
 ): Promise<R2Object> {
   return env.RAW_EMAIL_BUCKET.put(objectKey, value).then((object) => {
     if (!object) throw new Error("R2_PUT_FAILED");
@@ -15,7 +15,7 @@ export async function putRawEmail(
 
 export async function getRawEmail(
   env: { RAW_EMAIL_BUCKET: R2Bucket },
-  objectKey: string
+  objectKey: string,
 ): Promise<R2ObjectBody | null> {
   return env.RAW_EMAIL_BUCKET.get(objectKey);
 }
@@ -26,7 +26,7 @@ export async function getRawEmail(
  */
 export async function deleteRawEmail(
   env: { RAW_EMAIL_BUCKET: R2Bucket },
-  objectKey: string
+  objectKey: string,
 ): Promise<void> {
   try {
     await env.RAW_EMAIL_BUCKET.delete(objectKey);

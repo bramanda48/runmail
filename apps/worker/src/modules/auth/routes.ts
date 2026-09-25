@@ -21,10 +21,10 @@ authRoutes.post("/login", async (c) => {
       {
         error: {
           code: API_ERROR_CODES.INVALID_CREDENTIALS,
-          message: "Username atau password salah"
-        }
+          message: "Username atau password salah",
+        },
       },
-      401
+      401,
     );
   }
 
@@ -32,7 +32,7 @@ authRoutes.post("/login", async (c) => {
 });
 
 const refreshBodySchema = z.object({
-  refresh_token: z.string().min(1)
+  refresh_token: z.string().min(1),
 });
 
 authRoutes.post("/refresh", async (c) => {
@@ -46,13 +46,13 @@ authRoutes.post("/refresh", async (c) => {
     const errors: Record<string, ApiErrorCode> = {
       TOKEN_EXPIRED: API_ERROR_CODES.TOKEN_EXPIRED,
       TOKEN_REUSED: API_ERROR_CODES.TOKEN_REUSED,
-      UNAUTHORIZED: API_ERROR_CODES.UNAUTHORIZED
+      UNAUTHORIZED: API_ERROR_CODES.UNAUTHORIZED,
     };
     const code = errors[result.error] ?? API_ERROR_CODES.UNAUTHORIZED;
     const messages: Record<string, string> = {
       TOKEN_EXPIRED: "Sesi kedaluwarsa, silakan login kembali",
       TOKEN_REUSED: "Token sudah digunakan, silakan login kembali",
-      UNAUTHORIZED: "Sesi tidak valid, silakan login kembali"
+      UNAUTHORIZED: "Sesi tidak valid, silakan login kembali",
     };
     return c.json({ error: { code, message: messages[result.error] ?? code } }, 401);
   }
@@ -61,7 +61,7 @@ authRoutes.post("/refresh", async (c) => {
 });
 
 const logoutBodySchema = z.object({
-  refresh_token: z.string().min(1)
+  refresh_token: z.string().min(1),
 });
 
 authRoutes.post("/logout", jwtAuth, async (c) => {
@@ -77,7 +77,7 @@ authRoutes.post("/logout", jwtAuth, async (c) => {
 
 const changePasswordBodySchema = z.object({
   current_password: z.string().min(1),
-  new_password: passwordSchema
+  new_password: passwordSchema,
 });
 
 authRoutes.post("/change-password", jwtAuth, async (c) => {
@@ -91,17 +91,17 @@ authRoutes.post("/change-password", jwtAuth, async (c) => {
     c,
     authUser.user_id,
     parsed.data.current_password,
-    parsed.data.new_password
+    parsed.data.new_password,
   );
   if ("error" in result) {
     return c.json(
       {
         error: {
           code: API_ERROR_CODES.INVALID_CREDENTIALS,
-          message: "Kata sandi saat ini salah"
-        }
+          message: "Kata sandi saat ini salah",
+        },
       },
-      401
+      401,
     );
   }
 

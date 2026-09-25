@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,12 +10,14 @@ import {
   DialogHeader,
   DialogRoot,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { PasswordInput } from "@/components/ui/password-input";
 import { Icon } from "@/icons";
 import { ApiError, changePassword } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const auth = useAuthStore();
 const router = useRouter();

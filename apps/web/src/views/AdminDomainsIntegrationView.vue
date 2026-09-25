@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { ApiError, completeCloudflareOAuthCallback } from "@/lib/api";
+import { nextTick, onMounted, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();

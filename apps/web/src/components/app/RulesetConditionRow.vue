@@ -31,24 +31,20 @@ const emits = defineEmits<{
   "move-down": [];
 }>();
 
-const fieldOptions = computed(() =>
-  RULE_FIELDS.map((v) => ({ value: v, label: v }))
-);
+const fieldOptions = computed(() => RULE_FIELDS.map((v) => ({ value: v, label: v })));
 
-const matchTypeOptions = computed(() =>
-  MATCH_TYPES.map((v) => ({ value: v, label: v }))
-);
+const matchTypeOptions = computed(() => MATCH_TYPES.map((v) => ({ value: v, label: v })));
 
 const localCondition = computed({
   get: () => props.condition,
-  set: (value) => emits("update:condition", value)
+  set: (value) => emits("update:condition", value),
 });
 
 watch(
   () => props.condition,
   (newValue) => {
     localCondition.value = newValue;
-  }
+  },
 );
 </script>
 

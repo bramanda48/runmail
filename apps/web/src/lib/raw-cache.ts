@@ -16,7 +16,7 @@ async function openRawCache(): Promise<Cache> {
 
 export async function getCachedRaw(
   mailboxId: string,
-  messageId: string
+  messageId: string,
 ): Promise<Response | undefined> {
   const cache = await openRawCache();
   return cache.match(rawCacheKey(mailboxId, messageId));
@@ -25,15 +25,15 @@ export async function getCachedRaw(
 export async function putCachedRaw(
   mailboxId: string,
   messageId: string,
-  blob: Blob
+  blob: Blob,
 ): Promise<void> {
   try {
     const cache = await openRawCache();
     await cache.put(
       rawCacheKey(mailboxId, messageId),
       new Response(blob, {
-        headers: { "Content-Type": "message/rfc822" }
-      })
+        headers: { "Content-Type": "message/rfc822" },
+      }),
     );
   } catch {
     // Best-effort: quota errors must never break the surrounding flow.

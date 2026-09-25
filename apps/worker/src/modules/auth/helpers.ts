@@ -24,13 +24,13 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 export async function issueAccessToken(
   secret: string,
   ttlSeconds: number,
-  user: { id: string; role: string }
+  user: { id: string; role: string },
 ) {
   const now = Math.floor(Date.now() / 1000);
   return await sign(
     { role: user.role, sub: user.id, iat: now, exp: now + ttlSeconds },
     secret,
-    "HS256"
+    "HS256",
   );
 }
 

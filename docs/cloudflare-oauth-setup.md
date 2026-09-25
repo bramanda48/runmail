@@ -20,21 +20,26 @@ Runmail menggunakan Cloudflare OAuth 2.0 untuk mengakses domain dan email routin
 **Application Name:** `Runmail`
 
 **Redirect URIs:**
+
 ```
 https://your-domain.com/admin/domains/integration
 ```
-*Ganti `your-domain.com` dengan domain Runmail Anda*
+
+_Ganti `your-domain.com` dengan domain Runmail Anda_
 
 **For development:**
+
 ```
 http://localhost:8787/admin/domains/integration
 ```
 
 **Grant Types:**
+
 - ✅ Authorization Code
 - ✅ Refresh Token
 
 **Scopes (Required):**
+
 - ✅ `account.read` — Account Read
 - ✅ `zone.read` — Zone Read
 - ✅ `zone_settings.read` — Zone Settings Read
@@ -83,6 +88,7 @@ wrangler d1 migrations apply DB
 ```
 
 Migration yang dijalankan:
+
 - `0002_lean_iceman.sql` — Creates `settings` table
 
 ---
@@ -115,6 +121,7 @@ Setelah OAuth terhubung:
 **Penyebab:** OAuth token belum tersimpan di database.
 
 **Solusi:**
+
 1. Pastikan env vars sudah di-set (`CLOUDFLARE_OAUTH_CLIENT_ID`, `CLOUDFLARE_OAUTH_CLIENT_SECRET`)
 2. Lakukan OAuth connection via UI (step 4 di atas)
 
@@ -123,6 +130,7 @@ Setelah OAuth terhubung:
 **Penyebab:** Client ID/Secret salah, atau redirect URI tidak match.
 
 **Solusi:**
+
 1. Cek Client ID/Secret di Cloudflare dashboard
 2. Pastikan redirect URI di OAuth app match dengan domain Runmail Anda
 3. Format redirect URI: `https://your-domain.com/api/v1/admin/cloudflare/oauth/callback`
@@ -132,6 +140,7 @@ Setelah OAuth terhubung:
 **Penyebab:** OAuth state JWT expired (>5 menit antara authorize dan callback).
 
 **Solusi:**
+
 1. Coba lagi OAuth flow dari awal
 2. Authorize lebih cepat di Cloudflare dashboard
 
@@ -140,6 +149,7 @@ Setelah OAuth terhubung:
 **Penyebab:** Refresh token revoked atau expired.
 
 **Solusi:**
+
 1. Reconnect OAuth via UI (alert banner akan muncul)
 2. Cek di Cloudflare dashboard apakah OAuth app masih aktif
 
@@ -190,18 +200,21 @@ Follow step 4 di atas untuk connect OAuth via UI.
 ## API Endpoints (Admin Only)
 
 **Check Status:**
+
 ```bash
 GET /api/v1/admin/cloudflare/oauth/status
 Authorization: Bearer <admin_access_token>
 ```
 
 **Initiate OAuth:**
+
 ```bash
 POST /api/v1/admin/cloudflare/oauth/authorize
 Authorization: Bearer <admin_access_token>
 ```
 
 **Disconnect OAuth:**
+
 ```bash
 DELETE /api/v1/admin/cloudflare/oauth/disconnect
 Authorization: Bearer <admin_access_token>
@@ -212,6 +225,7 @@ Authorization: Bearer <admin_access_token>
 ## Support
 
 Jika masih ada masalah, check:
+
 1. Worker logs: `wrangler tail`
 2. D1 database: `wrangler d1 execute DB --command "SELECT * FROM settings WHERE name='CLOUDFLARE_OAUTH_TOKEN'"`
 3. Cloudflare OAuth app settings di dashboard

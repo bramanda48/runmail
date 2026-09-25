@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { ApiMeta, Domain, Mailbox, MailboxLinkedUser, User } from "@runmail/shared";
-import { computed, onMounted, ref } from "vue";
 import AdminShell from "@/components/app/admin-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
 import { Alert } from "@/components/ui/alert";
@@ -12,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogRoot,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +24,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { Icon } from "@/icons";
 import {
@@ -38,8 +36,10 @@ import {
   listDomains,
   listUsers,
   unlinkMailboxUser,
-  updateMailbox
+  updateMailbox,
 } from "@/lib/api";
+import type { ApiMeta, Domain, Mailbox, MailboxLinkedUser, User } from "@runmail/shared";
+import { computed, onMounted, ref } from "vue";
 
 const perPage = 10;
 
@@ -55,7 +55,7 @@ const start = computed(() => pageIndex.value * perPage + 1);
 const end = computed(() => start.value + mailboxes.value.length - 1);
 const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
 const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage
+  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
 );
 
 async function load(cursor?: string) {
@@ -114,13 +114,13 @@ const createSubmitting = ref(false);
 const loadingDomains = ref(false);
 
 const activeDomains = computed(() =>
-  domains.value.filter((d) => d.verification_status === "active")
+  domains.value.filter((d) => d.verification_status === "active"),
 );
 const domainOptions = computed(() =>
-  activeDomains.value.map((d) => ({ value: d.id, label: d.domain_name }))
+  activeDomains.value.map((d) => ({ value: d.id, label: d.domain_name })),
 );
 const selectedDomain = computed(() =>
-  activeDomains.value.find((d) => d.id === selectedDomainId.value)
+  activeDomains.value.find((d) => d.id === selectedDomainId.value),
 );
 
 async function fetchAllDomains(): Promise<Domain[]> {
@@ -192,7 +192,7 @@ async function submitCreate() {
   try {
     await createMailbox({
       domain_id: selectedDomainId.value,
-      local_part: localPart.value.trim()
+      local_part: localPart.value.trim(),
     });
     createOpen.value = false;
     await load(cursors.value[pageIndex.value]);
@@ -268,7 +268,7 @@ const manageInlineError = ref("");
 const userOptions = computed(() =>
   allUsers.value
     .filter((u) => !linkedUsers.value.some((linked) => linked.user_id === u.id))
-    .map((u) => ({ value: u.id, label: `${u.username} (${u.role})` }))
+    .map((u) => ({ value: u.id, label: `${u.username} (${u.role})` })),
 );
 
 async function fetchAllUsers(): Promise<User[]> {
@@ -304,7 +304,7 @@ async function openManageUsers(mailbox: Mailbox) {
   linkedUsers.value = [];
   const [usersResult, linkedResult] = await Promise.allSettled([
     fetchAllUsers(),
-    loadLinkedUsers(mailbox.id)
+    loadLinkedUsers(mailbox.id),
   ]);
   if (usersResult.status === "fulfilled") {
     allUsers.value = usersResult.value;
@@ -512,10 +512,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
           <Button variant="ghost" :disabled="createSubmitting" @click="createOpen = false">
             Batal
           </Button>
-          <Button
-            :disabled="createSubmitting || activeDomains.length === 0"
-            @click="submitCreate"
-          >
+          <Button :disabled="createSubmitting || activeDomains.length === 0" @click="submitCreate">
             <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
             <span>Buat</span>
           </Button>
@@ -542,9 +539,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
           <div class="flex items-center justify-between rounded-lg border p-3">
             <div>
               <p class="text-sm font-medium text-foreground">Status Aktif</p>
-              <p class="text-xs text-muted-foreground">
-                Mailbox nonaktif tidak menerima email.
-              </p>
+              <p class="text-xs text-muted-foreground">Mailbox nonaktif tidak menerima email.</p>
             </div>
             <Switch
               :model-value="editIsActive"
@@ -644,10 +639,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
               </div>
             </div>
           </div>
-          <p
-            v-else-if="!manageLoading"
-            class="text-sm text-muted-foreground"
-          >
+          <p v-else-if="!manageLoading" class="text-sm text-muted-foreground">
             Belum ada user yang terhubung ke mailbox ini.
           </p>
         </div>

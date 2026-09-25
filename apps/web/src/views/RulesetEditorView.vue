@@ -1,16 +1,9 @@
 <script setup lang="ts">
-import type { LogicOperator, RulesetDetail } from "@runmail/shared";
-import { LOGIC_OPERATORS, rulesetSchema, validateRegexSafe } from "@runmail/shared";
-import { computed, onMounted, reactive, ref, watch } from "vue";
 import AppShell from "@/components/app/app-shell.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
 import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
-import RulesetActionRow, {
-  type ActionRow
-} from "@/components/app/RulesetActionRow.vue";
-import RulesetConditionRow, {
-  type ConditionRow
-} from "@/components/app/RulesetConditionRow.vue";
+import RulesetActionRow, { type ActionRow } from "@/components/app/RulesetActionRow.vue";
+import RulesetConditionRow, { type ConditionRow } from "@/components/app/RulesetConditionRow.vue";
 import SyncIndicator from "@/components/app/sync-indicator.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -21,7 +14,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { Icon } from "@/icons";
-import { ApiError, createRuleset, getRuleset, listFolders, updateRuleset } from "@/lib/api";
+import { ApiError, createRuleset, getRuleset, updateRuleset } from "@/lib/api";
+import type { LogicOperator, RulesetDetail } from "@runmail/shared";
+import { LOGIC_OPERATORS, rulesetSchema, validateRegexSafe } from "@runmail/shared";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 
 interface FormErrors {
   name?: string;
@@ -40,11 +36,11 @@ const {
   unreadCounts,
   resolveMailbox,
   loadLocalFolders,
-  watchSyncStatus
+  watchSyncStatus,
 } = useMailboxWorkspace({
   onResolveError: () => {
     notFound.value = true;
-  }
+  },
 });
 
 const rulesetId = computed(() => route.params.ruleset_id as string);
@@ -60,17 +56,15 @@ const form = reactive({
   logic_operator: "AND" as LogicOperator,
   is_enabled: true,
   conditions: [] as ConditionRow[],
-  actions: [] as ActionRow[]
+  actions: [] as ActionRow[],
 });
 
 const errors = reactive<FormErrors>({
   conditions: [],
-  actions: []
+  actions: [],
 });
 
-const logicOperatorOptions = computed(() =>
-  LOGIC_OPERATORS.map((v) => ({ value: v, label: v }))
-);
+const logicOperatorOptions = computed(() => LOGIC_OPERATORS.map((v) => ({ value: v, label: v })));
 
 async function init() {
   await resolveMailbox();
@@ -89,7 +83,7 @@ function createCondition(): ConditionRow {
     id: generateId(),
     field: "from",
     match_type: "contains",
-    condition_value: ""
+    condition_value: "",
   };
 }
 
@@ -127,7 +121,7 @@ function populateDetail(detail: RulesetDetail) {
       id: generateId(),
       field: c.field,
       match_type: c.match_type,
-      condition_value: c.condition_value
+      condition_value: c.condition_value,
     }));
   form.actions = detail.actions
     .slice()
@@ -135,7 +129,7 @@ function populateDetail(detail: RulesetDetail) {
     .map((a) => ({
       id: generateId(),
       action_type: a.action_type,
-      action_value: a.action_value ?? ""
+      action_value: a.action_value ?? "",
     }));
   clearErrors();
 }
@@ -230,12 +224,12 @@ function validateForm(): boolean {
     conditions: form.conditions.map((c) => ({
       field: c.field,
       match_type: c.match_type,
-      condition_value: c.condition_value
+      condition_value: c.condition_value,
     })),
     actions: form.actions.map((a) => ({
       action_type: a.action_type,
-      action_value: a.action_type === "move_to_folder" ? a.action_value || null : null
-    }))
+      action_value: a.action_type === "move_to_folder" ? a.action_value || null : null,
+    })),
   });
 
   if (!parsed.success) {
@@ -319,12 +313,12 @@ async function submit() {
     conditions: form.conditions.map((c) => ({
       field: c.field,
       match_type: c.match_type,
-      condition_value: c.condition_value
+      condition_value: c.condition_value,
     })),
     actions: form.actions.map((a) => ({
       action_type: a.action_type,
-      action_value: a.action_type === "move_to_folder" ? a.action_value : null
-    }))
+      action_value: a.action_type === "move_to_folder" ? a.action_value : null,
+    })),
   };
 
   try {
@@ -377,12 +371,7 @@ watchSyncStatus();
     </template>
 
     <main class="flex flex-1 flex-col p-4 lg:p-8">
-      <Button
-        variant="ghost"
-        size="sm"
-        class="mb-4 w-fit"
-        @click="goBack"
-      >
+      <Button variant="ghost" size="sm" class="mb-4 w-fit" @click="goBack">
         <Icon icon="lucide:arrow-left" />
         <span>Kembali ke Ruleset</span>
       </Button>
@@ -391,9 +380,7 @@ watchSyncStatus();
         <h1 class="text-2xl font-semibold text-foreground">
           {{ isCreate ? "Ruleset Baru" : "Ubah Ruleset" }}
         </h1>
-        <p class="text-sm text-muted-foreground">
-          Atur kondisi dan aksi pemrosesan email.
-        </p>
+        <p class="text-sm text-muted-foreground">Atur kondisi dan aksi pemrosesan email.</p>
       </div>
 
       <div v-if="isLoading" class="flex flex-col gap-4">
@@ -435,7 +422,9 @@ watchSyncStatus();
                 :disabled="isSaving"
                 :variant="errors.priority ? 'error' : 'default'"
               />
-              <p class="text-xs text-muted-foreground">Angka lebih kecil dieksekusi lebih dahulu.</p>
+              <p class="text-xs text-muted-foreground">
+                Angka lebih kecil dieksekusi lebih dahulu.
+              </p>
               <p v-if="errors.priority" class="text-sm text-destructive">{{ errors.priority }}</p>
             </label>
           </div>
@@ -466,10 +455,7 @@ watchSyncStatus();
           <!-- Conditions -->
           <div class="flex flex-col gap-3">
             <h3 class="text-sm font-semibold text-foreground">Kondisi</h3>
-            <div
-              v-for="(condition, index) in form.conditions"
-              :key="condition.id"
-            >
+            <div v-for="(condition, index) in form.conditions" :key="condition.id">
               <RulesetConditionRow
                 v-model:condition="form.conditions[index]"
                 :condition-index="index"
@@ -529,9 +515,7 @@ watchSyncStatus();
           </div>
 
           <div class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
-            <Button variant="ghost" :disabled="isSaving" @click="goBack">
-              Batal
-            </Button>
+            <Button variant="ghost" :disabled="isSaving" @click="goBack"> Batal </Button>
             <Button :disabled="isSaving" @click="submit">
               <Icon v-if="isSaving" icon="lucide:loader-circle" class="animate-spin" />
               <span>Simpan</span>

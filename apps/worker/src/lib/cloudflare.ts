@@ -32,7 +32,7 @@ async function createCloudflareClient(c: AppContext) {
     resources: [Zones, EmailRouting],
     apiToken: accessToken,
     logLevel: "off",
-    timeout: 10_000
+    timeout: 10_000,
   });
 }
 
@@ -49,7 +49,7 @@ export async function listZones(c: AppContext): Promise<ZoneSummary[]> {
 
 export async function getEmailRoutingStatus(
   c: AppContext,
-  zoneId: string
+  zoneId: string,
 ): Promise<EmailRoutingStatus | null> {
   const client = await createCloudflareClient(c);
 
@@ -57,7 +57,7 @@ export async function getEmailRoutingStatus(
     const settings = await client.emailRouting.get({ zone_id: zoneId });
     return {
       enabled: settings.enabled === true,
-      status: typeof settings.status === "string" ? settings.status : ""
+      status: typeof settings.status === "string" ? settings.status : "",
     };
   } catch (err: unknown) {
     if (err instanceof Error && ("status" in err ? err.status === 404 : /404/.test(err.message)))

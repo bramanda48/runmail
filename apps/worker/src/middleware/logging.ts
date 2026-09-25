@@ -11,6 +11,6 @@ export const requestLogger = createMiddleware<AppEnv>(async (c, next) => {
   const duration = Date.now() - start;
   logger.info("request_completed", {
     status: c.res.status,
-    duration_ms: duration
+    duration_ms: duration,
   });
 });

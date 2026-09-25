@@ -1,8 +1,8 @@
 import js from "@eslint/js";
-import tseslint from "typescript-eslint";
-import pluginVue from "eslint-plugin-vue";
-import vueParser from "vue-eslint-parser";
 import eslintConfigPrettier from "eslint-config-prettier";
+import pluginVue from "eslint-plugin-vue";
+import tseslint from "typescript-eslint";
+import vueParser from "vue-eslint-parser";
 
 export default tseslint.config(
   // Ignore patterns
@@ -17,8 +17,8 @@ export default tseslint.config(
       "**/.vercel/**",
       "**/.netlify/**",
       "**/coverage/**",
-      "**/.turbo/**"
-    ]
+      "**/.turbo/**",
+    ],
   },
 
   // Base configs
@@ -33,48 +33,7 @@ export default tseslint.config(
       parser: tseslint.parser,
       parserOptions: {
         ecmaVersion: "latest",
-        sourceType: "module"
-      },
-      globals: {
-        // Browser globals
-        window: "readonly",
-        document: "readonly",
-        setTimeout: "readonly",
-        clearTimeout: "readonly",
-        setInterval: "readonly",
-        clearInterval: "readonly",
-        console: "readonly",
-        fetch: "readonly",
-        localStorage: "readonly",
-        sessionStorage: "readonly",
-        navigator: "readonly",
-        Event: "readonly",
-        HTMLElement: "readonly",
-        HTMLInputElement: "readonly"
-      }
-    },
-    rules: {
-      "@typescript-eslint/no-unused-vars": [
-        "warn",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_"
-        }
-      ],
-      "@typescript-eslint/no-explicit-any": "warn",
-      "no-useless-assignment": "warn"
-    }
-  },
-
-  // Vue files
-  {
-    files: ["**/*.vue"],
-    languageOptions: {
-      parser: vueParser,
-      parserOptions: {
-        parser: tseslint.parser,
-        ecmaVersion: "latest",
-        sourceType: "module"
+        sourceType: "module",
       },
       globals: {
         // Browser globals
@@ -92,8 +51,49 @@ export default tseslint.config(
         Event: "readonly",
         HTMLElement: "readonly",
         HTMLInputElement: "readonly",
-        Blob: "readonly"
-      }
+      },
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "no-useless-assignment": "warn",
+    },
+  },
+
+  // Vue files
+  {
+    files: ["**/*.vue"],
+    languageOptions: {
+      parser: vueParser,
+      parserOptions: {
+        parser: tseslint.parser,
+        ecmaVersion: "latest",
+        sourceType: "module",
+      },
+      globals: {
+        // Browser globals
+        window: "readonly",
+        document: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        setInterval: "readonly",
+        clearInterval: "readonly",
+        console: "readonly",
+        fetch: "readonly",
+        localStorage: "readonly",
+        sessionStorage: "readonly",
+        navigator: "readonly",
+        Event: "readonly",
+        HTMLElement: "readonly",
+        HTMLInputElement: "readonly",
+        Blob: "readonly",
+      },
     },
     rules: {
       // Disable rules that conflict with Biome's previous settings
@@ -111,18 +111,19 @@ export default tseslint.config(
           html: {
             void: "always",
             normal: "always",
-            component: "always"
+            component: "always",
           },
           svg: "always",
-          math: "always"
-        }
+          math: "always",
+        },
       ],
       // Relax some common Vue warnings
       "vue/attribute-hyphenation": "off",
       "vue/require-default-prop": "off",
       "vue/attributes-order": "warn",
-      "vue/no-v-html": "warn"
-    }
+      // v-html is intentionally used for sanitized email content
+      "vue/no-v-html": "off",
+    },
   },
 
   // JavaScript files
@@ -130,10 +131,10 @@ export default tseslint.config(
     files: ["**/*.js", "**/*.mjs", "**/*.cjs"],
     languageOptions: {
       ecmaVersion: "latest",
-      sourceType: "module"
-    }
+      sourceType: "module",
+    },
   },
 
   // Prettier config last to disable conflicting rules
-  eslintConfigPrettier
+  eslintConfigPrettier,
 );

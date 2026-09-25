@@ -1,10 +1,10 @@
-import Dexie from "dexie";
 import { clearAllRawCaches } from "@/lib/raw-cache";
+import Dexie from "dexie";
 import {
   clearKnownMailboxDbNames,
   closeAllMailboxDbs,
   DB_NAME_PREFIX,
-  readKnownMailboxDbNames
+  readKnownMailboxDbNames,
 } from "./mailbox-db";
 
 /**

@@ -8,18 +8,18 @@ import {
   disconnectOAuth,
   getAuthorizationUrl,
   handleOAuthCallback,
-  isOAuthConfigured
+  isOAuthConfigured,
 } from "./service";
 
 const oauth = new Hono<AppEnv>();
 
 const authorizeSchema = z.object({
-  redirect_uri: z.string().url()
+  redirect_uri: z.string().url(),
 });
 
 const callbackSchema = z.object({
   code: z.string().min(1),
-  state: z.string().min(1)
+  state: z.string().min(1),
 });
 
 // Per-route auth: defined before the wildcard middleware below.
@@ -39,20 +39,20 @@ oauth.post("/callback", jwtAuth, requireAdmin, async (c) => {
       {
         error: {
           code: API_ERROR_CODES.VALIDATION_ERROR,
-          message: result.error
-        }
+          message: result.error,
+        },
       },
-      400
+      400,
     );
   }
 
   return c.json(
     {
       data: {
-        message: "OAuth connected successfully"
-      }
+        message: "OAuth connected successfully",
+      },
     },
-    200
+    200,
   );
 });
 
@@ -62,8 +62,8 @@ oauth.get("/status", async (c) => {
   const configured = await isOAuthConfigured(c);
   return c.json({
     data: {
-      configured
-    }
+      configured,
+    },
   });
 });
 
@@ -80,8 +80,8 @@ oauth.post("/authorize", async (c) => {
   return c.json({
     data: {
       authorization_url: url,
-      state
-    }
+      state,
+    },
   });
 });
 
@@ -90,8 +90,8 @@ oauth.delete("/disconnect", async (c) => {
 
   return c.json({
     data: {
-      message: "OAuth disconnected successfully"
-    }
+      message: "OAuth disconnected successfully",
+    },
   });
 });
 

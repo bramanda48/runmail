@@ -1,10 +1,10 @@
-import { computed, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
 import { getMailboxDb, type LocalFolder } from "@/db/mailbox-db";
 import { ApiError, getMailbox } from "@/lib/api";
 import { computeUnreadCounts } from "@/lib/unread-counts";
 import { useMailboxStore } from "@/stores/mailbox";
 import { useMailboxAccessStore } from "@/stores/mailboxAccess";
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 export interface MailboxWorkspaceOptions {
   /** Called when mailbox resolution fails for a reason other than 404/403. */
@@ -72,7 +72,7 @@ export function useMailboxWorkspace(options: MailboxWorkspaceOptions = {}) {
           await loadLocalFolders();
           await onSynced?.();
         }
-      }
+      },
     );
   }
 
@@ -85,6 +85,6 @@ export function useMailboxWorkspace(options: MailboxWorkspaceOptions = {}) {
     unreadCounts,
     resolveMailbox,
     loadLocalFolders,
-    watchSyncStatus
+    watchSyncStatus,
   };
 }

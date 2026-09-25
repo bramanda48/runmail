@@ -17,14 +17,14 @@ export function toPublicUser(row: typeof users.$inferSelect): PublicUser {
     role: row.role,
     is_active: row.is_active,
     created_at: row.created_at,
-    updated_at: row.updated_at
+    updated_at: row.updated_at,
   };
 }
 
 export async function listUsers(
   c: AppContext,
   limit: number,
-  cursorId: string | undefined
+  cursorId: string | undefined,
 ): Promise<{ users: PublicUser[]; meta: PageMeta }> {
   const db = getDb(c);
   const rows = await db.select().from(users).orderBy(desc(users.created_at), desc(users.id));
@@ -37,7 +37,7 @@ export async function listUsers(
 
   const window = rows.slice(start, start + limit + 1);
   const meta = buildPageMeta(window, limit, (row) => ({
-    ...buildIdCursor(row)
+    ...buildIdCursor(row),
   }));
   return { users: window.slice(0, limit).map(toPublicUser), meta };
 }
@@ -50,7 +50,7 @@ export type CreateUserInput = {
 
 export async function createUser(
   c: AppContext,
-  input: CreateUserInput
+  input: CreateUserInput,
 ): Promise<{ user: PublicUser } | { error: "USERNAME_EXISTS" }> {
   const db = getDb(c);
 
@@ -73,7 +73,7 @@ export async function createUser(
       role: input.role,
       is_active: true,
       created_at: now,
-      updated_at: now
+      updated_at: now,
     });
   } catch (err) {
     if (isUniqueViolation(err)) {
@@ -89,8 +89,8 @@ export async function createUser(
       role: input.role,
       is_active: true,
       created_at: now,
-      updated_at: now
-    }
+      updated_at: now,
+    },
   };
 }
 
@@ -109,7 +109,7 @@ export type UpdateUserInput = {
 export async function updateUser(
   c: AppContext,
   id: string,
-  input: UpdateUserInput
+  input: UpdateUserInput,
 ): Promise<{ user: PublicUser } | { error: "NOT_FOUND" }> {
   const db = getDb(c);
 
@@ -130,7 +130,7 @@ export async function updateUser(
       db
         .update(refreshTokens)
         .set({ revoked_at: now })
-        .where(and(eq(refreshTokens.user_id, id), isNull(refreshTokens.revoked_at)))
+        .where(and(eq(refreshTokens.user_id, id), isNull(refreshTokens.revoked_at))),
     ]);
   } else {
     await db.update(users).set(set).where(eq(users.id, id));

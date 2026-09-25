@@ -4,7 +4,7 @@ export const SYNC_EVENT_TYPES = [
   "message_created",
   "message_updated",
   "message_moved",
-  "message_deleted"
+  "message_deleted",
 ] as const;
 export type SyncEventType = (typeof SYNC_EVENT_TYPES)[number];
 
@@ -40,7 +40,4 @@ export interface MessageDeletedPayload {
 }
 
 export type SyncEventPayload =
-  | MessageCreatedPayload
-  | MessageUpdatedPayload
-  | MessageMovedPayload
-  | MessageDeletedPayload;
+  MessageCreatedPayload | MessageUpdatedPayload | MessageMovedPayload | MessageDeletedPayload;

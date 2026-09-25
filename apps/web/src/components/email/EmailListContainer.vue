@@ -32,9 +32,7 @@ const emits = defineEmits<{
   "next-page": [];
 }>();
 
-const isTrashFolder = computed(
-  () => props.activeFolder?.name.toLowerCase() === "trash"
-);
+const isTrashFolder = computed(() => props.activeFolder?.name.toLowerCase() === "trash");
 
 function emptyIcon() {
   const name = props.activeFolder?.name.toLowerCase() || "inbox";
@@ -50,9 +48,7 @@ function emptyTitle() {
   return "Belum ada email";
 }
 
-const paginationTotal = computed(
-  () => Math.ceil(props.total / props.perPage) * props.perPage
-);
+const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * props.perPage);
 </script>
 
 <template>
@@ -96,10 +92,7 @@ const paginationTotal = computed(
       @trash="emits('trash', message)"
     />
 
-    <p
-      v-if="searchQuery && messages.length >= 50"
-      class="text-sm text-muted-foreground"
-    >
+    <p v-if="searchQuery && messages.length >= 50" class="text-sm text-muted-foreground">
       Menampilkan 50 hasil pertama.
     </p>
 
@@ -113,8 +106,7 @@ const paginationTotal = computed(
       @next="emits('next-page')"
     >
       <template #range>
-        {{ (page - 1) * perPage + 1 }}–
-        {{ Math.min(page * perPage, total) }} dari {{ total }}
+        {{ (page - 1) * perPage + 1 }}– {{ Math.min(page * perPage, total) }} dari {{ total }}
       </template>
     </Pagination>
   </div>

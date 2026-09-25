@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import type { Folder } from "@runmail/shared";
-import { folderNameSchema, isReservedFolderName } from "@runmail/shared";
-import { computed, onMounted, ref, watch } from "vue";
 import AppShell from "@/components/app/app-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
@@ -15,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogRoot,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +20,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { Icon } from "@/icons";
 import { ApiError, createFolder, deleteFolder, listFolders, renameFolder } from "@/lib/api";
+import type { Folder } from "@runmail/shared";
+import { folderNameSchema, isReservedFolderName } from "@runmail/shared";
+import { computed, onMounted, ref, watch } from "vue";
 
 const {
   mailboxStore,
@@ -31,11 +31,11 @@ const {
   unreadCounts,
   resolveMailbox,
   loadLocalFolders,
-  watchSyncStatus
+  watchSyncStatus,
 } = useMailboxWorkspace({
   onResolveError: () => {
     error.value = "Tidak dapat memuat mailbox. Coba lagi.";
-  }
+  },
 });
 
 const folders = ref<Folder[]>([]);
@@ -62,12 +62,12 @@ const editSubmitting = ref(false);
 const systemFolders = computed(() =>
   folders.value
     .filter((f) => f.folder_type === "system")
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 );
 const customFolders = computed(() =>
   folders.value
     .filter((f) => f.folder_type === "custom")
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .sort((a, b) => a.name.localeCompare(b.name)),
 );
 const hasCustomFolders = computed(() => customFolders.value.length > 0);
 
@@ -303,7 +303,9 @@ watchSyncStatus();
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 class="text-2xl font-semibold text-foreground">Kelola Folder</h1>
-          <p class="text-sm text-muted-foreground">Buat dan hapus folder kustom pada mailbox ini.</p>
+          <p class="text-sm text-muted-foreground">
+            Buat dan hapus folder kustom pada mailbox ini.
+          </p>
         </div>
         <Button @click="openCreate">
           <Icon icon="lucide:folder-plus" />
@@ -463,7 +465,8 @@ watchSyncStatus();
           <DialogTitle>Hapus Folder</DialogTitle>
         </DialogHeader>
         <p class="text-sm text-foreground">
-          Hapus folder <strong>{{ folderToDelete?.name }}</strong>? Seluruh email di dalamnya akan dipindahkan ke Inbox.
+          Hapus folder <strong>{{ folderToDelete?.name }}</strong
+          >? Seluruh email di dalamnya akan dipindahkan ke Inbox.
         </p>
         <DialogFooter>
           <Button variant="ghost" :disabled="deleteSubmitting" @click="deleteOpen = false">

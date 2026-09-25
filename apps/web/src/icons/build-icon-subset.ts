@@ -10,10 +10,10 @@
 // The script also scans `src/` for icon usages and fails if any used icon is
 // missing from USED_ICONS, so a missing icon fails loudly here instead of
 // rendering nothing at runtime.
+import fullCollection from "@iconify-json/lucide/icons.json";
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import fullCollection from "@iconify-json/lucide/icons.json";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const srcDir = join(here, "..");
@@ -62,7 +62,7 @@ const USED_ICONS = [
   "trash",
   "trash-2",
   "users",
-  "x"
+  "x",
 ];
 
 interface IconifyCollection {
@@ -134,7 +134,7 @@ if (uncovered.length > 0) {
 const checkOnly = process.argv.includes("--check");
 if (checkOnly) {
   console.log(
-    `Icon check passed: ${Object.keys(subset.icons).length} icons cover all src/ usages.`
+    `Icon check passed: ${Object.keys(subset.icons).length} icons cover all src/ usages.`,
   );
   process.exit(0);
 }

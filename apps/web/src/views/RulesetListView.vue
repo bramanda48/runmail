@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { ApiMeta, RulesetDetail } from "@runmail/shared";
-import { computed, onMounted, ref, watch } from "vue";
 import AppShell from "@/components/app/app-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
@@ -14,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogRoot,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { IconButton } from "@/components/ui/icon-button";
 import { Pagination } from "@/components/ui/pagination";
@@ -26,11 +24,13 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { Icon } from "@/icons";
 import { ApiError, deleteRuleset, getRuleset, listRulesets, updateRuleset } from "@/lib/api";
+import type { ApiMeta, RulesetDetail } from "@runmail/shared";
+import { computed, onMounted, ref, watch } from "vue";
 
 const {
   router,
@@ -40,11 +40,11 @@ const {
   unreadCounts,
   resolveMailbox,
   loadLocalFolders,
-  watchSyncStatus
+  watchSyncStatus,
 } = useMailboxWorkspace({
   onResolveError: () => {
     error.value = "Tidak dapat memuat mailbox. Coba lagi.";
-  }
+  },
 });
 
 const perPage = 10;
@@ -66,7 +66,7 @@ const start = computed(() => pageIndex.value * perPage + 1);
 const end = computed(() => start.value + rulesets.value.length - 1);
 const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
 const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage
+  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
 );
 
 async function init() {
@@ -85,7 +85,7 @@ async function load(cursor?: string) {
     const { data, meta: responseMeta } = (await listRulesets(
       mailboxId.value,
       cursor,
-      perPage
+      perPage,
     )) as unknown as {
       data: { rulesets: RulesetDetail[] };
       meta?: ApiMeta;
@@ -175,12 +175,12 @@ async function toggleEnabled(ruleset: RulesetDetail, value: boolean) {
       conditions: detail.conditions.map((c) => ({
         field: c.field,
         match_type: c.match_type,
-        condition_value: c.condition_value
+        condition_value: c.condition_value,
       })),
       actions: detail.actions.map((a) => ({
         action_type: a.action_type,
-        action_value: a.action_value
-      }))
+        action_value: a.action_value,
+      })),
     });
   } catch (err) {
     // Rollback
@@ -304,16 +304,16 @@ watchSyncStatus();
                     <div class="flex items-center gap-1">
                       <IconButton
                         :ariaLabel="`Edit ruleset ${ruleset.name}`"
-variant="ghost"
-                    size="md"
+                        variant="ghost"
+                        size="md"
                         @click="editRuleset(ruleset)"
                       >
                         <Icon icon="lucide:pencil" />
                       </IconButton>
                       <IconButton
                         :ariaLabel="`Hapus ruleset ${ruleset.name}`"
-variant="ghost"
-                    size="md"
+                        variant="ghost"
+                        size="md"
                         @click="openDelete(ruleset)"
                       >
                         <Icon icon="lucide:trash" class="text-destructive" />
@@ -347,7 +347,8 @@ variant="ghost"
           <DialogTitle>Hapus Ruleset</DialogTitle>
         </DialogHeader>
         <p class="text-sm text-foreground">
-          Hapus ruleset <strong>{{ rulesetToDelete?.name }}</strong>? Tindakan ini tidak dapat dibatalkan.
+          Hapus ruleset <strong>{{ rulesetToDelete?.name }}</strong
+          >? Tindakan ini tidak dapat dibatalkan.
         </p>
         <DialogFooter>
           <Button variant="ghost" :disabled="deleteSubmitting" @click="deleteOpen = false">

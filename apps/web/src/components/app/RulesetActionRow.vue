@@ -43,24 +43,22 @@ const actionTypeOptions = computed(() =>
         ? "Pindah ke folder"
         : v === "mark_as_star"
           ? "Tandai bintang"
-          : "Tandai sudah dibaca"
-  }))
+          : "Tandai sudah dibaca",
+  })),
 );
 
-const folderOptions = computed(() =>
-  props.folders.map((f) => ({ value: f.id, label: f.name }))
-);
+const folderOptions = computed(() => props.folders.map((f) => ({ value: f.id, label: f.name })));
 
 const localAction = computed({
   get: () => props.action,
-  set: (value) => emits("update:action", value)
+  set: (value) => emits("update:action", value),
 });
 
 watch(
   () => props.action,
   (newValue) => {
     localAction.value = newValue;
-  }
+  },
 );
 </script>
 

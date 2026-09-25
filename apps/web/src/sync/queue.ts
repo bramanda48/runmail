@@ -1,7 +1,7 @@
-import type { SyncMutationItem } from "@runmail/shared";
 import { getMailboxDb, type MailboxDb, type QueueMutationType } from "@/db/mailbox-db";
 import { ApiError, getMessage, type MutationResult, postMutations } from "@/lib/api";
 import { deleteCachedRaw } from "@/lib/raw-cache";
+import type { SyncMutationItem } from "@runmail/shared";
 import { runDeltaSync } from "./engine";
 import { toLocalMessage } from "./mapping";
 
@@ -17,7 +17,7 @@ export interface PendingMutation {
 function toSyncMutationItem(
   mutationType: QueueMutationType,
   messageId: string,
-  mutationValue: boolean | string
+  mutationValue: boolean | string,
 ): SyncMutationItem | null {
   if (mutationType === "move") {
     if (typeof mutationValue !== "string") return null;
@@ -37,7 +37,7 @@ function toSyncMutationItem(
 export async function enqueueMutation(
   db: MailboxDb,
   mailboxId: string,
-  mutation: PendingMutation
+  mutation: PendingMutation,
 ): Promise<void> {
   void mailboxId;
   const now = Date.now();
@@ -46,12 +46,12 @@ export async function enqueueMutation(
     if (mutation.mutation_type === "read" && typeof mutation.mutation_value === "boolean") {
       await db.messages.update(mutation.message_id, {
         is_read: mutation.mutation_value,
-        updated_at: now
+        updated_at: now,
       });
     } else if (mutation.mutation_type === "star" && typeof mutation.mutation_value === "boolean") {
       await db.messages.update(mutation.message_id, {
         is_starred: mutation.mutation_value,
-        updated_at: now
+        updated_at: now,
       });
     } else if (mutation.mutation_type === "move" && typeof mutation.mutation_value === "string") {
       // Mirror the server's moveMessage logic: folder_entered_at is stamped
@@ -64,7 +64,7 @@ export async function enqueueMutation(
       await db.messages.update(mutation.message_id, {
         folder_id: mutation.mutation_value,
         folder_entered_at: stamp ? now : null,
-        updated_at: now
+        updated_at: now,
       });
     }
     await db.sync_queue.add({
@@ -74,7 +74,7 @@ export async function enqueueMutation(
       created_at: now,
       attempt_count: 0,
       last_attempt_at: null,
-      status: "pending"
+      status: "pending",
     });
   });
 }
@@ -94,7 +94,7 @@ export async function countPendingMutations(mailboxId: string): Promise<number> 
 async function reconcileRejectedMessage(
   db: MailboxDb,
   mailboxId: string,
-  messageId: string
+  messageId: string,
 ): Promise<void> {
   try {
     const { message } = await getMessage(mailboxId, messageId);
@@ -176,7 +176,7 @@ export async function flushQueue(mailboxId: string): Promise<FlushResult> {
         if (row.id === undefined) continue;
         await db.sync_queue.update(row.id, {
           attempt_count: row.attempt_count + 1,
-          last_attempt_at: now
+          last_attempt_at: now,
         });
       }
       break;
@@ -190,7 +190,7 @@ export async function flushQueue(mailboxId: string): Promise<FlushResult> {
         if (row.id === undefined) continue;
         await db.sync_queue.update(row.id, {
           attempt_count: row.attempt_count + 1,
-          last_attempt_at: now
+          last_attempt_at: now,
         });
       }
       break;

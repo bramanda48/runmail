@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { ApiMeta, Role, User } from "@runmail/shared";
-import { computed, onMounted, ref } from "vue";
 import AdminShell from "@/components/app/admin-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
 import { Alert } from "@/components/ui/alert";
@@ -12,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogRoot,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
@@ -27,10 +25,12 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { Icon } from "@/icons";
 import { ApiError, createUser, listUsers, updateUser } from "@/lib/api";
+import type { ApiMeta, Role, User } from "@runmail/shared";
+import { computed, onMounted, ref } from "vue";
 
 const perPage = 10;
 
@@ -46,7 +46,7 @@ const start = computed(() => pageIndex.value * perPage + 1);
 const end = computed(() => start.value + users.value.length - 1);
 const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
 const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage
+  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
 );
 
 async function load(cursor?: string) {
@@ -106,7 +106,7 @@ const createSubmitting = ref(false);
 
 const roleOptions = [
   { value: "member", label: "Member" },
-  { value: "admin", label: "Admin" }
+  { value: "admin", label: "Admin" },
 ];
 
 function resetCreate() {
@@ -162,7 +162,7 @@ async function submitCreate() {
     await createUser({
       username: createUsername.value.trim(),
       password: createPassword.value,
-      role: createRole.value
+      role: createRole.value,
     });
     createOpen.value = false;
     await load(cursors.value[pageIndex.value]);
@@ -243,7 +243,7 @@ async function submitEdit() {
   try {
     const body: { role?: Role; is_active?: boolean; password?: string } = {
       role: editRole.value,
-      is_active: editIsActive.value
+      is_active: editIsActive.value,
     };
     if (editNewPassword.value) {
       body.password = editNewPassword.value;

@@ -3,7 +3,7 @@ import {
   buildMessageCursor,
   decodeCursor,
   encodeCursor,
-  syncMutationItemSchema
+  syncMutationItemSchema,
 } from "../../packages/shared/src/index";
 
 describe("decodeCursor MessageCursorPayload roundtrip", () => {
@@ -16,7 +16,7 @@ describe("decodeCursor MessageCursorPayload roundtrip", () => {
   it("roundtrips buildMessageCursor output", () => {
     const cursor = buildMessageCursor({
       email_date: 1757452800000,
-      message_id: "0193a1b2-uuid7"
+      message_id: "0193a1b2-uuid7",
     });
     expect(decodeCursor<typeof cursor>(encodeCursor({ ...cursor }))).toEqual(cursor);
   });
@@ -50,7 +50,7 @@ describe("syncMutationItemSchema discriminated union", () => {
     const parsed = syncMutationItemSchema.safeParse({
       message_id: "msg-1",
       mutation_type: "read",
-      mutation_value: true
+      mutation_value: true,
     });
     expect(parsed.success).toBe(true);
   });
@@ -59,7 +59,7 @@ describe("syncMutationItemSchema discriminated union", () => {
     const parsed = syncMutationItemSchema.safeParse({
       message_id: "msg-1",
       mutation_type: "star",
-      mutation_value: false
+      mutation_value: false,
     });
     expect(parsed.success).toBe(true);
   });
@@ -68,7 +68,7 @@ describe("syncMutationItemSchema discriminated union", () => {
     const parsed = syncMutationItemSchema.safeParse({
       message_id: "msg-1",
       mutation_type: "move",
-      mutation_value: "folder-id"
+      mutation_value: "folder-id",
     });
     expect(parsed.success).toBe(true);
   });
@@ -76,7 +76,7 @@ describe("syncMutationItemSchema discriminated union", () => {
   it("rejects a missing discriminator", () => {
     const parsed = syncMutationItemSchema.safeParse({
       message_id: "msg-1",
-      mutation_value: true
+      mutation_value: true,
     });
     expect(parsed.success).toBe(false);
   });
@@ -85,7 +85,7 @@ describe("syncMutationItemSchema discriminated union", () => {
     const parsed = syncMutationItemSchema.safeParse({
       message_id: "msg-1",
       mutation_type: "delete",
-      mutation_value: true
+      mutation_value: true,
     });
     expect(parsed.success).toBe(false);
   });
@@ -94,7 +94,7 @@ describe("syncMutationItemSchema discriminated union", () => {
     const parsed = syncMutationItemSchema.safeParse({
       message_id: "msg-1",
       mutation_type: "read",
-      mutation_value: "folder-id"
+      mutation_value: "folder-id",
     });
     expect(parsed.success).toBe(false);
   });

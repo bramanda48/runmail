@@ -39,23 +39,23 @@ app.onError((err, c) => {
   if (err instanceof HTTPException) {
     logger.warn("HTTP exception", {
       status: err.status,
-      message: err.message
+      message: err.message,
     });
     return c.json({ error: { message: err.message } }, err.status);
   }
 
   logger.error("Unhandled error", err, {
-    path: c.req.path
+    path: c.req.path,
   });
 
   return c.json(
     {
       error: {
         code: "INTERNAL_ERROR",
-        message: "An unexpected error occurred"
-      }
+        message: "An unexpected error occurred",
+      },
     },
-    500
+    500,
   );
 });
 
@@ -79,7 +79,7 @@ export default {
     ctx.waitUntil(
       runRetentionCleanup(env, { execution_id })
         .then((r) => logger.info("retention_run", { ...r }))
-        .catch((err) => logger.error("retention_run_failed", err))
+        .catch((err) => logger.error("retention_run_failed", err)),
     );
-  }
+  },
 };
