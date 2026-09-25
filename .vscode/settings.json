@@ -1,5 +1,7 @@
 {
   "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "editor.guides.bracketPairs": "active",
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
@@ -19,5 +21,16 @@
     "javascript",
     "typescript",
     "vue"
-  ]
+  ],
+  "json.schemas": [
+    {
+      "fileMatch": ["*.jsonc"],
+      "schema": {
+          "allowTrailingCommas": true
+      }
+    }
+  ],
+  "json.schemaDownload.trustedDomains": { 
+    "*": true 
+  },
 }
