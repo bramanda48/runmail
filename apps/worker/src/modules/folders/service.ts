@@ -58,24 +58,24 @@ export async function createFolder(
   const now = Date.now();
   const id = uuidv7();
   try {
-    await db.insert(folders).values({
-      id,
-      mailbox_id: mailboxId,
-      name,
-      folder_type: "custom",
-      created_at: now,
-      updated_at: now,
-    });
+    const [row] = await db
+      .insert(folders)
+      .values({
+        id,
+        mailbox_id: mailboxId,
+        name,
+        folder_type: "custom",
+        created_at: now,
+        updated_at: now,
+      })
+      .returning();
+    return { folder: toFolder(row) };
   } catch (err) {
     if (isUniqueViolation(err)) {
       return { error: "FOLDER_NAME_CONFLICT" };
     }
     throw err;
   }
-
-  const [row] = await db.select().from(folders).where(eq(folders.id, id)).limit(1);
-  if (!row) return { error: "NOT_FOUND" };
-  return { folder: toFolder(row) };
 }
 
 export async function deleteFolder(
@@ -205,15 +205,17 @@ export async function renameFolder(
 
   const now = Date.now();
   try {
-    await db.update(folders).set({ name, updated_at: now }).where(eq(folders.id, folderId));
+    const [row] = await db
+      .update(folders)
+      .set({ name, updated_at: now })
+      .where(eq(folders.id, folderId))
+      .returning();
+    if (!row) return { error: "NOT_FOUND" };
+    return { folder: toFolder(row) };
   } catch (err) {
     if (isUniqueViolation(err)) {
       return { error: "FOLDER_NAME_CONFLICT" };
     }
     throw err;
   }
-
-  const [row] = await db.select().from(folders).where(eq(folders.id, folderId)).limit(1);
-  if (!row) return { error: "NOT_FOUND" };
-  return { folder: toFolder(row) };
 }

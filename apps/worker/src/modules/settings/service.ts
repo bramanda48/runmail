@@ -26,7 +26,7 @@ export async function upsertSetting(
   const now = Date.now();
   const id = uuidv7();
 
-  await db
+  const [row] = await db
     .insert(settings)
     .values({
       id,
@@ -38,9 +38,9 @@ export async function upsertSetting(
     .onConflictDoUpdate({
       target: settings.name,
       set: { value, updated_at: now },
-    });
+    })
+    .returning();
 
-  const [row] = await db.select().from(settings).where(eq(settings.name, name)).limit(1);
   if (!row) throw new Error(`Setting ${name} not found after upsert`);
   return row;
 }

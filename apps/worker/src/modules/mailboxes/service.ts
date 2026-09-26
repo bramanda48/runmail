@@ -142,11 +142,17 @@ export async function createMailbox(
     throw err;
   }
 
-  const mailbox = await getMailboxDetail(c, id);
-  if (!mailbox) {
-    return { error: "NOT_FOUND" };
-  }
-  return { mailbox };
+  return {
+    mailbox: {
+      id,
+      domain_id: input.domain_id,
+      local_part: input.local_part,
+      is_active: true,
+      address: `${input.local_part}@${domain.domain_name}`,
+      created_at: now,
+      updated_at: now,
+    },
+  };
 }
 
 export async function getMailboxDetail(c: AppContext, mailboxId: string): Promise<Mailbox | null> {
@@ -181,7 +187,7 @@ export async function updateMailbox(
   const db = getDb(c);
 
   const [existing] = await db
-    .select({ id: mailboxes.id })
+    .select({ id: mailboxes.id, domain_id: mailboxes.domain_id })
     .from(mailboxes)
     .where(eq(mailboxes.id, mailboxId))
     .limit(1);

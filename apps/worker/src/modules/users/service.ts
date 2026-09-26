@@ -132,11 +132,12 @@ export async function updateUser(
         .set({ revoked_at: now })
         .where(and(eq(refreshTokens.user_id, id), isNull(refreshTokens.revoked_at))),
     ]);
+    const [row] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    if (!row) return { error: "NOT_FOUND" };
+    return { user: toPublicUser(row) };
   } else {
-    await db.update(users).set(set).where(eq(users.id, id));
+    const [row] = await db.update(users).set(set).where(eq(users.id, id)).returning();
+    if (!row) return { error: "NOT_FOUND" };
+    return { user: toPublicUser(row) };
   }
-
-  const [row] = await db.select().from(users).where(eq(users.id, id)).limit(1);
-  if (!row) return { error: "NOT_FOUND" };
-  return { user: toPublicUser(row) };
 }

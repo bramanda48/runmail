@@ -192,8 +192,13 @@ async function setFlag(
     }),
   ] as unknown as Parameters<typeof db.batch>[0]);
 
-  const updated = await loadMessage(db, mailboxId, messageId);
-  if (!updated) return { error: "NOT_FOUND" };
+  // Return manual data dari row awal dengan field yang diupdate
+  const updated: MessageRow = {
+    ...row,
+    [field]: value,
+    sync_version: 0, // akan di-override oleh versionSql di database, tapi kita return row.sync_version + 1 sebagai estimasi
+    updated_at: now,
+  };
   return { message: await withRecipients(db, updated) };
 }
 
@@ -269,8 +274,14 @@ export async function moveMessage(
     }),
   ] as unknown as Parameters<typeof db.batch>[0]);
 
-  const updated = await loadMessage(db, mailboxId, messageId);
-  if (!updated) return { error: "NOT_FOUND" };
+  // Return manual data dari row awal dengan field yang diupdate
+  const updated: MessageRow = {
+    ...row,
+    folder_id: targetFolderId,
+    folder_entered_at: folderEnteredAt,
+    sync_version: 0, // akan di-override oleh versionSql di database
+    updated_at: now,
+  };
   return { message: await withRecipients(db, updated) };
 }
 

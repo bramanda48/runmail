@@ -85,23 +85,23 @@ export async function addDomain(
     const id = uuidv7();
 
     try {
-      await db.insert(domains).values({
-        id,
-        domain_name: domainName,
-        verification_status: "pending_verification",
-        created_at: now,
-        updated_at: now,
-      });
+      const [row] = await db
+        .insert(domains)
+        .values({
+          id,
+          domain_name: domainName,
+          verification_status: "pending_verification",
+          created_at: now,
+          updated_at: now,
+        })
+        .returning();
+      return { domain: toDomain(row) };
     } catch (err) {
       if (isUniqueViolation(err)) {
         return { error: "DOMAIN_EXISTS" };
       }
       throw err;
     }
-
-    const [row] = await db.select().from(domains).where(eq(domains.id, id)).limit(1);
-    if (!row) return { error: "NOT_FOUND" };
-    return { domain: toDomain(row) };
   } catch (err) {
     if (err instanceof CloudflareOAuthNotConfiguredError) {
       return { error: "OAUTH_NOT_CONFIGURED" };
@@ -134,12 +134,12 @@ export async function verifyDomain(
 
     const cfStatus = await getEmailRoutingStatus(c, zone.id);
     const nextStatus = cfStatus?.status === "ready" ? "active" : "pending_verification";
-    await db
+    const [fresh] = await db
       .update(domains)
       .set({ verification_status: nextStatus, updated_at: Date.now() })
-      .where(eq(domains.id, domainId));
+      .where(eq(domains.id, domainId))
+      .returning();
 
-    const [fresh] = await db.select().from(domains).where(eq(domains.id, domainId)).limit(1);
     if (!fresh) return { error: "NOT_FOUND" };
     return {
       domain: toDomain(fresh),
