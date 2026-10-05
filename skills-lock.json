@@ -55,12 +55,6 @@
       "skillPath": "skills/shadcn-vue/SKILL.md",
       "computedHash": "b6502f4cd142f43590f0269c492dae1aba2a77e1871d428fdca3fca8de20e2fc"
     },
-    "turborepo": {
-      "source": "bramanda48/skills",
-      "sourceType": "github",
-      "skillPath": "skills/turborepo/SKILL.md",
-      "computedHash": "eaad8f1bd744d73cf91fc7d758716a2c00f8183a47c118872571fd939a25791d"
-    },
     "vite": {
       "source": "bramanda48/skills",
       "sourceType": "github",
