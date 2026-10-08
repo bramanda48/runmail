@@ -72,7 +72,7 @@ Backend menggunakan modular monolith agar autentikasi, user, domain, mailbox, em
 4. **Mutation:** UI optimistic → Dexie update → sync queue → batch POST ke backend → apply sync_version
 
 ### Design System
-Material Design 3-inspired dengan tonal elevation (no heavy shadow), pill shapes untuk high-interaction elements, strict typography hierarchy (unread = weight 700), shadcn-vue components, Lucide icons only.
+Aturan visual mengikat ada di `DESIGN.md` (root): shadcn-vue **default theme / slate / normal** — token standar saja (`background, foreground, card, popover, primary, secondary, muted, accent, destructive, border, input, ring`), font Inter, blok `.dark` tanpa UI toggle. Komponen basis dari `@/components/ui`; Iconify mutlak (`lucide-vue-next` dilarang); tanpa hex hardcode; tanpa override CSS variable inline; jangan hapus ring fokus & atribut ARIA. Hierarki produk yang dipertahankan: unread = weight 700, pill hanya untuk search.
 
 
 ## 4. Setup & Command
@@ -143,10 +143,10 @@ bun run seed:admin [--username] [--password] [--remote --yes]
 - **Indent:** 2 spaces untuk semua file
 
 ### Icon Usage
-- **Framework:** @iconify/vue dengan icon set Lucide (lucide:*)
-- **Konsistensi:** jangan campur icon set lain untuk navigasi/action utama
-- **Centralized names:** nama icon berulang dipusatkan via mapping/constant di src/icons/
-- **Icon subset build:** bun run build:icons untuk generate subset yang dipakai; build production akan check subset
+- **Framework:** @iconify/vue mutlak; `lucide-vue-next` DILARANG di code manapun.
+- **Icon set:** Lucide (`lucide:*`) via offline subset di src/icons/; jangan campur icon set lain untuk navigasi/action utama.
+- **Centralized names:** nama icon berulang dipusatkan via mapping/constant di src/icons/.
+- **Icon subset build:** bun run build:icons untuk generate subset yang dipakai; build production akan check subset.
 
 
 ### Component Organization
@@ -221,9 +221,11 @@ Git hooks menjalankan lint-staged:
 - **Dexie schema:** perubahan schema wajib disertai Dexie migration version bump
 
 ### Design System Violations
-- **No heavy drop shadows:** depth harus dari tonal elevation
-- **No mixed icon sets:** gunakan Lucide saja untuk konsistensi stroke/proporsi
-- **No generic component modifications:** shadcn-vue components di components/ui/ adalah source code aplikasi, review setiap perubahan
+- **No heavy drop shadows:** depth dari border + tonal muted, bukan shadow.
+- **No mixed icon sets / no lucide-vue-next:** Iconify + `lucide:*` saja.
+- **No custom ui variants:** `components/ui/` WAJIB sama dengan stock shadcn-vue (new-york); varian custom dilarang. Composite app-specific tinggal di `components/app/` (mis. password-field, pagination cursor).
+- **No hex hardcode / no inline CSS-variable override** di views/komponen.
+- **No shadcn-vue add --overwrite** tanpa approval eksplisit user.
 
 ## 8. Belum Diputuskan
 
@@ -263,8 +265,12 @@ Git hooks menjalankan lint-staged:
 
 ### Branding Final
 - **Logo/wordmark Runmail:** belum tersedia, gunakan text wordmark netral
-- **Font final:** Roboto atau Inter belum dikunci (spec fallback keduanya)
-- **Error color token:** #B3261E digunakan sementara karena DESIGN.md belum definisikan
+  (`components/app/wordmark.vue`, ikon `text-primary` agar kontras di slate terang).
+- **Font final: Inter** (diputuskan 2026-10-08 via DESIGN.md; dimuat dari Google
+  Fonts di `apps/web/index.html`, fallback system-ui).
+- **Skala tipografi:** mengikuti standar shadcn-vue harfiah (H1
+  `scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl`; lihat DESIGN.md).
+- **Star/bintang:** `fill-primary text-primary` (amber kustom dihapus bersama token warning).
 
 **Instruksi Agent:** Saat branding asset/final font tersedia, update design tokens di Tailwind config dan AGENTS.md.
 
@@ -292,6 +298,6 @@ Tunggu approval sebelum menulis perubahan ke AGENTS.md.
 
 ---
 
-**Versi:** 1.0  
-**Terakhir Update:** 26 September 2026  
+**Versi:** 1.1
+**Terakhir Update:** 8 Oktober 2026 (reset design system ke shadcn-vue default slate — PLAN.md/TASKS.md)
 **Maintainer:** Project team
