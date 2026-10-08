@@ -299,5 +299,5 @@ Tunggu approval sebelum menulis perubahan ke AGENTS.md.
 ---
 
 **Versi:** 1.1
-**Terakhir Update:** 8 Oktober 2026 (reset design system ke shadcn-vue default slate — PLAN.md/TASKS.md)
+**Terakhir Update:** 8 Oktober 2026 (reset design system ke shadcn-vue default slate)
 **Maintainer:** Project team
