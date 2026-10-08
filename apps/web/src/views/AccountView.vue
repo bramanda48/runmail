@@ -113,7 +113,9 @@ async function confirmLogout() {
   <main class="flex min-h-screen flex-col items-center justify-center bg-background p-6">
     <div class="w-full max-w-2xl flex flex-col gap-6">
       <div>
-        <h1 class="text-2xl font-semibold text-foreground">Akun</h1>
+        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
+          Akun
+        </h1>
         <p class="text-sm text-muted-foreground">Kelola informasi akun dan keamanan Anda.</p>
       </div>
 

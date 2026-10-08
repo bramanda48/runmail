@@ -132,7 +132,9 @@ function rowClasses(isActive: boolean) {
 
     <main class="mx-auto w-full max-w-2xl flex-1 p-4 lg:p-8">
       <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-foreground">Pilih Mailbox</h1>
+        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
+          Pilih Mailbox
+        </h1>
         <p class="text-sm text-muted-foreground">Pilih mailbox yang ingin Anda akses.</p>
       </div>
 

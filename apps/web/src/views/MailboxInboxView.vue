@@ -307,7 +307,7 @@ watch(
       </div>
 
       <div class="mb-4 flex items-center justify-between">
-        <h1 class="text-2xl font-semibold text-foreground">
+        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
           {{ activeFolder?.name || "Inbox" }}
         </h1>
         <Button variant="ghost" size="sm" @click="mailboxStore.runSync">

@@ -383,7 +383,11 @@ async function unlinkUser(user: MailboxLinkedUser) {
     <main class="p-4 lg:p-8">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 class="text-2xl font-semibold text-foreground">Manajemen Mailbox</h1>
+          <h1
+            class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl"
+          >
+            Manajemen Mailbox
+          </h1>
           <p class="text-sm text-muted-foreground">Buat dan kelola mailbox serta akses user.</p>
         </div>
         <Button @click="openCreateDialog">
@@ -496,7 +500,11 @@ async function unlinkUser(user: MailboxLinkedUser) {
                 <SelectValue placeholder="Pilih domain" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="option in domainOptions" :key="option.value" :value="option.value">
+                <SelectItem
+                  v-for="option in domainOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
                   {{ option.label }}
                 </SelectItem>
               </SelectContent>
@@ -621,7 +629,11 @@ async function unlinkUser(user: MailboxLinkedUser) {
                   <SelectValue placeholder="Pilih user" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="option in userOptions" :key="option.value" :value="option.value">
+                  <SelectItem
+                    v-for="option in userOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
                     {{ option.label }}
                   </SelectItem>
                 </SelectContent>

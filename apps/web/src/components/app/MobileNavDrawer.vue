@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from "@/components/ui/button";
 import {
   DialogContent,
   DialogDescription,
@@ -7,7 +8,6 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { watch } from "vue";
 import { useRoute } from "vue-router";

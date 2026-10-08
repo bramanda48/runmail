@@ -28,9 +28,7 @@ const open = ref(false);
     </MobileNavDrawer>
 
     <div class="flex min-h-screen flex-1 flex-col lg:ml-64">
-      <header
-        class="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 lg:px-8"
-      >
+      <header class="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 lg:px-8">
         <Button
           aria-label="Buka menu"
           variant="ghost"

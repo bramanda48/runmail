@@ -33,9 +33,7 @@ const classes = computed(() => cn(baseClasses, stateClasses.value, props.class))
 const countClasses = computed(() =>
   cn(
     "ml-auto rounded-full px-2 py-0.5 text-xs font-medium",
-    props.active
-      ? "bg-primary/10 text-primary"
-      : "bg-muted text-muted-foreground",
+    props.active ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
   ),
 );
 </script>

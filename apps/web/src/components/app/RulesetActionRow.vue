@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Icon } from "@/icons";
 import type { ActionType } from "@runmail/shared";
 import { ACTION_TYPES } from "@runmail/shared";
@@ -79,10 +85,7 @@ watch(
         <div class="flex-1">
           <template v-if="localAction.action_type === 'move_to_folder'">
             <Select v-model="localAction.action_value" :disabled="isSaving">
-              <SelectTrigger
-                aria-label="Folder tujuan aksi"
-                :aria-invalid="Boolean(error)"
-              >
+              <SelectTrigger aria-label="Folder tujuan aksi" :aria-invalid="Boolean(error)">
                 <SelectValue placeholder="Pilih folder tujuan" />
               </SelectTrigger>
               <SelectContent>

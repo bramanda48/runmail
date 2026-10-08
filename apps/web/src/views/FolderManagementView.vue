@@ -301,7 +301,11 @@ watchSyncStatus();
     <main class="flex flex-1 flex-col p-4 lg:p-8">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 class="text-2xl font-semibold text-foreground">Kelola Folder</h1>
+          <h1
+            class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl"
+          >
+            Kelola Folder
+          </h1>
           <p class="text-sm text-muted-foreground">
             Buat dan hapus folder kustom pada mailbox ini.
           </p>

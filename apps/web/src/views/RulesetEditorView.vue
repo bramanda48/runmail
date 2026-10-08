@@ -9,7 +9,13 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
@@ -377,7 +383,7 @@ watchSyncStatus();
       </Button>
 
       <div class="mb-6">
-        <h1 class="text-2xl font-semibold text-foreground">
+        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
           {{ isCreate ? "Ruleset Baru" : "Ubah Ruleset" }}
         </h1>
         <p class="text-sm text-muted-foreground">Atur kondisi dan aksi pemrosesan email.</p>

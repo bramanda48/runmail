@@ -310,7 +310,7 @@ watch(messageId, async () => {
         <div class="rounded-lg border bg-card p-4 lg:p-6">
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
-              <h1 class="text-xl font-semibold text-foreground lg:text-2xl">
+              <h1 class="scroll-m-20 text-2xl font-semibold tracking-tight text-foreground">
                 {{ message.subject || "(Tanpa subjek)" }}
               </h1>
               <div class="mt-2 text-sm text-foreground">

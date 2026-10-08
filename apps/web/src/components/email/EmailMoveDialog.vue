@@ -8,7 +8,13 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { LocalFolder } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { computed, ref, watch } from "vue";

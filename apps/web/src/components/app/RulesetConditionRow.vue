@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Icon } from "@/icons";
 import type { MatchType, RuleField } from "@runmail/shared";
 import { MATCH_TYPES, RULE_FIELDS } from "@runmail/shared";

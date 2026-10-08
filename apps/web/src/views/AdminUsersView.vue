@@ -271,7 +271,11 @@ async function submitEdit() {
     <main class="p-4 lg:p-8">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 class="text-2xl font-semibold text-foreground">Manajemen User</h1>
+          <h1
+            class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl"
+          >
+            Manajemen User
+          </h1>
           <p class="text-sm text-muted-foreground">Buat dan kelola pengguna Runmail.</p>
         </div>
         <Button @click="openCreate">
@@ -389,7 +393,9 @@ async function submitEdit() {
           </label>
 
           <div class="flex flex-col gap-1.5">
-            <label for="select-create-role" class="text-sm font-medium text-foreground">Peran</label>
+            <label for="select-create-role" class="text-sm font-medium text-foreground"
+              >Peran</label
+            >
             <Select v-model="createRole">
               <SelectTrigger id="select-create-role" :disabled="createSubmitting">
                 <SelectValue placeholder="Pilih peran" />

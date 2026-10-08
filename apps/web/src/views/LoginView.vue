@@ -90,9 +90,7 @@ async function handleSubmit() {
       </CardHeader>
 
       <CardContent class="flex flex-col gap-4">
-        <Alert v-if="showRedirectInfo">
-          Sesi Anda berakhir, silakan masuk kembali.
-        </Alert>
+        <Alert v-if="showRedirectInfo"> Sesi Anda berakhir, silakan masuk kembali. </Alert>
 
         <Alert v-if="apiError" variant="destructive">{{ apiError }}</Alert>
 

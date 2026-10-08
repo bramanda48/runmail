@@ -2,7 +2,13 @@
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
 import type { DialogContentEmits, DialogContentProps } from "reka-ui";
-import { DialogClose, DialogContent, DialogOverlay, DialogPortal, useForwardPropsEmits } from "reka-ui";
+import {
+  DialogClose,
+  DialogContent,
+  DialogOverlay,
+  DialogPortal,
+  useForwardPropsEmits,
+} from "reka-ui";
 import type { HTMLAttributes } from "vue";
 import { computed } from "vue";
 
@@ -11,7 +17,9 @@ defineOptions({
 });
 
 const props = withDefaults(
-  defineProps<DialogContentProps & { class?: HTMLAttributes["class"]; showCloseButton?: boolean }>(),
+  defineProps<
+    DialogContentProps & { class?: HTMLAttributes["class"]; showCloseButton?: boolean }
+  >(),
   {
     showCloseButton: true,
   },

@@ -10,7 +10,7 @@
   `--success`, `--warning`, font Roboto, `rounded-2xl` di mana-mana).
 - Desain baru (`DESIGN.md`): shadcn-vue **default theme / slate / normal** — token
   standar saja (`background, foreground, card, popover, primary, secondary, muted,
-  accent, destructive, border, input, ring`), font Inter, tanpa token kustom.
+accent, destructive, border, input, ring`), font Inter, tanpa token kustom.
 - Aturan DESIGN.md: komponen basis dari `@/components/ui`; Iconify mutlak
   (`lucide-vue-next` dilarang); tanpa hex hardcode; tanpa override CSS variable
   inline; dark-mode-ready; jangan hapus ring fokus & atribut ARIA.
@@ -37,32 +37,32 @@
 
 ### 3a. STOCK-CLEAN — samakan base class, tanpa ubah callsite
 
-| Komponen | Selisih vs stock |
-|---|---|
-| `button` | base `focus-visible:ring-1` (cek stock) |
-| `switch` | thumb `bg-surface`; ukuran `h-5/w-9` (cek stock) |
-| `table/*` | Row `hover:bg-accent` (stock: `hover:bg-muted/50`); Head `px-4` (stock `px-2`); Cell `p-4` (stock `p-2`) |
-| `card/*` (kecuali root) | Header/Title/Content/Description/Footer sudah stock |
-| `dialog/*` (kecuali Content) | Header/Title/Description/Footer sudah stock |
+| Komponen                     | Selisih vs stock                                                                                         |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `button`                     | base `focus-visible:ring-1` (cek stock)                                                                  |
+| `switch`                     | thumb `bg-surface`; ukuran `h-5/w-9` (cek stock)                                                         |
+| `table/*`                    | Row `hover:bg-accent` (stock: `hover:bg-muted/50`); Head `px-4` (stock `px-2`); Cell `p-4` (stock `p-2`) |
+| `card/*` (kecuali root)      | Header/Title/Content/Description/Footer sudah stock                                                      |
+| `dialog/*` (kecuali Content) | Header/Title/Description/Footer sudah stock                                                              |
 
 ### 3b. CUSTOM-API — rewrite + perbaiki callsite
 
-| Komponen | Custom saat ini | Stock | Callsite |
-|---|---|---|---|
-| `alert` | varian `info/success/warning/error` + auto-icon + role logic | `default/destructive` saja, tanpa auto-icon (ada `AlertTitle`/`AlertDescription`) | ~10 file |
-| `badge` | varian `success/inactive/pending/error` | `default/secondary/destructive/outline` | ~6 file |
-| `input` | props `variant` (`focus/disabled/error`) + `size="md"`, `bg-surface` | single file, tanpa varian | ~10 file |
-| `dialog/Content` | props `variant` (`destructive`) + `size` (`sm/md`), `bg-surface`, tanpa tombol close ✕ | single content + tombol close ✕ | ~7 file |
-| `select` | wrapper single-file (`options/label/error`) | primitives multi-file (Trigger/Content/Item/Value/…) | ~11 file (termasuk `:error` di `AdminUsersView`, `RulesetActionRow`) |
-| `skeleton` | props `shape` (`block/list/detail/form`) | single `div` | ~8 file |
+| Komponen         | Custom saat ini                                                                        | Stock                                                                             | Callsite                                                             |
+| ---------------- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `alert`          | varian `info/success/warning/error` + auto-icon + role logic                           | `default/destructive` saja, tanpa auto-icon (ada `AlertTitle`/`AlertDescription`) | ~10 file                                                             |
+| `badge`          | varian `success/inactive/pending/error`                                                | `default/secondary/destructive/outline`                                           | ~6 file                                                              |
+| `input`          | props `variant` (`focus/disabled/error`) + `size="md"`, `bg-surface`                   | single file, tanpa varian                                                         | ~10 file                                                             |
+| `dialog/Content` | props `variant` (`destructive`) + `size` (`sm/md`), `bg-surface`, tanpa tombol close ✕ | single content + tombol close ✕                                                   | ~7 file                                                              |
+| `select`         | wrapper single-file (`options/label/error`)                                            | primitives multi-file (Trigger/Content/Item/Value/…)                              | ~11 file (termasuk `:error` di `AdminUsersView`, `RulesetActionRow`) |
+| `skeleton`       | props `shape` (`block/list/detail/form`)                                               | single `div`                                                                      | ~8 file                                                              |
 
 ### 3c. NON-STOCK — bukan komponen shadcn; hapus dari `ui/`, pindah ke `app/`
 
-| Komponen | Pengganti | Callsite |
-|---|---|---|
-| `icon-button` | `Button size="icon"` | ~20 file |
+| Komponen         | Pengganti                                                                           | Callsite                                                 |
+| ---------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `icon-button`    | `Button size="icon"`                                                                | ~20 file                                                 |
 | `password-input` | composite app-level (Input + Button icon), mis. `components/app/password-field.vue` | 4 file (`LoginView`, `AccountView`, `AdminUsersView` ×2) |
-| `pagination` | pindah ke `components/app/` apa adanya (stock numbered tak cocok dengan cursor API) | pemakai saat ini |
+| `pagination`     | pindah ke `components/app/` apa adanya (stock numbered tak cocok dengan cursor API) | pemakai saat ini                                         |
 
 ### 3d. Jebakan visual yang ditemukan
 
