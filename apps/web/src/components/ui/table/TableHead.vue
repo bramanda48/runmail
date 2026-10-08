@@ -11,7 +11,7 @@ const props = defineProps<Props>();
 
 <template>
   <th
-    :class="cn('h-10 px-4 text-left align-middle font-medium text-muted-foreground', props.class)"
+    :class="cn('h-10 px-2 text-left align-middle font-medium text-muted-foreground', props.class)"
   >
     <slot />
   </th>

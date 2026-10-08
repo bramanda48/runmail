@@ -10,7 +10,7 @@ const props = defineProps<Props>();
 </script>
 
 <template>
-  <td :class="cn('p-4 align-middle', props.class)">
+  <td :class="cn('p-2 align-middle', props.class)">
     <slot />
   </td>
 </template>
