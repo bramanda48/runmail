@@ -1,85 +1,71 @@
 ---
-name: Webmail SaaS Inbox
-description: Clean, Material Design 3 inspired email client focusing on productivity and tonal elevation.
+name: Shadcn Vue Default Theme
 colors:
-  primary: "#C2E7FF"
-  accent: "#0B57D0"
-  background: "#F6F8FC"
-  surface: "#FFFFFF"
-  surface-hover: "#F3F4F6"
-  text-primary: "#1F1F1F"
-  text-secondary: "#444746"
-  border: "#E5E7EB"
-  success: "#146C2E"
-  warning: "#E27200"
+  primary: "hsl(var(--primary))"
+  primary-foreground: "hsl(var(--primary-foreground))"
+  secondary: "hsl(var(--secondary))"
+  secondary-foreground: "hsl(var(--secondary-foreground))"
+  background: "hsl(var(--background))"
+  foreground: "hsl(var(--foreground))"
+  card: "hsl(var(--card))"
+  card-foreground: "hsl(var(--card-foreground))"
+  muted: "hsl(var(--muted))"
+  muted-foreground: "hsl(var(--muted-foreground))"
+  accent: "hsl(var(--accent))"
+  accent-foreground: "hsl(var(--accent-foreground))"
+  destructive: "hsl(var(--destructive))"
+  destructive-foreground: "hsl(var(--destructive-foreground))"
+  border: "hsl(var(--border))"
+  input: "hsl(var(--input))"
+  ring: "hsl(var(--ring))"
 typography:
-  body-bold:
-    fontFamily: "Roboto, Inter, sans-serif"
-    fontSize: 0.875rem
-    fontWeight: 700
-    lineHeight: 1.5
-  body-regular:
-    fontFamily: "Roboto, Inter, sans-serif"
-    fontSize: 0.875rem
-    fontWeight: 400
-    lineHeight: 1.5
-  label-sm:
-    fontFamily: "Roboto, Inter, sans-serif"
-    fontSize: 0.75rem
-    fontWeight: 500
+  fontFamily: "Inter, sans-serif"
+  h1:
+    fontSize: "2.25rem"
+    fontWeight: "800"
+    lineHeight: "2.5rem"
+  h2:
+    fontSize: "1.875rem"
+    fontWeight: "700"
+    lineHeight: "2.25rem"
+  body:
+    fontSize: "0.875rem"
+    fontWeight: "400"
+    lineHeight: "1.25rem"
 rounded:
-  sm: 4px
-  md: 8px
-  lg: 12px
-  xl: 16px
-  full: 9999px
-spacing:
-  xs: 4px
-  sm: 8px
-  md: 16px
-  lg: 24px
-  xl: 32px
-components:
-  button-compose:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.text-primary}"
-    rounded: "{rounded.full}"
-    padding: "16px 24px"
-  nav-item-active:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.accent}"
-    rounded: "{rounded.full}"
-  surface-container:
-    backgroundColor: "{colors.surface}"
-    rounded: "{rounded.xl}"
+  default: "var(--radius)"
 ---
 
-## Overview
+# Visual Identity & UI Guidelines (shadcn-vue)
 
-Webmail SaaS interface designed for professional productivity. The design relies heavily on Google's Material Design 3 language, utilizing tonal elevation, rounded shapes, and clear hierarchy to make scanning dense information (emails) effortless.
+Dokumen ini mendefinisikan aturan visual dan komponen untuk AI Coding Agent. Semua komponen UI wajib mengikuti konvensi **shadcn-vue** dan **Tailwind CSS**.
 
-## Colors
+---
 
-The palette uses a soft gray-blue (`#F6F8FC`) as the foundational canvas, elevating the main content area in pure white (`#FFFFFF`). The primary CTA and active states use a soft light blue (`#C2E7FF`), paired with a deep blue (`#0B57D0`) for text/icons to maintain excellent WCAG AAA contrast ratios.
+## 🛑 Strict Do's and Don'ts for AI Agents
 
-## Typography
+### DO'S (Wajib Dilakukan)
+* **Gunakan Komponen shadcn-vue:** Selalu prioritaskan komponen re-usable dari `@/components/ui` (misal: `<Button>`, `<Input>`, `<Card>`, `<Dialog>`).
+* **Gunakan Iconify untuk Ikon:** WAJIB menggunakan komponen `<Icon>` dari `@iconify/vue` untuk semua kebutuhan ikon visual (misal: `<Icon icon="mdi:home" />`).
+* **Gunakan Utility Class HSL:** Selalu gunakan token warna shadcn via Tailwind class seperti `bg-background`, `text-foreground`, `bg-primary`, `text-muted-foreground`, `border-border`.
+* **Gunakan Radix Vue Primitives:** Jika membuat komponen kustom kompleks, bangun di atas `@radix-vue` primitives agar aksesibilitas (aria) dan perilaku keyboard tetap terjaga.
+* **Mendukung Dark Mode Native:** Gunakan sintaks Tailwind yang bersih karena warna basis sudah menggunakan variabel CSS (`hsl(var(...))`).
 
-Relies on a clean geometric/humanist sans-serif (Roboto or Inter). Hierarchy in the email list is established purely by font-weight (700 for unread, 400 for read) and color (near-black vs dark gray).
+### DON'TS (Dilarang Keras)
+* **DILARANG Menggunakan Lucide Icons:** Jangan mengimpor atau menggunakan ikon dari paket `lucide-vue-next`. Gunakan Iconify sebagai pengganti mutlak.
+* **DILARANG Hardcode Warna Hex/RGB:** Jangan pernah menulis `bg-[#ffffff]`, `text-[#000000]`, atau `style="color: red"`. Selalu gunakan CSS variables / token Tailwind shadcn.
+* **DILARANG Membuat Komponen Basis dari Nol:** Jangan membuat komponen `<button>` atau `<input>` bawaan HTML jika elemen tersebut sudah tersedia di `components/ui/`.
+* **DILARANG Mengubah Konfigurasi CSS Variable Secara Inline:** Jangan meng-override variabel CSS langsung pada tag HTML tanpa alasan yang jelas.
+* **DILARANG Mengabaikan State Focus & Accessibility:** Jangan menghapus ring fokus (`focus-visible:ring-2`) atau atribut ARIA yang sudah disediakan oleh shadcn-vue.
 
-## Spacing & Layout
+---
 
-A complex multi-panel dashboard. The layout creates visual separation through negative space and a distinct 16px radius on the main content container, rather than using rigid borders everywhere.
+## Typography Guidelines
 
-## Shapes
+Gunakan hierarki kelas Tailwind berikut untuk konsistensi teks:
 
-Pill shapes (`rounded-full`) are the signature element of this UI, used exclusively for high-interaction elements: the search bar, the Compose button, and active sidebar items.
-
-## Elevation & Depth
-
-Strictly **Tonal Elevation**. The UI avoids traditional drop shadows, creating a modern, flat, yet layered look by stacking `#FFFFFF` surfaces on top of `#F6F8FC` backgrounds.
-
-## Rules to Never Break
-
-- **No heavy drop shadows.** Depth must come from background color differences.
-- **Strict typography hierarchy.** Unread emails must be visually distinct via bold text.
-- **Maintain pill shapes** for core navigation and primary actions to retain the specific design language.
+* **Heading 1:** `scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl`
+* **Heading 2:** `scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight transition-colors first:mt-0`
+* **Heading 3:** `scroll-m-20 text-2xl font-semibold tracking-tight`
+* **Paragraph / Body:** `leading-7 [&:not(:first-child)]:mt-6`
+* **Muted / Secondary Text:** `text-sm text-muted-foreground`
