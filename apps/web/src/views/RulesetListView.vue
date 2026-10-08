@@ -3,6 +3,7 @@ import AppShell from "@/components/app/app-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
 import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
+import Pagination from "@/components/app/pagination.vue";
 import SyncIndicator from "@/components/app/sync-indicator.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -14,8 +15,6 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IconButton } from "@/components/ui/icon-button";
-import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -267,7 +266,7 @@ watchSyncStatus();
       </EmptyState>
 
       <div v-else class="flex flex-col gap-4">
-        <div class="rounded-2xl border bg-surface p-4">
+        <div class="rounded-lg border bg-card p-4">
           <div class="w-full overflow-x-auto">
             <Table>
               <TableHeader>
@@ -305,22 +304,22 @@ watchSyncStatus();
                   </TableCell>
                   <TableCell>
                     <div class="flex items-center gap-1">
-                      <IconButton
-                        :ariaLabel="`Edit ruleset ${ruleset.name}`"
+                      <Button
+                        :aria-label="`Edit ruleset ${ruleset.name}`"
                         variant="ghost"
-                        size="md"
+                        size="icon"
                         @click="editRuleset(ruleset)"
                       >
                         <Icon icon="lucide:pencil" />
-                      </IconButton>
-                      <IconButton
-                        :ariaLabel="`Hapus ruleset ${ruleset.name}`"
+                      </Button>
+                      <Button
+                        :aria-label="`Hapus ruleset ${ruleset.name}`"
                         variant="ghost"
-                        size="md"
+                        size="icon"
                         @click="openDelete(ruleset)"
                       >
                         <Icon icon="lucide:trash" class="text-destructive" />
-                      </IconButton>
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

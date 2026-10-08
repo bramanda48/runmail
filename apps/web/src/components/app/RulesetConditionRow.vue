@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Icon } from "@/icons";
@@ -85,33 +85,33 @@ watch(
         </div>
       </div>
       <div class="flex items-center gap-1">
-        <IconButton
-          :ariaLabel="`Pindah kondisi ke atas`"
+        <Button
+          aria-label="Pindah kondisi ke atas"
           variant="ghost"
-          size="md"
+          size="icon"
           :disabled="isSaving || !canMoveUp"
           @click="emits('move-up')"
         >
           <Icon icon="lucide:chevron-up" />
-        </IconButton>
-        <IconButton
-          :ariaLabel="`Pindah kondisi ke bawah`"
+        </Button>
+        <Button
+          aria-label="Pindah kondisi ke bawah"
           variant="ghost"
-          size="md"
+          size="icon"
           :disabled="isSaving || !canMoveDown"
           @click="emits('move-down')"
         >
           <Icon icon="lucide:chevron-down" />
-        </IconButton>
-        <IconButton
-          :ariaLabel="`Hapus kondisi`"
+        </Button>
+        <Button
+          aria-label="Hapus kondisi"
           variant="ghost"
-          size="md"
+          size="icon"
           :disabled="isSaving || !canRemove"
           @click="emits('remove')"
         >
           <Icon icon="lucide:x" />
-        </IconButton>
+        </Button>
       </div>
     </div>
   </div>

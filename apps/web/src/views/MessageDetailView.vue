@@ -14,7 +14,6 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IconButton } from "@/components/ui/icon-button";
 import {
   Select,
   SelectContent,
@@ -277,9 +276,9 @@ watch(messageId, async () => {
 
     <template #topbar>
       <div class="flex items-center gap-3">
-        <IconButton :ariaLabel="'Kembali'" variant="ghost" size="sm" @click="back">
+        <Button aria-label="Kembali" variant="ghost" size="icon" @click="back">
           <Icon icon="lucide:arrow-left" />
-        </IconButton>
+        </Button>
         <MailboxSwitcher />
         <SyncIndicator
           :status="mailboxStore.syncStatus"
@@ -308,7 +307,7 @@ watch(messageId, async () => {
 
       <div v-else-if="message" class="mx-auto w-full max-w-4xl flex flex-col gap-4">
         <!-- Header -->
-        <div class="rounded-2xl border bg-surface p-4 lg:p-6">
+        <div class="rounded-lg border bg-card p-4 lg:p-6">
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
               <h1 class="text-xl font-semibold text-foreground lg:text-2xl">
@@ -327,10 +326,10 @@ watch(messageId, async () => {
             </div>
 
             <div class="flex flex-wrap items-center gap-1">
-              <IconButton
-                :ariaLabel="message.is_starred ? 'Hapus bintang' : 'Tandai bintang'"
+              <Button
+                :aria-label="message.is_starred ? 'Hapus bintang' : 'Tandai bintang'"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 @click="toggleStar"
               >
                 <Icon
@@ -338,45 +337,45 @@ watch(messageId, async () => {
                   :class="
                     cn(
                       'size-5',
-                      message.is_starred ? 'fill-current text-warning' : 'text-muted-foreground',
+                      message.is_starred ? 'fill-primary text-primary' : 'text-muted-foreground',
                     )
                   "
                 />
-              </IconButton>
+              </Button>
 
-              <IconButton
-                :ariaLabel="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
+              <Button
+                :aria-label="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 @click="toggleRead"
               >
                 <Icon :icon="message.is_read ? 'lucide:mail-open' : 'lucide:mail'" class="size-5" />
-              </IconButton>
+              </Button>
 
-              <IconButton
-                :ariaLabel="'Pindahkan ke folder'"
+              <Button
+                aria-label="Pindahkan ke folder"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 @click="openMove"
               >
                 <Icon icon="lucide:folder-input" class="size-5" />
-              </IconButton>
+              </Button>
 
-              <IconButton
+              <Button
                 v-if="isTrash"
-                :ariaLabel="'Hapus permanen'"
+                aria-label="Hapus permanen"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 @click="deleteOpen = true"
               >
                 <Icon icon="lucide:trash-2" class="size-5 text-destructive" />
-              </IconButton>
+              </Button>
             </div>
           </div>
         </div>
 
         <!-- Body -->
-        <div class="rounded-2xl border bg-surface p-4 lg:p-6">
+        <div class="rounded-lg border bg-card p-4 lg:p-6">
           <div v-if="bodyState === 'loading'" class="flex flex-col gap-2">
             <Skeleton class="h-4 w-full" />
             <Skeleton class="h-4 w-full" />

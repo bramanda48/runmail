@@ -31,7 +31,7 @@ const state = computed(() => {
 
 const textClass = computed(() => {
   if (state.value.tone === "error") return "text-destructive";
-  if (state.value.tone === "warning") return "text-warning";
+  if (state.value.tone === "warning") return "text-muted-foreground";
   return "text-muted-foreground";
 });
 </script>

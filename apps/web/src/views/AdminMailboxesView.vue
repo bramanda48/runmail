@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AdminShell from "@/components/app/admin-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
+import Pagination from "@/components/app/pagination.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,9 +13,7 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -417,7 +416,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
       </EmptyState>
 
       <div v-else class="flex flex-col gap-4">
-        <div class="rounded-2xl border bg-surface p-4">
+        <div class="rounded-lg border bg-card p-4">
           <Table>
             <TableHeader>
               <TableRow>
@@ -436,22 +435,22 @@ async function unlinkUser(user: MailboxLinkedUser) {
                 </TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
-                    <IconButton
-                      :ariaLabel="`Edit ${mailbox.address}`"
+                    <Button
+                      :aria-label="`Edit ${mailbox.address}`"
                       variant="ghost"
-                      size="sm"
+                      size="icon"
                       @click="openEdit(mailbox)"
                     >
                       <Icon icon="lucide:pencil" />
-                    </IconButton>
-                    <IconButton
-                      :ariaLabel="`Kelola user ${mailbox.address}`"
+                    </Button>
+                    <Button
+                      :aria-label="`Kelola user ${mailbox.address}`"
                       variant="ghost"
-                      size="sm"
+                      size="icon"
                       @click="openManageUsers(mailbox)"
                     >
                       <Icon icon="lucide:users" />
-                    </IconButton>
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>

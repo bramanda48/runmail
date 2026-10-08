@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
@@ -41,17 +41,17 @@ function toggle() {
       @update:model-value="onInput"
     />
     <div class="absolute inset-y-0 right-0 flex items-center pr-2">
-      <IconButton
+      <Button
         type="button"
-        :ariaLabel="label"
+        :aria-label="label"
         :aria-pressed="show"
         variant="ghost"
-        size="sm"
+        size="icon"
         :disabled="disabled"
         @click="toggle"
       >
         <Icon :icon="show ? 'lucide:eye-off' : 'lucide:eye'" />
-      </IconButton>
+      </Button>
     </div>
   </div>
 </template>

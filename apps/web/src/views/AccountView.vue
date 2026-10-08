@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PasswordField from "@/components/app/password-field.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PasswordInput } from "@/components/ui/password-input";
 import { Icon } from "@/icons";
 import { ApiError, changePassword } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
@@ -171,7 +171,7 @@ async function confirmLogout() {
           <form class="flex flex-col gap-4" @submit.prevent="handleChangePassword">
             <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Kata Sandi Saat Ini</span>
-              <PasswordInput
+              <PasswordField
                 v-model="currentPassword"
                 placeholder="Masukkan kata sandi saat ini"
                 :disabled="isSubmitting"
@@ -183,7 +183,7 @@ async function confirmLogout() {
 
             <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Kata Sandi Baru</span>
-              <PasswordInput
+              <PasswordField
                 v-model="newPassword"
                 placeholder="Minimal 8 karakter"
                 :disabled="isSubmitting"
@@ -196,7 +196,7 @@ async function confirmLogout() {
 
             <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Konfirmasi Kata Sandi Baru</span>
-              <PasswordInput
+              <PasswordField
                 v-model="confirmPassword"
                 placeholder="Ulangi kata sandi baru"
                 :disabled="isSubmitting"

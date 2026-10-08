@@ -20,7 +20,7 @@ const textClass = computed(() => (props.size === "lg" ? "text-xl" : "text-base")
 
 <template>
   <div :class="cn('inline-flex items-center gap-2', props.class)">
-    <Icon icon="lucide:mail" :class="cn('text-primary-foreground', iconClass)" />
+    <Icon icon="lucide:mail" :class="cn('text-primary', iconClass)" />
     <span :class="cn('font-semibold text-foreground', textClass)">Runmail</span>
   </div>
 </template>

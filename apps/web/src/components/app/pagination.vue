@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
 import type { HTMLAttributes } from "vue";
@@ -42,15 +42,15 @@ function next() {
 
 <template>
   <nav :class="cn('flex items-center gap-3', props.class)" aria-label="Navigasi halaman">
-    <IconButton
-      :ariaLabel="'Halaman sebelumnya'"
+    <Button
+      aria-label="Halaman sebelumnya"
       variant="ghost"
-      size="sm"
+      size="icon"
       :disabled="disabled || isFirst"
       @click="prev"
     >
       <Icon icon="lucide:chevron-left" />
-    </IconButton>
+    </Button>
 
     <span class="text-sm text-foreground">
       <slot name="range" :start="start" :end="end" :total="total">
@@ -58,14 +58,14 @@ function next() {
       </slot>
     </span>
 
-    <IconButton
-      :ariaLabel="'Halaman berikutnya'"
+    <Button
+      aria-label="Halaman berikutnya"
       variant="ghost"
-      size="sm"
+      size="icon"
       :disabled="disabled || isLast"
       @click="next"
     >
       <Icon icon="lucide:chevron-right" />
-    </IconButton>
+    </Button>
   </nav>
 </template>

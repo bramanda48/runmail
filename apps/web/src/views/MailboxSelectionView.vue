@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import EmptyState from "@/components/app/empty-state.vue";
+import Pagination from "@/components/app/pagination.vue";
 import Wordmark from "@/components/app/wordmark.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/icons";
 import { ApiError, listMailboxes } from "@/lib/api";
@@ -97,7 +97,7 @@ onMounted(() => load(undefined));
 
 function rowClasses(isActive: boolean) {
   return cn(
-    "flex w-full items-center gap-4 rounded-2xl border bg-surface p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+    "flex w-full items-center gap-4 rounded-lg border bg-card p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
     isActive ? "hover:bg-accent cursor-pointer" : "cursor-not-allowed opacity-60",
   );
 }
@@ -106,7 +106,7 @@ function rowClasses(isActive: boolean) {
 <template>
   <div class="flex min-h-screen flex-col bg-background">
     <header
-      class="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-surface px-4 lg:px-8"
+      class="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-card px-4 lg:px-8"
     >
       <Wordmark size="sm" />
       <div class="flex items-center gap-3">
@@ -169,7 +169,7 @@ function rowClasses(isActive: boolean) {
           @click="selectMailbox(mailbox)"
         >
           <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/20 text-primary-foreground"
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
           >
             <Icon icon="lucide:mail" class="size-5" />
           </div>

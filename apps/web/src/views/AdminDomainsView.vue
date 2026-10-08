@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AdminShell from "@/components/app/admin-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
+import Pagination from "@/components/app/pagination.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,8 +13,6 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IconButton } from "@/components/ui/icon-button";
-import { Pagination } from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -305,7 +304,7 @@ async function submitAdd() {
       <div v-else class="flex flex-col gap-4">
         <Alert v-if="verifyError" variant="destructive">{{ verifyError }}</Alert>
 
-        <div class="rounded-2xl border bg-surface p-4">
+        <div class="rounded-lg border bg-card p-4">
           <Table>
             <TableHeader>
               <TableRow>
@@ -323,10 +322,10 @@ async function submitAdd() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <IconButton
-                    :ariaLabel="`Verifikasi ulang ${domain.domain_name}`"
+                  <Button
+                    :aria-label="`Verifikasi ulang ${domain.domain_name}`"
                     variant="ghost"
-                    size="sm"
+                    size="icon"
                     :disabled="
                       !canUseCloudflare ||
                       domain.verification_status === 'active' ||
@@ -338,7 +337,7 @@ async function submitAdd() {
                       icon="lucide:refresh-cw"
                       :class="verifyingId === domain.id ? 'animate-spin' : ''"
                     />
-                  </IconButton>
+                  </Button>
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -367,7 +366,7 @@ async function submitAdd() {
       <Alert
         v-if="notice"
         :variant="notice.variant === 'error' ? 'destructive' : undefined"
-        class="shadow-lg [&>div]:min-w-0 [&>div]:flex-1 bg-surface"
+        class="mb-6 [&>div]:min-w-0 [&>div]:flex-1"
       >
         <div class="flex items-start gap-2">
           <p class="flex-1">{{ notice.message }}</p>

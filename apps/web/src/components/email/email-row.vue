@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@/components/ui/button";
 import type { LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,7 @@ const displayDate = computed(() => {
 <template>
   <button
     type="button"
-    class="group flex w-full items-center gap-3 rounded-xl border-b bg-surface p-3 text-left transition-colors last:border-b-0 hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+    class="group flex w-full items-center gap-3 rounded-md border-b bg-card p-3 text-left transition-colors last:border-b-0 hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
     @click="emit('click')"
   >
     <span
@@ -88,10 +88,10 @@ const displayDate = computed(() => {
       <div
         class="flex items-center gap-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
       >
-        <IconButton
-          :ariaLabel="message.is_starred ? 'Hapus bintang' : 'Tandai bintang'"
+        <Button
+          :aria-label="message.is_starred ? 'Hapus bintang' : 'Tandai bintang'"
           variant="ghost"
-          size="sm"
+          size="icon"
           @click.stop="emit('toggle-star')"
         >
           <Icon
@@ -99,38 +99,38 @@ const displayDate = computed(() => {
             :class="
               cn(
                 'size-4',
-                message.is_starred ? 'fill-current text-warning' : 'text-muted-foreground',
+                message.is_starred ? 'fill-primary text-primary' : 'text-muted-foreground',
               )
             "
           />
-        </IconButton>
+        </Button>
 
-        <IconButton
-          :ariaLabel="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
+        <Button
+          :aria-label="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
           variant="ghost"
-          size="sm"
+          size="icon"
           @click.stop="emit('toggle-read')"
         >
           <Icon :icon="message.is_read ? 'lucide:mail-open' : 'lucide:mail'" class="size-4" />
-        </IconButton>
+        </Button>
 
-        <IconButton
-          :ariaLabel="'Pindahkan ke folder'"
+        <Button
+          aria-label="Pindahkan ke folder"
           variant="ghost"
-          size="sm"
+          size="icon"
           @click.stop="emit('move')"
         >
           <Icon icon="lucide:folder-input" class="size-4" />
-        </IconButton>
+        </Button>
 
-        <IconButton
-          :ariaLabel="'Pindah ke Trash'"
+        <Button
+          aria-label="Pindah ke Trash"
           variant="ghost"
-          size="sm"
+          size="icon"
           @click.stop="emit('trash')"
         >
           <Icon icon="lucide:trash" class="size-4 text-destructive" />
-        </IconButton>
+        </Button>
       </div>
     </div>
   </button>

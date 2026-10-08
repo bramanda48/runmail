@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import EmptyState from "@/components/app/empty-state.vue";
+import Pagination from "@/components/app/pagination.vue";
 import EmailRow from "@/components/email/email-row.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { LocalFolder, LocalMessage } from "@/db/mailbox-db";
 import { computed } from "vue";

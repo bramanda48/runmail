@@ -34,7 +34,7 @@ const countClasses = computed(() =>
   cn(
     "ml-auto rounded-full px-2 py-0.5 text-xs font-medium",
     props.active
-      ? "bg-primary-foreground/10 text-primary-foreground"
+      ? "bg-primary/10 text-primary"
       : "bg-muted text-muted-foreground",
   ),
 );

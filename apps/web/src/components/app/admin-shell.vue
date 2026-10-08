@@ -3,7 +3,7 @@ import AppShell from "@/components/app/app-shell.vue";
 import NavItem from "@/components/app/nav-item.vue";
 import Wordmark from "@/components/app/wordmark.vue";
 import { Badge } from "@/components/ui/badge";
-import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { useAuthStore } from "@/stores/auth";
 import { useRoute, useRouter } from "vue-router";
@@ -46,10 +46,10 @@ async function logout() {
           </nav>
         </div>
         <div class="mt-auto p-4">
-          <IconButton :ariaLabel="'Keluar'" variant="ghost" class="w-full" @click="logout">
+          <Button aria-label="Keluar" variant="ghost" size="icon" class="w-full" @click="logout">
             <Icon icon="lucide:log-out" />
             <span>Keluar</span>
-          </IconButton>
+          </Button>
         </div>
       </div>
     </template>

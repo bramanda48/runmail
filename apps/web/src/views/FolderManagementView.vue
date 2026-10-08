@@ -14,7 +14,6 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
@@ -324,7 +323,7 @@ watchSyncStatus();
 
       <div v-else class="flex flex-col gap-4">
         <!-- System folders -->
-        <div class="rounded-2xl border bg-surface p-4">
+        <div class="rounded-lg border bg-card p-4">
           <h2 class="mb-3 text-sm font-semibold text-muted-foreground">Folder Sistem</h2>
           <ul class="divide-y">
             <li
@@ -343,7 +342,7 @@ watchSyncStatus();
         </div>
 
         <!-- Custom folders -->
-        <div class="rounded-2xl border bg-surface p-4">
+        <div class="rounded-lg border bg-card p-4">
           <h2 class="mb-3 text-sm font-semibold text-muted-foreground">Folder Kustom</h2>
 
           <EmptyState
@@ -365,22 +364,22 @@ watchSyncStatus();
                 <span class="truncate text-foreground">{{ folder.name }}</span>
               </div>
               <div class="flex items-center gap-1">
-                <IconButton
-                  :ariaLabel="`Ubah nama folder ${folder.name}`"
+                <Button
+                  :aria-label="`Ubah nama folder ${folder.name}`"
                   variant="ghost"
-                  size="md"
+                  size="icon"
                   @click="openEdit(folder)"
                 >
                   <Icon icon="lucide:pencil" class="size-4 shrink-0 text-muted-foreground" />
-                </IconButton>
-                <IconButton
-                  :ariaLabel="`Hapus folder ${folder.name}`"
+                </Button>
+                <Button
+                  :aria-label="`Hapus folder ${folder.name}`"
                   variant="ghost"
-                  size="md"
+                  size="icon"
                   @click="openDelete(folder)"
                 >
                   <Icon icon="lucide:trash" class="text-destructive" />
-                </IconButton>
+                </Button>
               </div>
             </li>
           </ul>

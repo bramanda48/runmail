@@ -7,7 +7,7 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { watch } from "vue";
 import { useRoute } from "vue-router";
@@ -38,16 +38,16 @@ function onOpenChange(value: boolean) {
   <DialogRoot :open="open" @update:open="onOpenChange">
     <DialogPortal>
       <DialogOverlay class="fixed inset-0 z-40 bg-black/50 lg:hidden" />
-      <DialogContent class="fixed inset-y-0 left-0 z-50 w-64 bg-surface p-0 outline-none lg:hidden">
-        <IconButton
-          :ariaLabel="'Tutup menu'"
+      <DialogContent class="fixed inset-y-0 left-0 z-50 w-64 bg-card p-0 outline-none lg:hidden">
+        <Button
+          aria-label="Tutup menu"
           variant="ghost"
-          size="sm"
+          size="icon"
           class="absolute right-2 top-2"
           @click="onOpenChange(false)"
         >
           <Icon icon="lucide:x" />
-        </IconButton>
+        </Button>
         <DialogTitle class="sr-only">Navigasi</DialogTitle>
         <DialogDescription class="sr-only"> Menu navigasi aplikasi </DialogDescription>
         <slot />

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AdminShell from "@/components/app/admin-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
-import { Alert } from "@/components/ui/alert";
+import Pagination from "@/components/app/pagination.vue";
+import PasswordField from "@/components/app/password-field.vue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,10 +13,7 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
-import { Pagination } from "@/components/ui/pagination";
-import { PasswordInput } from "@/components/ui/password-input";
 import {
   Select,
   SelectContent,
@@ -306,7 +304,7 @@ async function submitEdit() {
       </EmptyState>
 
       <div v-else class="flex flex-col gap-4">
-        <div class="rounded-2xl border bg-surface p-4">
+        <div class="rounded-lg border bg-card p-4">
           <Table>
             <TableHeader>
               <TableRow>
@@ -326,14 +324,14 @@ async function submitEdit() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <IconButton
-                    :ariaLabel="`Edit ${user.username}`"
+                  <Button
+                    :aria-label="`Edit ${user.username}`"
                     variant="ghost"
-                    size="sm"
+                    size="icon"
                     @click="openEdit(user)"
                   >
                     <Icon icon="lucide:pencil" />
-                  </IconButton>
+                  </Button>
                 </TableCell>
               </TableRow>
             </TableBody>
@@ -380,7 +378,7 @@ async function submitEdit() {
 
           <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Kata Sandi Awal</span>
-            <PasswordInput
+            <PasswordField
               v-model="createPassword"
               placeholder="Masukkan kata sandi"
               :disabled="createSubmitting"
@@ -469,7 +467,7 @@ async function submitEdit() {
 
           <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Kata Sandi Baru (opsional)</span>
-            <PasswordInput
+            <PasswordField
               v-model="editNewPassword"
               placeholder="Kosongkan jika tidak diubah"
               :disabled="editSubmitting"
