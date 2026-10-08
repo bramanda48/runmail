@@ -52,16 +52,16 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
 </script>
 
 <template>
-  <Alert v-if="isTrashFolder" variant="warning" class="mb-4">
+  <Alert v-if="isTrashFolder" class="mb-4">
     Pesan di folder Trash akan dihapus otomatis dalam 30 hari.
   </Alert>
 
   <div v-if="loading" class="flex flex-col gap-2">
-    <Skeleton shape="list" :rows="4" />
+    <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
   </div>
 
   <div v-else-if="error" class="flex flex-col gap-4">
-    <Alert variant="error">{{ error }}</Alert>
+    <Alert variant="destructive">{{ error }}</Alert>
     <Button variant="ghost" @click="emits('load-more')">Coba Lagi</Button>
   </div>
 

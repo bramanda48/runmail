@@ -9,7 +9,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
@@ -384,11 +384,16 @@ watchSyncStatus();
       </div>
 
       <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton shape="form" :rows="6" />
+        <Skeleton class="h-8 w-1/3" />
+        <Skeleton class="h-24 w-full" />
+        <Skeleton class="h-24 w-full" />
+        <Skeleton class="h-24 w-full" />
+        <Skeleton class="h-24 w-full" />
+        <Skeleton class="h-10 w-full" />
       </div>
 
       <div v-else-if="notFound" class="flex flex-col gap-4">
-        <Alert variant="error">Ruleset tidak ditemukan.</Alert>
+        <Alert variant="destructive">Ruleset tidak ditemukan.</Alert>
         <Button variant="ghost" @click="goBack">Kembali ke daftar ruleset</Button>
       </div>
 
@@ -397,7 +402,7 @@ watchSyncStatus();
           <CardTitle>Detail Ruleset</CardTitle>
         </CardHeader>
         <CardContent class="flex flex-col gap-6">
-          <Alert v-if="errors.inline" variant="error">{{ errors.inline }}</Alert>
+          <Alert v-if="errors.inline" variant="destructive">{{ errors.inline }}</Alert>
 
           <div class="grid gap-4 md:grid-cols-2">
             <label class="flex flex-col gap-1.5">
@@ -406,7 +411,7 @@ watchSyncStatus();
                 v-model="form.name"
                 placeholder="Contoh: Filter newsletter"
                 :disabled="isSaving"
-                :variant="errors.name ? 'error' : 'default'"
+                :aria-invalid="Boolean(errors.name)"
               />
               <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
             </label>
@@ -420,7 +425,7 @@ watchSyncStatus();
                 step="1"
                 placeholder="0"
                 :disabled="isSaving"
-                :variant="errors.priority ? 'error' : 'default'"
+                :aria-invalid="Boolean(errors.priority)"
               />
               <p class="text-xs text-muted-foreground">
                 Angka lebih kecil dieksekusi lebih dahulu.
@@ -430,13 +435,23 @@ watchSyncStatus();
           </div>
 
           <div class="grid gap-4 md:grid-cols-2">
-            <Select
-              id="select-logic-operator"
-              v-model="form.logic_operator"
-              label="Logika Kondisi"
-              :options="logicOperatorOptions"
-              :disabled="isSaving"
-            />
+            <div class="flex flex-col gap-1.5">
+              <span class="text-sm font-medium text-foreground">Logika Kondisi</span>
+              <Select v-model="form.logic_operator" :disabled="isSaving">
+                <SelectTrigger id="select-logic-operator">
+                  <SelectValue placeholder="Pilih logika" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in logicOperatorOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <div class="flex items-center justify-between rounded-lg border p-3">
               <div>

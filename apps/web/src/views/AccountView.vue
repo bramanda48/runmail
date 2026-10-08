@@ -128,7 +128,7 @@ async function confirmLogout() {
               <p class="text-sm text-muted-foreground">Username</p>
               <p class="font-medium text-foreground">{{ auth.user?.username }}</p>
             </div>
-            <Badge :variant="auth.isAdmin ? 'success' : 'inactive'">
+            <Badge :variant="auth.isAdmin ? 'secondary' : 'outline'">
               {{ auth.isAdmin ? "Admin" : "Member" }}
             </Badge>
           </div>
@@ -140,7 +140,7 @@ async function confirmLogout() {
                 <span>Keluar</span>
               </Button>
             </DialogTrigger>
-            <DialogContent variant="destructive" size="sm">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Keluar</DialogTitle>
                 <DialogDescription>Apakah Anda yakin ingin keluar?</DialogDescription>
@@ -165,8 +165,8 @@ async function confirmLogout() {
           </CardDescription>
         </CardHeader>
         <CardContent class="flex flex-col gap-4">
-          <Alert v-if="inlineError" variant="error">{{ inlineError }}</Alert>
-          <Alert v-if="successMessage" variant="success">{{ successMessage }}</Alert>
+          <Alert v-if="inlineError" variant="destructive">{{ inlineError }}</Alert>
+          <Alert v-if="successMessage">{{ successMessage }}</Alert>
 
           <form class="flex flex-col gap-4" @submit.prevent="handleChangePassword">
             <label class="flex flex-col gap-1.5">
@@ -175,7 +175,6 @@ async function confirmLogout() {
                 v-model="currentPassword"
                 placeholder="Masukkan kata sandi saat ini"
                 :disabled="isSubmitting"
-                :variant="currentPasswordError ? 'error' : 'default'"
               />
               <p v-if="currentPasswordError" class="text-sm text-destructive">
                 {{ currentPasswordError }}
@@ -188,7 +187,6 @@ async function confirmLogout() {
                 v-model="newPassword"
                 placeholder="Minimal 8 karakter"
                 :disabled="isSubmitting"
-                :variant="newPasswordError ? 'error' : 'default'"
               />
               <p class="text-xs text-muted-foreground">Kata sandi harus 8–128 karakter.</p>
               <p v-if="newPasswordError" class="text-sm text-destructive">
@@ -202,7 +200,6 @@ async function confirmLogout() {
                 v-model="confirmPassword"
                 placeholder="Ulangi kata sandi baru"
                 :disabled="isSubmitting"
-                :variant="confirmPasswordError ? 'error' : 'default'"
               />
               <p v-if="confirmPasswordError" class="text-sm text-destructive">
                 {{ confirmPasswordError }}

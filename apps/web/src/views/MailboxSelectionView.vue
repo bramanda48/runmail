@@ -137,11 +137,11 @@ function rowClasses(isActive: boolean) {
       </div>
 
       <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton shape="list" :rows="4" />
+        <Skeleton v-for="n in 4" :key="n" class="h-[72px] w-full" />
       </div>
 
       <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="error">{{ error }}</Alert>
+        <Alert variant="destructive">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
 
@@ -181,7 +181,7 @@ function rowClasses(isActive: boolean) {
             <p v-if="!mailbox.is_active" class="text-xs text-muted-foreground">Mailbox nonaktif</p>
           </div>
 
-          <Badge :variant="mailbox.is_active ? 'success' : 'inactive'">
+          <Badge :variant="mailbox.is_active ? 'secondary' : 'outline'">
             {{ mailbox.is_active ? "Aktif" : "Nonaktif" }}
           </Badge>
         </button>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IconButton } from "@/components/ui/icon-button";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Icon } from "@/icons";
 import type { ActionType } from "@runmail/shared";
 import { ACTION_TYPES } from "@runmail/shared";
@@ -66,23 +66,32 @@ watch(
   <div class="rounded-xl border bg-background p-3">
     <div class="flex flex-col gap-3 md:flex-row md:items-start">
       <div class="flex flex-1 flex-col gap-3 md:flex-row">
-        <Select
-          v-model="localAction.action_type"
-          :options="actionTypeOptions"
-          :disabled="isSaving"
-          class="md:w-48"
-          ariaLabel="Tipe aksi"
-        />
+        <Select v-model="localAction.action_type" :disabled="isSaving">
+          <SelectTrigger class="md:w-48" aria-label="Tipe aksi">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="opt in actionTypeOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
         <div class="flex-1">
-          <Select
-            v-if="localAction.action_type === 'move_to_folder'"
-            v-model="localAction.action_value"
-            :options="folderOptions"
-            placeholder="Pilih folder tujuan"
-            :disabled="isSaving"
-            :error="Boolean(error)"
-            ariaLabel="Folder tujuan aksi"
-          />
+          <template v-if="localAction.action_type === 'move_to_folder'">
+            <Select v-model="localAction.action_value" :disabled="isSaving">
+              <SelectTrigger
+                aria-label="Folder tujuan aksi"
+                :aria-invalid="Boolean(error)"
+              >
+                <SelectValue placeholder="Pilih folder tujuan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="opt in folderOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </template>
           <p v-if="error" class="mt-1 text-sm text-destructive">
             {{ error }}
           </p>

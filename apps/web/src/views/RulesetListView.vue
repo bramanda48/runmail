@@ -241,11 +241,14 @@ watchSyncStatus();
       </div>
 
       <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton shape="list" :rows="4" />
+        <Skeleton class="h-12 w-full" />
+        <Skeleton class="h-12 w-full" />
+        <Skeleton class="h-12 w-full" />
+        <Skeleton class="h-12 w-full" />
       </div>
 
       <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="error">{{ error }}</Alert>
+        <Alert variant="destructive">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
 
@@ -287,10 +290,10 @@ watchSyncStatus();
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="inactive">{{ ruleset.priority }}</Badge>
+                    <Badge variant="outline">{{ ruleset.priority }}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="inactive">{{ ruleset.logic_operator }}</Badge>
+                    <Badge variant="outline">{{ ruleset.logic_operator }}</Badge>
                   </TableCell>
                   <TableCell>
                     <Switch
@@ -342,7 +345,7 @@ watchSyncStatus();
 
     <!-- Delete confirmation -->
     <DialogRoot v-model:open="deleteOpen">
-      <DialogContent variant="destructive" size="sm">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Hapus Ruleset</DialogTitle>
         </DialogHeader>

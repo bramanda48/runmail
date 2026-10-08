@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Icon } from "@/icons";
 import type { MatchType, RuleField } from "@runmail/shared";
 import { MATCH_TYPES, RULE_FIELDS } from "@runmail/shared";
@@ -52,26 +52,32 @@ watch(
   <div class="rounded-xl border bg-background p-3">
     <div class="flex flex-col gap-3 md:flex-row md:items-start">
       <div class="flex flex-1 flex-col gap-3 md:flex-row">
-        <Select
-          v-model="localCondition.field"
-          :options="fieldOptions"
-          :disabled="isSaving"
-          class="md:w-32"
-          ariaLabel="Field kondisi"
-        />
-        <Select
-          v-model="localCondition.match_type"
-          :options="matchTypeOptions"
-          :disabled="isSaving"
-          class="md:w-40"
-          ariaLabel="Jenis pencocokan"
-        />
+        <Select v-model="localCondition.field" :disabled="isSaving">
+          <SelectTrigger class="md:w-32" aria-label="Field kondisi">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="opt in fieldOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Select v-model="localCondition.match_type" :disabled="isSaving">
+          <SelectTrigger class="md:w-40" aria-label="Jenis pencocokan">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="opt in matchTypeOptions" :key="opt.value" :value="opt.value">
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
         <div class="flex-1">
           <Input
             v-model="localCondition.condition_value"
             placeholder="Nilai yang dicocokkan"
             :disabled="isSaving"
-            :variant="error ? 'error' : 'default'"
+            :aria-invalid="Boolean(error)"
           />
           <p v-if="error" class="mt-1 text-sm text-destructive">
             {{ error }}

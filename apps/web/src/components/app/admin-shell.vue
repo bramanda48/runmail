@@ -57,7 +57,7 @@ async function logout() {
     <template #topbar>
       <div class="flex items-center gap-3">
         <Wordmark size="sm" />
-        <Badge variant="success">Admin</Badge>
+        <Badge variant="secondary">Admin</Badge>
       </div>
     </template>
 

@@ -8,7 +8,7 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Select } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { LocalFolder } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { computed, ref, watch } from "vue";
@@ -64,14 +64,17 @@ async function confirmMove() {
       </DialogHeader>
       <DialogDescription>
         <div class="flex flex-col gap-4 py-2">
-          <Select
-            id="select-move-target"
-            v-model="moveTargetFolderId"
-            label="Folder tujuan"
-            placeholder="Pilih folder"
-            :options="folderOptions"
-            :disabled="moveSubmitting"
-          />
+          <label for="select-move-target" class="text-sm font-medium">Folder tujuan</label>
+          <Select v-model="moveTargetFolderId" :disabled="moveSubmitting">
+            <SelectTrigger id="select-move-target" aria-label="Folder tujuan" class="w-full">
+              <SelectValue placeholder="Pilih folder" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="opt in folderOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </DialogDescription>
       <DialogFooter>

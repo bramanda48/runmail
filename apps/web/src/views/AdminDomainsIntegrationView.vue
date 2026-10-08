@@ -93,7 +93,7 @@ onMounted(() => {
       aria-labelledby="oauth-error-title"
       aria-describedby="oauth-error-message"
     >
-      <Alert variant="error" class="items-start">
+      <Alert variant="destructive" class="items-start">
         <div class="min-w-0">
           <h1 id="oauth-error-title" class="font-semibold">Gagal menghubungkan Cloudflare</h1>
           <p id="oauth-error-message" class="mt-1 wrap-break-words">{{ errorMessage }}</p>

@@ -16,8 +16,13 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
 import { PasswordInput } from "@/components/ui/password-input";
-import { Select } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -278,11 +283,11 @@ async function submitEdit() {
       </div>
 
       <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton shape="list" :rows="4" />
+        <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
       </div>
 
       <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="error">{{ error }}</Alert>
+        <Alert variant="destructive">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
 
@@ -316,7 +321,7 @@ async function submitEdit() {
                 <TableCell class="font-medium">{{ user.username }}</TableCell>
                 <TableCell class="capitalize">{{ user.role }}</TableCell>
                 <TableCell>
-                  <Badge :variant="user.is_active ? 'success' : 'inactive'">
+                  <Badge :variant="user.is_active ? 'secondary' : 'outline'">
                     {{ user.is_active ? "Aktif" : "Nonaktif" }}
                   </Badge>
                 </TableCell>
@@ -358,7 +363,7 @@ async function submitEdit() {
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="createInlineError" variant="error">{{ createInlineError }}</Alert>
+          <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
 
           <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Username</span>
@@ -366,7 +371,7 @@ async function submitEdit() {
               v-model="createUsername"
               placeholder="nama.pengguna"
               :disabled="createSubmitting"
-              :variant="createUsernameError ? 'error' : 'default'"
+              :aria-invalid="Boolean(createUsernameError)"
             />
             <p v-if="createUsernameError" class="text-sm text-destructive">
               {{ createUsernameError }}
@@ -379,20 +384,25 @@ async function submitEdit() {
               v-model="createPassword"
               placeholder="Masukkan kata sandi"
               :disabled="createSubmitting"
-              :variant="createPasswordError ? 'error' : 'default'"
             />
             <p v-if="createPasswordError" class="text-sm text-destructive">
               {{ createPasswordError }}
             </p>
           </label>
 
-          <Select
-            id="select-create-role"
-            v-model="createRole"
-            label="Peran"
-            :options="roleOptions"
-            :disabled="createSubmitting"
-          />
+          <div class="flex flex-col gap-1.5">
+            <label for="select-create-role" class="text-sm font-medium text-foreground">Peran</label>
+            <Select v-model="createRole">
+              <SelectTrigger id="select-create-role" :disabled="createSubmitting">
+                <SelectValue placeholder="Pilih peran" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="option in roleOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <DialogFooter>
@@ -416,21 +426,30 @@ async function submitEdit() {
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="editInlineError" variant="error">{{ editInlineError }}</Alert>
+          <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
 
           <div>
             <p class="text-sm text-muted-foreground">Username</p>
             <p class="font-medium text-foreground">{{ editingUser?.username }}</p>
           </div>
 
-          <Select
-            id="select-edit-role"
-            v-model="editRole"
-            label="Peran"
-            :options="roleOptions"
-            :disabled="editSubmitting"
-            :error="Boolean(editRoleError)"
-          />
+          <div class="flex flex-col gap-1.5">
+            <label for="select-edit-role" class="text-sm font-medium text-foreground">Peran</label>
+            <Select v-model="editRole">
+              <SelectTrigger
+                id="select-edit-role"
+                :disabled="editSubmitting"
+                :aria-invalid="Boolean(editRoleError)"
+              >
+                <SelectValue placeholder="Pilih peran" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="option in roleOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <p v-if="editRoleError" class="text-sm text-destructive">{{ editRoleError }}</p>
 
           <div class="flex items-center justify-between rounded-lg border p-3">
@@ -454,7 +473,6 @@ async function submitEdit() {
               v-model="editNewPassword"
               placeholder="Kosongkan jika tidak diubah"
               :disabled="editSubmitting"
-              :variant="editPasswordError ? 'error' : 'default'"
             />
             <p v-if="editPasswordError" class="text-sm text-destructive">
               {{ editPasswordError }}
@@ -476,7 +494,7 @@ async function submitEdit() {
 
     <!-- Deactivate confirmation -->
     <DialogRoot v-model:open="deactivateOpen">
-      <DialogContent variant="destructive" size="sm">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Nonaktifkan User</DialogTitle>
           <DialogDescription>Nonaktifkan user? Sesi user akan diakhiri.</DialogDescription>

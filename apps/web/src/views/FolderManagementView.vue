@@ -314,11 +314,11 @@ watchSyncStatus();
       </div>
 
       <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton shape="list" :rows="4" />
+        <Skeleton v-for="n in 4" :key="n" class="h-[52px] w-full" />
       </div>
 
       <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="error">{{ error }}</Alert>
+        <Alert variant="destructive">{{ error }}</Alert>
         <Button variant="ghost" @click="load">Coba Lagi</Button>
       </div>
 
@@ -335,7 +335,7 @@ watchSyncStatus();
               <div class="flex items-center gap-3 min-w-0">
                 <Icon icon="lucide:folder" class="size-5 shrink-0 text-muted-foreground" />
                 <span class="truncate text-foreground">{{ folder.name }}</span>
-                <Badge variant="inactive">Sistem</Badge>
+                <Badge variant="outline">Sistem</Badge>
               </div>
               <Icon icon="lucide:lock" class="size-4 shrink-0 text-muted-foreground" />
             </li>
@@ -396,7 +396,7 @@ watchSyncStatus();
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="createInlineError" variant="error">{{ createInlineError }}</Alert>
+          <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
 
           <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Nama Folder</span>
@@ -404,7 +404,7 @@ watchSyncStatus();
               v-model="newFolderName"
               placeholder="Contoh: Proyek A"
               :disabled="createSubmitting"
-              :variant="nameError ? 'error' : 'default'"
+              :aria-invalid="nameError ? 'true' : undefined"
               maxlength="64"
             />
             <p v-if="nameError" class="text-sm text-destructive">{{ nameError }}</p>
@@ -431,7 +431,7 @@ watchSyncStatus();
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="editInlineError" variant="error">{{ editInlineError }}</Alert>
+          <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
 
           <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Nama Folder</span>
@@ -439,7 +439,7 @@ watchSyncStatus();
               v-model="editFolderName"
               placeholder="Contoh: Proyek A"
               :disabled="editSubmitting"
-              :variant="editNameError ? 'error' : 'default'"
+              :aria-invalid="editNameError ? 'true' : undefined"
               maxlength="64"
             />
             <p v-if="editNameError" class="text-sm text-destructive">{{ editNameError }}</p>
@@ -460,7 +460,7 @@ watchSyncStatus();
 
     <!-- Delete confirmation -->
     <DialogRoot v-model:open="deleteOpen">
-      <DialogContent variant="destructive" size="sm">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Hapus Folder</DialogTitle>
         </DialogHeader>

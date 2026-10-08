@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { IconButton } from "@/components/ui/icon-button";
-import { Input, type inputVariants } from "@/components/ui/input";
+import { Input } from "@/components/ui/input";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
-import type { VariantProps } from "class-variance-authority";
 import type { HTMLAttributes } from "vue";
 import { computed, ref } from "vue";
 
 interface Props {
   modelValue?: string;
-  variant?: VariantProps<typeof inputVariants>["variant"];
   placeholder?: string;
   disabled?: boolean;
   class?: HTMLAttributes["class"];
@@ -37,7 +35,6 @@ function toggle() {
     <Input
       :type="type"
       :model-value="modelValue"
-      :variant="variant"
       :placeholder="placeholder"
       :disabled="disabled"
       class="pr-10"

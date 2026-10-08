@@ -14,7 +14,13 @@ import {
 } from "@/components/ui/dialog";
 import { IconButton } from "@/components/ui/icon-button";
 import { Pagination } from "@/components/ui/pagination";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -110,7 +116,7 @@ function retry() {
 onMounted(() => load(undefined));
 
 function statusBadge(status: DomainVerificationStatus) {
-  return status === "active" ? "success" : "pending";
+  return status === "active" ? "secondary" : "outline";
 }
 
 function statusLabel(status: DomainVerificationStatus) {
@@ -228,7 +234,7 @@ async function submitAdd() {
         />
         Memeriksa koneksi Cloudflare...
       </p>
-      <Alert v-else-if="statusError" variant="warning" class="mb-6 [&>div]:min-w-0 [&>div]:flex-1">
+      <Alert v-else-if="statusError" class="mb-6 [&>div]:min-w-0 [&>div]:flex-1">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p>{{ statusError }}</p>
           <Button variant="outline" class="min-h-11 shrink-0 text-foreground" @click="checkStatus"
@@ -238,7 +244,6 @@ async function submitAdd() {
       </Alert>
       <Alert
         v-else-if="configured === false"
-        :variant="reconnect ? 'warning' : 'info'"
         aria-live="polite"
         class="mb-6 [&>div]:min-w-0 [&>div]:flex-1"
         aria-labelledby="cloudflare-connection-title"
@@ -275,11 +280,11 @@ async function submitAdd() {
       </Alert>
 
       <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton shape="list" :rows="4" />
+        <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
       </div>
 
       <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="error">{{ error }}</Alert>
+        <Alert variant="destructive">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
 
@@ -298,7 +303,7 @@ async function submitAdd() {
       </EmptyState>
 
       <div v-else class="flex flex-col gap-4">
-        <Alert v-if="verifyError" variant="error">{{ verifyError }}</Alert>
+        <Alert v-if="verifyError" variant="destructive">{{ verifyError }}</Alert>
 
         <div class="rounded-2xl border bg-surface p-4">
           <Table>
@@ -361,7 +366,7 @@ async function submitAdd() {
     >
       <Alert
         v-if="notice"
-        :variant="notice.variant"
+        :variant="notice.variant === 'error' ? 'destructive' : undefined"
         class="shadow-lg [&>div]:min-w-0 [&>div]:flex-1 bg-surface"
       >
         <div class="flex items-start gap-2">
@@ -405,23 +410,31 @@ async function submitAdd() {
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="addInlineError" variant="error">{{ addInlineError }}</Alert>
+          <Alert v-if="addInlineError" variant="destructive">{{ addInlineError }}</Alert>
 
           <div v-if="loadingAvailable" class="text-sm text-muted-foreground">
             Memuat domain yang tersedia...
           </div>
-          <Alert v-else-if="availableDomains.length === 0 && !addInlineError" variant="info">
+          <Alert v-else-if="availableDomains.length === 0 && !addInlineError">
             Tidak ada domain Cloudflare yang tersedia.
           </Alert>
-          <Select
-            v-else
-            id="select-domain"
-            v-model="selectedDomain"
-            label="Domain"
-            placeholder="Pilih domain"
-            :options="availableDomains"
-            :disabled="loadingAvailable || addSubmitting"
-          />
+          <div v-else class="flex flex-col gap-1.5">
+            <label for="select-domain" class="text-sm font-medium text-foreground">Domain</label>
+            <Select v-model="selectedDomain">
+              <SelectTrigger id="select-domain" :disabled="loadingAvailable || addSubmitting">
+                <SelectValue placeholder="Pilih domain" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="option in availableDomains"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <DialogFooter>

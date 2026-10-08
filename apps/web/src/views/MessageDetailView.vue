@@ -15,7 +15,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { IconButton } from "@/components/ui/icon-button";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
@@ -284,10 +290,16 @@ watch(messageId, async () => {
 
     <main class="flex flex-1 flex-col p-4 lg:p-8">
       <div v-if="!message && bodyState === 'loading'" class="flex flex-col gap-4">
-        <Skeleton shape="detail" />
+        <Skeleton class="h-8 w-2/3" />
+        <Skeleton class="h-4 w-1/3" />
+        <div class="flex flex-col gap-2">
+          <Skeleton class="h-4 w-full" />
+          <Skeleton class="h-4 w-full" />
+          <Skeleton class="h-4 w-5/6" />
+        </div>
       </div>
 
-      <Alert v-else-if="bodyState === 'error'" variant="error">
+      <Alert v-else-if="bodyState === 'error'" variant="destructive">
         {{ fetchError }}
         <Button variant="ghost" size="sm" class="ml-2" @click="loadMessage(false)"
           >Coba Lagi</Button
@@ -365,8 +377,10 @@ watch(messageId, async () => {
 
         <!-- Body -->
         <div class="rounded-2xl border bg-surface p-4 lg:p-6">
-          <div v-if="bodyState === 'loading'" class="flex flex-col gap-3">
-            <Skeleton shape="block" />
+          <div v-if="bodyState === 'loading'" class="flex flex-col gap-2">
+            <Skeleton class="h-4 w-full" />
+            <Skeleton class="h-4 w-full" />
+            <Skeleton class="h-4 w-5/6" />
           </div>
 
           <RemoteImageNotice
@@ -393,7 +407,7 @@ watch(messageId, async () => {
             Email ini tidak memiliki konten.
           </div>
 
-          <Alert v-else-if="bodyState === 'parse-error'" variant="warning">
+          <Alert v-else-if="bodyState === 'parse-error'">
             Email tidak dapat ditampilkan. Anda dapat mencoba memuat ulang.
             <Button variant="ghost" size="sm" class="ml-2" @click="loadBody">Coba Lagi</Button>
           </Alert>
@@ -422,15 +436,24 @@ watch(messageId, async () => {
           <DialogHeader>
             <DialogTitle>Pindahkan Email</DialogTitle>
           </DialogHeader>
-          <div class="flex flex-col gap-4 py-2">
-            <Select
-              id="select-move-target"
-              v-model="moveTargetFolderId"
-              label="Folder tujuan"
-              placeholder="Pilih folder"
-              :options="folderOptions"
-              :disabled="moveSubmitting"
-            />
+          <div class="flex flex-col gap-1.5 py-2">
+            <label for="select-move-target" class="text-sm font-medium text-foreground">
+              Folder tujuan
+            </label>
+            <Select v-model="moveTargetFolderId" :disabled="moveSubmitting">
+              <SelectTrigger id="select-move-target">
+                <SelectValue placeholder="Pilih folder" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="option in folderOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button variant="ghost" :disabled="moveSubmitting" @click="moveOpen = false">
@@ -446,7 +469,7 @@ watch(messageId, async () => {
 
       <!-- Permanent delete dialog -->
       <DialogRoot v-model:open="deleteOpen">
-        <DialogContent variant="destructive" size="sm">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Hapus Permanen</DialogTitle>
             <DialogDescription> Email tidak dapat dikembalikan. Lanjutkan? </DialogDescription>

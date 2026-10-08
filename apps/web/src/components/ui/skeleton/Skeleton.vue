@@ -1,52 +1,17 @@
 <script setup lang="ts">
-import { cn } from "@/lib/utils";
 import type { HTMLAttributes } from "vue";
+import { cn } from "@/lib/utils";
 
-type Shape = "block" | "list" | "detail" | "form";
-
-interface Props {
-  shape?: Shape;
-  rows?: number;
+interface SkeletonProps {
   class?: HTMLAttributes["class"];
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  shape: "block",
-  rows: 3,
-});
+const props = defineProps<SkeletonProps>();
 </script>
 
 <template>
-  <div :class="cn('animate-pulse', props.class)" aria-hidden="true">
-    <template v-if="shape === 'block'">
-      <div class="h-24 w-full rounded-md bg-muted" />
-    </template>
-
-    <template v-else-if="shape === 'list'">
-      <div v-for="i in rows" :key="i" class="flex items-center gap-4 py-3">
-        <div class="size-10 rounded-full bg-muted" />
-        <div class="flex flex-1 flex-col gap-2">
-          <div class="h-4 w-1/3 rounded bg-muted" />
-          <div class="h-3 w-2/3 rounded bg-muted" />
-        </div>
-      </div>
-    </template>
-
-    <template v-else-if="shape === 'detail'">
-      <div class="flex flex-col gap-4">
-        <div class="h-8 w-2/3 rounded bg-muted" />
-        <div class="h-4 w-full rounded bg-muted" />
-        <div class="h-4 w-5/6 rounded bg-muted" />
-      </div>
-    </template>
-
-    <template v-else-if="shape === 'form'">
-      <div class="flex flex-col gap-4">
-        <div v-for="i in rows" :key="i" class="flex flex-col gap-2">
-          <div class="h-4 w-1/4 rounded bg-muted" />
-          <div class="h-9 w-full rounded-md bg-muted" />
-        </div>
-      </div>
-    </template>
-  </div>
+  <div
+    data-slot="skeleton"
+    :class="cn('animate-pulse rounded-md bg-muted', props.class)"
+  />
 </template>

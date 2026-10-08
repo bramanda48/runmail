@@ -15,8 +15,13 @@ import {
 import { IconButton } from "@/components/ui/icon-button";
 import { Input } from "@/components/ui/input";
 import { Pagination } from "@/components/ui/pagination";
-import { Select } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -389,11 +394,11 @@ async function unlinkUser(user: MailboxLinkedUser) {
       </div>
 
       <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton shape="list" :rows="4" />
+        <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
       </div>
 
       <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="error">{{ error }}</Alert>
+        <Alert variant="destructive">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
 
@@ -425,7 +430,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
               <TableRow v-for="mailbox in mailboxes" :key="mailbox.id">
                 <TableCell class="font-medium">{{ mailbox.address }}</TableCell>
                 <TableCell>
-                  <Badge :variant="mailbox.is_active ? 'success' : 'inactive'">
+                  <Badge :variant="mailbox.is_active ? 'secondary' : 'outline'">
                     {{ mailbox.is_active ? "Aktif" : "Nonaktif" }}
                   </Badge>
                 </TableCell>
@@ -477,18 +482,27 @@ async function unlinkUser(user: MailboxLinkedUser) {
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="createInlineError" variant="error">{{ createInlineError }}</Alert>
-          <Alert v-if="!loadingDomains && activeDomains.length === 0" variant="warning">
+          <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
+          <Alert v-if="!loadingDomains && activeDomains.length === 0">
             Aktifkan domain terlebih dahulu sebelum membuat mailbox.
           </Alert>
 
-          <Select
-            v-model="selectedDomainId"
-            label="Domain"
-            placeholder="Pilih domain"
-            :options="domainOptions"
-            :disabled="loadingDomains || createSubmitting || activeDomains.length === 0"
-          />
+          <div class="flex flex-col gap-1.5">
+            <label for="select-domain" class="text-sm font-medium text-foreground">Domain</label>
+            <Select v-model="selectedDomainId">
+              <SelectTrigger
+                id="select-domain"
+                :disabled="loadingDomains || createSubmitting || activeDomains.length === 0"
+              >
+                <SelectValue placeholder="Pilih domain" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="option in domainOptions" :key="option.value" :value="option.value">
+                  {{ option.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
           <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Alamat Email</span>
@@ -498,7 +512,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
                 placeholder="nama"
                 class="flex-1"
                 :disabled="createSubmitting || activeDomains.length === 0"
-                :variant="localPartError ? 'error' : 'default'"
+                :aria-invalid="Boolean(localPartError)"
               />
               <span class="whitespace-nowrap text-sm text-muted-foreground">
                 @{{ selectedDomain?.domain_name || "domain" }}
@@ -529,7 +543,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="editInlineError" variant="error">{{ editInlineError }}</Alert>
+          <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
 
           <div>
             <p class="text-sm text-muted-foreground">Alamat</p>
@@ -564,7 +578,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
 
     <!-- Deactivate confirmation -->
     <DialogRoot v-model:open="deactivateOpen">
-      <DialogContent variant="destructive" size="sm">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Nonaktifkan Mailbox</DialogTitle>
           <DialogDescription>
@@ -583,7 +597,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
 
     <!-- Manage users dialog -->
     <DialogRoot v-model:open="manageOpen">
-      <DialogContent size="md">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Kelola User Mailbox</DialogTitle>
           <DialogDescription>
@@ -592,27 +606,33 @@ async function unlinkUser(user: MailboxLinkedUser) {
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="manageInlineError" variant="error">{{ manageInlineError }}</Alert>
+          <Alert v-if="manageInlineError" variant="destructive">{{ manageInlineError }}</Alert>
 
           <div v-if="manageLoading" class="text-sm text-muted-foreground">
             Memuat daftar user...
           </div>
 
           <div v-else class="flex items-end gap-2">
-            <Select
-              v-model="selectedUserId"
-              label="Pilih User"
-              placeholder="Pilih user"
-              :options="userOptions"
-              class="flex-1"
-              :disabled="manageSubmitting"
-            />
+            <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+              <label for="select-user" class="text-sm font-medium text-foreground"
+                >Pilih User</label
+              >
+              <Select v-model="selectedUserId">
+                <SelectTrigger id="select-user" :disabled="manageSubmitting">
+                  <SelectValue placeholder="Pilih user" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="option in userOptions" :key="option.value" :value="option.value">
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button :disabled="!selectedUserId || manageSubmitting" @click="linkUser">
               <Icon v-if="manageSubmitting" icon="lucide:loader-circle" class="animate-spin" />
               <span>Tambahkan</span>
             </Button>
           </div>
-
           <div v-if="linkedUsers.length > 0" class="flex flex-col gap-2">
             <p class="text-sm font-medium text-foreground">
               User terhubung ({{ linkedUsers.length }})
@@ -627,7 +647,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
                 <p class="text-xs text-muted-foreground capitalize">{{ user.role }}</p>
               </div>
               <div class="flex items-center gap-2">
-                <Badge v-if="!user.is_active" variant="inactive">Nonaktif</Badge>
+                <Badge v-if="!user.is_active" variant="outline">Nonaktif</Badge>
                 <Button
                   variant="ghost"
                   size="sm"

@@ -90,11 +90,11 @@ async function handleSubmit() {
       </CardHeader>
 
       <CardContent class="flex flex-col gap-4">
-        <Alert v-if="showRedirectInfo" variant="info">
+        <Alert v-if="showRedirectInfo">
           Sesi Anda berakhir, silakan masuk kembali.
         </Alert>
 
-        <Alert v-if="apiError" variant="error">{{ apiError }}</Alert>
+        <Alert v-if="apiError" variant="destructive">{{ apiError }}</Alert>
 
         <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
           <label class="flex flex-col gap-1.5">
@@ -103,7 +103,7 @@ async function handleSubmit() {
               v-model="username"
               placeholder="Masukkan username"
               :disabled="isSubmitting"
-              :variant="usernameError ? 'error' : 'default'"
+              :aria-invalid="Boolean(usernameError)"
             />
             <p v-if="usernameError" class="text-sm text-destructive">{{ usernameError }}</p>
           </label>
@@ -114,7 +114,6 @@ async function handleSubmit() {
               v-model="password"
               placeholder="Masukkan kata sandi"
               :disabled="isSubmitting"
-              :variant="passwordError ? 'error' : 'default'"
             />
             <p v-if="passwordError" class="text-sm text-destructive">{{ passwordError }}</p>
           </label>
