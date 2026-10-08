@@ -8,8 +8,7 @@
   ],
   "scripts": {
     "prepare": "simple-git-hooks",
-    "dev:web": "cd apps/web && bun run dev",
-    "dev:worker": "cd apps/worker && bun run dev",
+    "dev": "portless",
     "build": "cd apps/web && bun run build",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -27,6 +26,7 @@
     "eslint-config-prettier": "^10.1.0",
     "eslint-plugin-vue": "^10.11.0",
     "lint-staged": "^17.5.1",
+    "portless": "^0.15.7",
     "prettier": "^3.9.9",
     "prettier-plugin-organize-imports": "^4.0.0",
     "simple-git-hooks": "^2.14.0",

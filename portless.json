@@ -1,0 +1,12 @@
+{
+  "apps": {
+    "apps/web": {
+      "name": "dev.runmail",
+      "appPort": 3000
+    },
+    "apps/worker": {
+      "name": "runmail",
+      "appPort": 3001
+    }
+  }
+}
