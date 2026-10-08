@@ -13,9 +13,9 @@ const router = useRouter();
 const route = useRoute();
 
 const adminNav = [
-  { label: "User", to: "/admin/users", icon: "lucide:users" },
   { label: "Domain", to: "/admin/domains", icon: "lucide:globe" },
   { label: "Mailbox", to: "/admin/mailboxes", icon: "lucide:mail" },
+  { label: "User", to: "/admin/users", icon: "lucide:users" },
 ];
 
 async function logout() {

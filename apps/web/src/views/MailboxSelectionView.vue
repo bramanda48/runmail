@@ -113,6 +113,16 @@ function rowClasses(isActive: boolean) {
         <span class="hidden text-sm text-foreground sm:inline">
           {{ auth.user?.username }}
         </span>
+        <Button
+          v-if="auth.isAdmin"
+          variant="ghost"
+          size="sm"
+          aria-label="Buka halaman admin"
+          @click="router.push('/admin/domains')"
+        >
+          <Icon icon="lucide:shield" />
+          <span>Admin</span>
+        </Button>
         <Button variant="ghost" size="sm" @click="logout">
           <Icon icon="lucide:log-out" />
           <span>Keluar</span>

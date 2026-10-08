@@ -57,6 +57,7 @@ const USED_ICONS = [
   "plus",
   "refresh-cw",
   "search",
+  "shield",
   "shield-alert",
   "star",
   "trash",
