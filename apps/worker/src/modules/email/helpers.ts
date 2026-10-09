@@ -21,7 +21,7 @@ export function normalizeSnippet(text: string | null, max = 200): string {
 
 export function resolveEmailDate(
   dateHeader: string | null | undefined,
-  receivedAt: number
+  receivedAt: number,
 ): number {
   if (dateHeader === null || dateHeader === undefined) return receivedAt;
   const parsed = Date.parse(dateHeader);
@@ -45,7 +45,7 @@ export type ParsedRecipient = { address?: string; name?: string };
 export function buildRecipientRows(
   to: ParsedRecipient[],
   cc: ParsedRecipient[],
-  bcc: ParsedRecipient[]
+  bcc: ParsedRecipient[],
 ): {
   recipient_type: "to" | "cc" | "bcc";
   address: string;
@@ -53,7 +53,7 @@ export function buildRecipientRows(
 }[] {
   const tag = (
     list: ParsedRecipient[],
-    recipient_type: "to" | "cc" | "bcc"
+    recipient_type: "to" | "cc" | "bcc",
   ): {
     recipient_type: "to" | "cc" | "bcc";
     address: string;
@@ -65,8 +65,8 @@ export function buildRecipientRows(
         {
           recipient_type,
           address: r.address,
-          name: typeof r.name === "string" && r.name !== "" ? r.name : null
-        }
+          name: typeof r.name === "string" && r.name !== "" ? r.name : null,
+        },
       ];
     });
   return [...tag(to, "to"), ...tag(cc, "cc"), ...tag(bcc, "bcc")].slice(0, MAX_RECIPIENT_ROWS);

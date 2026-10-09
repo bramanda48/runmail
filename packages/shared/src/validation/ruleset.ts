@@ -10,7 +10,7 @@ export const MATCH_TYPES = [
   "not equal",
   "start with",
   "end with",
-  "match regex"
+  "match regex",
 ] as const;
 export type MatchType = (typeof MATCH_TYPES)[number];
 
@@ -30,13 +30,13 @@ export const rulesetConditionSchema = z.object({
     .min(1, "Condition value is required")
     .max(
       CONDITION_VALUE_MAX_LENGTH,
-      `Condition value must be at most ${CONDITION_VALUE_MAX_LENGTH} characters`
-    )
+      `Condition value must be at most ${CONDITION_VALUE_MAX_LENGTH} characters`,
+    ),
 });
 
 export const rulesetActionSchema = z.object({
   action_type: z.enum(ACTION_TYPES),
-  action_value: z.string().nullable()
+  action_value: z.string().nullable(),
 });
 
 export const rulesetSchema = z.object({
@@ -55,7 +55,7 @@ export const rulesetSchema = z.object({
   actions: z
     .array(rulesetActionSchema)
     .min(1, "At least one action is required")
-    .max(50, "At most 50 actions are allowed")
+    .max(50, "At most 50 actions are allowed"),
 });
 
 /**

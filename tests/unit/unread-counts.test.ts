@@ -9,7 +9,7 @@ function makeFolder(overrides: Partial<LocalFolder> & { id: string }): LocalFold
     folder_type: "custom",
     name: overrides.id,
     updated_at: 0,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -29,7 +29,7 @@ function makeMessage(overrides: Partial<LocalMessage> & { folder_id: string }): 
     sync_version: 1,
     to_addresses: [],
     updated_at: 0,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -37,7 +37,7 @@ function makeMessage(overrides: Partial<LocalMessage> & { folder_id: string }): 
 function fakeDb(folders: LocalFolder[], messages: LocalMessage[]): MailboxDb {
   return {
     folders: {
-      toArray: async () => folders
+      toArray: async () => folders,
     },
     messages: {
       where: (field: string) => ({
@@ -45,12 +45,13 @@ function fakeDb(folders: LocalFolder[], messages: LocalMessage[]): MailboxDb {
           and: (predicate: (m: LocalMessage) => boolean) => ({
             count: async () =>
               messages.filter(
-                (m) => (m as unknown as Record<string, unknown>)[field] === folderId && predicate(m)
-              ).length
-          })
-        })
-      })
-    }
+                (m) =>
+                  (m as unknown as Record<string, unknown>)[field] === folderId && predicate(m),
+              ).length,
+          }),
+        }),
+      }),
+    },
   } as unknown as MailboxDb;
 }
 
@@ -71,8 +72,8 @@ describe("computeUnreadCounts", () => {
         makeMessage({ folder_id: "inbox", is_read: false }),
         makeMessage({ folder_id: "inbox", is_read: false }),
         makeMessage({ folder_id: "inbox", is_read: true }),
-        makeMessage({ folder_id: "archive", is_read: true })
-      ]
+        makeMessage({ folder_id: "archive", is_read: true }),
+      ],
     );
     expect(await computeUnreadCounts(db)).toEqual({ archive: 0, inbox: 2 });
   });
@@ -82,8 +83,8 @@ describe("computeUnreadCounts", () => {
       [makeFolder({ id: "inbox" }), makeFolder({ id: "sent" })],
       [
         makeMessage({ folder_id: "inbox", is_read: true }),
-        makeMessage({ folder_id: "sent", is_read: true })
-      ]
+        makeMessage({ folder_id: "sent", is_read: true }),
+      ],
     );
     expect(await computeUnreadCounts(db)).toEqual({ inbox: 0, sent: 0 });
   });
@@ -95,8 +96,8 @@ describe("computeUnreadCounts", () => {
         makeMessage({ folder_id: "a", is_read: false }),
         makeMessage({ folder_id: "a", is_read: false }),
         makeMessage({ folder_id: "a", is_read: false }),
-        makeMessage({ folder_id: "b", is_read: false })
-      ]
+        makeMessage({ folder_id: "b", is_read: false }),
+      ],
     );
     expect(await computeUnreadCounts(db)).toEqual({ a: 3, b: 1 });
   });

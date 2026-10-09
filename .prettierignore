@@ -1,0 +1,82 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+.output
+.vercel
+.netlify
+.wrangler
+
+# Migrations
+migrations
+
+# Environment files
+.env
+.env.*
+
+# Lock files
+bun.lock
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Cache
+.cache
+.temp
+.tmp
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs
+
+# Coverage
+coverage
+.nyc_output
+
+# Generated files
+*.tsbuildinfo
+.turbo
+
+# AI Agent files & directories
+.claude/
+.cursor/
+.cursorrules
+.windsurf/
+.windsurfrules
+.github/copilot-instructions.md
+.copilot/
+.aider*
+.agents/
+.agent/
+.codeium/
+.continue/
+.cody/
+.tabnine/
+.amazonq/
+.qodo/
+.trae/
+.junie/
+.zed/
+.roo/
+.roorules
+.clinerules
+.cline/
+.warp/
+.gemini/
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+DESIGN.md

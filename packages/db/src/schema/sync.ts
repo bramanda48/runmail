@@ -5,7 +5,7 @@ export const syncEventTypes = [
   "message_created",
   "message_updated",
   "message_moved",
-  "message_deleted"
+  "message_deleted",
 ] as const;
 export type SyncEventType = (typeof syncEventTypes)[number];
 
@@ -23,11 +23,11 @@ export const syncEvents = sqliteTable(
     event_type: text("event_type", { enum: syncEventTypes }).notNull(),
     message_id: text("message_id").notNull(),
     payload: text("payload").notNull(),
-    created_at: integer("created_at").notNull()
+    created_at: integer("created_at").notNull(),
   },
   (t) => [
-    uniqueIndex("sync_events_mailbox_id_sync_version_unique").on(t.mailbox_id, t.sync_version)
-  ]
+    uniqueIndex("sync_events_mailbox_id_sync_version_unique").on(t.mailbox_id, t.sync_version),
+  ],
 );
 
 export type SyncEvent = typeof syncEvents.$inferSelect;
@@ -37,7 +37,7 @@ export const mailboxSyncCounters = sqliteTable("mailbox_sync_counters", {
   mailbox_id: text("mailbox_id")
     .primaryKey()
     .references(() => mailboxes.id),
-  last_version: integer("last_version").notNull().default(0)
+  last_version: integer("last_version").notNull().default(0),
 });
 
 export type MailboxSyncCounter = typeof mailboxSyncCounters.$inferSelect;

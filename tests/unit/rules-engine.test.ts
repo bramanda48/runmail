@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import type {
   EvaluableRuleset,
   MessageRuleContext,
-  RuleCondition
+  RuleCondition,
 } from "../../apps/worker/src/lib/rules-engine";
 import { evaluateRulesets } from "../../apps/worker/src/lib/rules-engine";
 
@@ -10,7 +10,7 @@ const CTX: MessageRuleContext = {
   from: "Newsletter <news@example.com>",
   subject: "Weekly newsletter #5",
   rawHeaders:
-    "From: Newsletter <news@example.com>\r\nSubject: Weekly newsletter #5\r\nX-Mailer: Outlook\r\nMessage-ID: <abc123@example.com>"
+    "From: Newsletter <news@example.com>\r\nSubject: Weekly newsletter #5\r\nX-Mailer: Outlook\r\nMessage-ID: <abc123@example.com>",
 };
 
 function ruleset(overrides: Partial<EvaluableRuleset> = {}): EvaluableRuleset {
@@ -20,7 +20,7 @@ function ruleset(overrides: Partial<EvaluableRuleset> = {}): EvaluableRuleset {
     logic_operator: "AND",
     conditions: [{ field: "subject", match_type: "contains", condition_value: "news" }],
     actions: [{ action_type: "mark_as_read", action_value: null }],
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -32,9 +32,9 @@ describe("AND logic", () => {
         {
           field: "subject",
           match_type: "contains",
-          condition_value: "newsletter"
-        }
-      ]
+          condition_value: "newsletter",
+        },
+      ],
     });
     const d = evaluateRulesets([rs], CTX);
     expect(d.matched).toBe(true);
@@ -48,9 +48,9 @@ describe("AND logic", () => {
         {
           field: "subject",
           match_type: "contains",
-          condition_value: "no-such-text"
-        }
-      ]
+          condition_value: "no-such-text",
+        },
+      ],
     });
     const d = evaluateRulesets([rs], CTX);
     expect(d.matched).toBe(false);
@@ -66,10 +66,10 @@ describe("OR logic", () => {
         {
           field: "subject",
           match_type: "contains",
-          condition_value: "no-such-text"
+          condition_value: "no-such-text",
         },
-        { field: "from", match_type: "contains", condition_value: "news" }
-      ]
+        { field: "from", match_type: "contains", condition_value: "news" },
+      ],
     });
     const d = evaluateRulesets([rs], CTX);
     expect(d.matched).toBe(true);
@@ -83,10 +83,10 @@ describe("OR logic", () => {
         {
           field: "subject",
           match_type: "contains",
-          condition_value: "no-such-text"
+          condition_value: "no-such-text",
         },
-        { field: "from", match_type: "equal", condition_value: "other" }
-      ]
+        { field: "from", match_type: "equal", condition_value: "other" },
+      ],
     });
     const d = evaluateRulesets([rs], CTX);
     expect(d.matched).toBe(false);
@@ -100,10 +100,10 @@ describe("match types against from", () => {
     evaluateRulesets(
       [
         ruleset({
-          conditions: [{ field: "from", match_type, condition_value }]
-        })
+          conditions: [{ field: "from", match_type, condition_value }],
+        }),
       ],
-      ctx
+      ctx,
     ).matched;
 
   it("contains: true and false", () => {
@@ -149,12 +149,12 @@ describe("match types against from", () => {
             {
               field: "header",
               match_type: "match regex",
-              condition_value: "needle"
-            }
-          ]
-        })
+              condition_value: "needle",
+            },
+          ],
+        }),
       ],
-      { from: "", subject: "", rawHeaders: `${"x".repeat(9000)}needle` }
+      { from: "", subject: "", rawHeaders: `${"x".repeat(9000)}needle` },
     );
     expect(d.matched).toBe(false);
   });
@@ -169,12 +169,12 @@ describe("case sensitivity", () => {
             {
               field: "subject",
               match_type: "contains",
-              condition_value: "Newsletter"
-            }
-          ]
-        })
+              condition_value: "Newsletter",
+            },
+          ],
+        }),
       ],
-      { from: "", subject: "newsletter #5", rawHeaders: "" }
+      { from: "", subject: "newsletter #5", rawHeaders: "" },
     );
     expect(d.matched).toBe(true);
   });
@@ -188,12 +188,12 @@ describe("case sensitivity", () => {
               {
                 field: "subject",
                 match_type: "match regex",
-                condition_value: pattern
-              }
-            ]
-          })
+                condition_value: pattern,
+              },
+            ],
+          }),
         ],
-        { from: "", subject: "newsletter #5", rawHeaders: "" }
+        { from: "", subject: "newsletter #5", rawHeaders: "" },
       ).matched;
     expect(mk("Newsletter")).toBe(false);
     expect(mk("[Nn]ewsletter")).toBe(true);
@@ -209,12 +209,12 @@ describe("header field", () => {
             {
               field: "header",
               match_type: "contains",
-              condition_value: "X-Mailer: Outlook"
-            }
-          ]
-        })
+              condition_value: "X-Mailer: Outlook",
+            },
+          ],
+        }),
       ],
-      CTX
+      CTX,
     );
     expect(d.matched).toBe(true);
   });
@@ -227,12 +227,12 @@ describe("header field", () => {
             {
               field: "header",
               match_type: "contains",
-              condition_value: "X-Mailer: Thunderbird"
-            }
-          ]
-        })
+              condition_value: "X-Mailer: Thunderbird",
+            },
+          ],
+        }),
       ],
-      CTX
+      CTX,
     );
     expect(d.matched).toBe(false);
   });
@@ -243,12 +243,12 @@ describe("priority ordering and last move wins", () => {
     const low = ruleset({
       id: "rs-low",
       priority: 5,
-      actions: [{ action_type: "move_to_folder", action_value: "folder-a" }]
+      actions: [{ action_type: "move_to_folder", action_value: "folder-a" }],
     });
     const high = ruleset({
       id: "rs-high",
       priority: 10,
-      actions: [{ action_type: "move_to_folder", action_value: "folder-b" }]
+      actions: [{ action_type: "move_to_folder", action_value: "folder-b" }],
     });
     // pass in reverse order to prove the engine sorts by priority
     const d = evaluateRulesets([high, low], CTX);
@@ -261,12 +261,12 @@ describe("priority ordering and last move wins", () => {
     const b = ruleset({
       id: "rs-b",
       priority: 1,
-      actions: [{ action_type: "move_to_folder", action_value: "folder-b" }]
+      actions: [{ action_type: "move_to_folder", action_value: "folder-b" }],
     });
     const a = ruleset({
       id: "rs-a",
       priority: 1,
-      actions: [{ action_type: "move_to_folder", action_value: "folder-a" }]
+      actions: [{ action_type: "move_to_folder", action_value: "folder-a" }],
     });
     const d = evaluateRulesets([b, a], CTX);
     expect(d.matched_ruleset_ids).toEqual(["rs-a", "rs-b"]);
@@ -283,19 +283,19 @@ describe("action fold across rulesets", () => {
           priority: 1,
           actions: [
             { action_type: "mark_as_star", action_value: null },
-            { action_type: "move_to_folder", action_value: "folder-a" }
-          ]
+            { action_type: "move_to_folder", action_value: "folder-a" },
+          ],
         }),
         ruleset({
           id: "rs-2",
           priority: 2,
           actions: [
             { action_type: "mark_as_read", action_value: null },
-            { action_type: "move_to_folder", action_value: "folder-b" }
-          ]
-        })
+            { action_type: "move_to_folder", action_value: "folder-b" },
+          ],
+        }),
       ],
-      CTX
+      CTX,
     );
     expect(d.matched).toBe(true);
     expect(d.is_starred).toBe(true);
@@ -315,13 +315,13 @@ describe("invalid regex", () => {
               {
                 field: "subject",
                 match_type: "match regex",
-                condition_value: "(unclosed"
-              }
-            ]
-          })
+                condition_value: "(unclosed",
+              },
+            ],
+          }),
         ],
-        CTX
-      )
+        CTX,
+      ),
     ).not.toThrow();
     const d = evaluateRulesets(
       [
@@ -330,12 +330,12 @@ describe("invalid regex", () => {
             {
               field: "subject",
               match_type: "match regex",
-              condition_value: "(unclosed"
-            }
-          ]
-        })
+              condition_value: "(unclosed",
+            },
+          ],
+        }),
       ],
-      CTX
+      CTX,
     );
     expect(d.matched).toBe(false);
   });
@@ -350,11 +350,11 @@ describe("failed move actions are skipped", () => {
             actions: [
               { action_type: "move_to_folder", action_value: bad },
               { action_type: "mark_as_star", action_value: null },
-              { action_type: "move_to_folder", action_value: "folder-ok" }
-            ]
-          })
+              { action_type: "move_to_folder", action_value: "folder-ok" },
+            ],
+          }),
         ],
-        CTX
+        CTX,
       );
       expect(d.matched).toBe(true);
       expect(d.folder_id).toBe("folder-ok");
@@ -366,10 +366,10 @@ describe("failed move actions are skipped", () => {
     const d = evaluateRulesets(
       [
         ruleset({
-          actions: [{ action_type: "move_to_folder", action_value: "" }]
-        })
+          actions: [{ action_type: "move_to_folder", action_value: "" }],
+        }),
       ],
-      CTX
+      CTX,
     );
     expect(d.matched).toBe(true);
     expect(d.matched_ruleset_ids).toEqual(["rs-1"]);
@@ -385,7 +385,7 @@ describe("empty inputs", () => {
       folder_id: null,
       is_starred: false,
       is_read: false,
-      matched_ruleset_ids: []
+      matched_ruleset_ids: [],
     });
   });
 
@@ -397,12 +397,12 @@ describe("empty inputs", () => {
             {
               field: "subject",
               match_type: "contains",
-              condition_value: "no-such-text"
-            }
-          ]
-        })
+              condition_value: "no-such-text",
+            },
+          ],
+        }),
       ],
-      CTX
+      CTX,
     );
     expect(d.matched).toBe(false);
     expect(d.folder_id).toBe(null);
@@ -414,9 +414,9 @@ describe("empty inputs", () => {
     const d = evaluateRulesets(
       [
         ruleset({ id: "rs-empty-cond", conditions: [] }),
-        ruleset({ id: "rs-empty-act", actions: [] })
+        ruleset({ id: "rs-empty-act", actions: [] }),
       ],
-      CTX
+      CTX,
     );
     expect(d.matched).toBe(true);
     expect(d.matched_ruleset_ids).toEqual(["rs-empty-act"]);

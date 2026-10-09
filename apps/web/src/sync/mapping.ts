@@ -21,6 +21,6 @@ export function toLocalMessage(detail: MessageDetail): LocalMessage {
     folder_id: detail.folder_id,
     folder_entered_at: detail.folder_entered_at,
     sync_version: detail.sync_version,
-    updated_at: detail.updated_at
+    updated_at: detail.updated_at,
   };
 }

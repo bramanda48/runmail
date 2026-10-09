@@ -4,7 +4,7 @@ import {
   cursorQuerySchema,
   decodeCursor,
   PAGINATION_DEFAULT_LIMIT,
-  rulesetSchema
+  rulesetSchema,
 } from "@runmail/shared";
 import { Hono } from "hono";
 import type { AppEnv } from "../../lib/env";
@@ -21,9 +21,9 @@ function mapServiceError(result: service.RulesetError) {
         error: {
           code: API_ERROR_CODES.RULESET_INVALID_REGEX,
           message: "Ekspresi regex tidak valid",
-          details: result.details ?? {}
-        }
-      }
+          details: result.details ?? {},
+        },
+      },
     };
   }
   if (result.error === "FOLDER_NOT_FOUND") {
@@ -33,9 +33,9 @@ function mapServiceError(result: service.RulesetError) {
         error: {
           code: API_ERROR_CODES.RULESET_INVALID_DEPENDENCY,
           message: "Folder tujuan tidak ditemukan pada mailbox ini",
-          details: result.details ?? {}
-        }
-      }
+          details: result.details ?? {},
+        },
+      },
     };
   }
   return { status: 404 as const, body: notFound("Ruleset tidak ditemukan") };
@@ -63,7 +63,7 @@ rulesetRoutes.get("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async 
     c,
     c.get("mailbox").mailbox_id,
     limit,
-    cursorId
+    cursorId,
   );
   return c.json({ data: { rulesets }, meta }, 200);
 });
@@ -86,7 +86,7 @@ rulesetRoutes.get("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
   const result = await service.getRuleset(
     c,
     c.get("mailbox").mailbox_id,
-    c.req.param("ruleset_id") ?? ""
+    c.req.param("ruleset_id") ?? "",
   );
   if ("error" in result) {
     return c.json(notFound("Ruleset tidak ditemukan"), 404);
@@ -104,7 +104,7 @@ rulesetRoutes.put("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
     c,
     c.get("mailbox").mailbox_id,
     c.req.param("ruleset_id") ?? "",
-    parsed.data
+    parsed.data,
   );
   if ("error" in result) {
     const mapped = mapServiceError(result);
@@ -121,11 +121,11 @@ rulesetRoutes.delete(
     const result = await service.deleteRuleset(
       c,
       c.get("mailbox").mailbox_id,
-      c.req.param("ruleset_id") ?? ""
+      c.req.param("ruleset_id") ?? "",
     );
     if ("error" in result) {
       return c.json(notFound("Ruleset tidak ditemukan"), 404);
     }
     return c.json({ data: { ok: true } }, 200);
-  }
+  },
 );

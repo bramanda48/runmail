@@ -10,10 +10,10 @@ export const jwtAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
       {
         error: {
           code: API_ERROR_CODES.UNAUTHORIZED,
-          message: "Missing or invalid Authorization header"
-        }
+          message: "Missing or invalid Authorization header",
+        },
       },
-      401
+      401,
     );
   }
   const payload = await verifyAccessToken(c.env.JWT_SIGNING_SECRET, header.slice(7));
@@ -22,10 +22,10 @@ export const jwtAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
       {
         error: {
           code: API_ERROR_CODES.UNAUTHORIZED,
-          message: "Invalid or expired access token"
-        }
+          message: "Invalid or expired access token",
+        },
       },
-      401
+      401,
     );
   }
   c.set("auth", { user_id: payload.sub, role: payload.role });
@@ -38,10 +38,10 @@ export const requireAdmin: MiddlewareHandler<AppEnv> = async (c, next) => {
       {
         error: {
           code: API_ERROR_CODES.FORBIDDEN,
-          message: "Admin role required"
-        }
+          message: "Admin role required",
+        },
       },
-      403
+      403,
     );
   }
   await next();

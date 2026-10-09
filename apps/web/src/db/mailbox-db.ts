@@ -1,6 +1,6 @@
+import { clearMailboxRawCache } from "@/lib/raw-cache";
 import type { FolderType } from "@runmail/shared";
 import Dexie, { type Table } from "dexie";
-import { clearMailboxRawCache } from "@/lib/raw-cache";
 
 export const DB_NAME_PREFIX = "runmail-mailbox-";
 
@@ -65,7 +65,7 @@ export class MailboxDb extends Dexie {
       messages: "&id, folder_id, email_date, [folder_id+email_date], sync_version, updated_at",
       folders: "&id, folder_type",
       sync_state: "id",
-      sync_queue: "++id"
+      sync_queue: "++id",
     });
   }
 }

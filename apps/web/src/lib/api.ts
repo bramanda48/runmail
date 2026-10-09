@@ -14,7 +14,7 @@ import type {
   RulesetDetail,
   SyncMutationItem,
   User,
-  VerifyDomainResponse
+  VerifyDomainResponse,
 } from "@runmail/shared";
 
 /**
@@ -85,12 +85,12 @@ async function doFetch(method: string, path: string, opts?: RequestOptions): Pro
   return fetch(`/api/v1${path}`, {
     method,
     headers,
-    body: opts?.body === undefined ? undefined : JSON.stringify(opts.body)
+    body: opts?.body === undefined ? undefined : JSON.stringify(opts.body),
   });
 }
 
 async function parseData<T>(res: Response): Promise<T> {
-  let payload: unknown = null;
+  let payload: unknown;
   try {
     payload = await res.json();
   } catch {
@@ -106,7 +106,7 @@ async function parseData<T>(res: Response): Promise<T> {
 }
 
 async function parseFailure(res: Response): Promise<ApiError> {
-  let payload: unknown = null;
+  let payload: unknown;
   try {
     payload = await res.json();
   } catch {
@@ -123,7 +123,7 @@ async function parseFailure(res: Response): Promise<ApiError> {
 async function performAuthorizedFetch(
   method: string,
   path: string,
-  opts?: RequestOptions
+  opts?: RequestOptions,
 ): Promise<Response> {
   let res: Response;
   try {
@@ -170,11 +170,11 @@ export interface RequestWithMeta<T> {
 export async function requestWithMeta<T>(
   method: string,
   path: string,
-  opts?: RequestOptions
+  opts?: RequestOptions,
 ): Promise<RequestWithMeta<T>> {
   const res = await performAuthorizedFetch(method, path, opts);
 
-  let payload: unknown = null;
+  let payload: unknown;
   try {
     payload = await res.json();
   } catch {
@@ -216,32 +216,32 @@ export interface AuthPayload {
 export async function loginRequest(username: string, password: string): Promise<AuthPayload> {
   return request<AuthPayload>("POST", "/auth/login", {
     body: { username, password },
-    auth: false
+    auth: false,
   });
 }
 
 export async function refreshRequest(refreshToken: string): Promise<AuthPayload> {
   return request<AuthPayload>("POST", "/auth/refresh", {
     body: { refresh_token: refreshToken },
-    auth: false
+    auth: false,
   });
 }
 
 export async function logoutRequest(refreshToken: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("POST", "/auth/logout", {
-    body: { refresh_token: refreshToken }
+    body: { refresh_token: refreshToken },
   });
 }
 
 export async function changePassword(
   currentPassword: string,
-  newPassword: string
+  newPassword: string,
 ): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("POST", "/auth/change-password", {
     body: {
       current_password: currentPassword,
-      new_password: newPassword
-    }
+      new_password: newPassword,
+    },
   });
 }
 
@@ -265,7 +265,7 @@ export interface UpdateUserInput {
 
 export async function listUsers(
   cursor?: string,
-  limit?: number
+  limit?: number,
 ): Promise<RequestWithMeta<UserList>> {
   return requestWithMeta<UserList>("GET", `/users${pageQuery(cursor, limit)}`);
 }
@@ -282,7 +282,36 @@ export async function updateUser(userId: string, body: UpdateUserInput): Promise
   return request<{ user: User }>("PATCH", `/users/${userId}`, { body });
 }
 
-// --- Domains (admin) ---
+// --- Cloudflare Integration (admin) ---
+
+export function getCloudflareOAuthStatus(): Promise<{ configured: boolean }> {
+  return request<{ configured: boolean }>("GET", "/integrations/cloudflare/status");
+}
+
+export function authorizeCloudflareOAuth(
+  redirect_uri: string,
+): Promise<{ authorization_url: string; state: string }> {
+  return request<{ authorization_url: string; state: string }>(
+    "POST",
+    "/integrations/cloudflare/authorize",
+    {
+      body: { redirect_uri },
+    },
+  );
+}
+
+export function callbackCloudflareOAuth(code: string, state: string): Promise<{ message: string }> {
+  return request<{ message: string }>("POST", "/integrations/cloudflare/callback", {
+    body: { code, state },
+  });
+}
+
+export function completeCloudflareOAuthCallback(
+  code: string,
+  state: string,
+): Promise<{ message: string }> {
+  return callbackCloudflareOAuth(code, state);
+}
 
 export interface AvailableZone {
   id: string;
@@ -299,14 +328,14 @@ export async function listAvailableDomains(): Promise<{ zones: AvailableZone[] }
 
 export async function listDomains(
   cursor?: string,
-  limit?: number
+  limit?: number,
 ): Promise<RequestWithMeta<DomainList>> {
   return requestWithMeta<DomainList>("GET", `/domains${pageQuery(cursor, limit)}`);
 }
 
 export async function addDomain(domainName: string): Promise<{ domain: Domain }> {
   return request<{ domain: Domain }>("POST", "/domains", {
-    body: { domain_name: domainName }
+    body: { domain_name: domainName },
   });
 }
 
@@ -332,14 +361,14 @@ export interface UpdateMailboxInput {
 
 export async function listMailboxes(
   cursor?: string,
-  limit?: number
+  limit?: number,
 ): Promise<RequestWithMeta<MailboxList>> {
   return requestWithMeta<MailboxList>("GET", `/mailboxes${pageQuery(cursor, limit)}`);
 }
 
 export async function listAllMailboxes(
   cursor?: string,
-  limit?: number
+  limit?: number,
 ): Promise<RequestWithMeta<MailboxList>> {
   return requestWithMeta<MailboxList>("GET", `/mailboxes/all${pageQuery(cursor, limit)}`);
 }
@@ -354,20 +383,20 @@ export async function getMailbox(mailboxId: string): Promise<{ mailbox: Mailbox 
 
 export async function updateMailbox(
   mailboxId: string,
-  body: UpdateMailboxInput
+  body: UpdateMailboxInput,
 ): Promise<{ mailbox: Mailbox }> {
   return request<{ mailbox: Mailbox }>("PATCH", `/mailboxes/${mailboxId}`, { body });
 }
 
 export async function linkMailboxUser(mailboxId: string, userId: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("POST", `/mailboxes/${mailboxId}/users`, {
-    body: { user_id: userId }
+    body: { user_id: userId },
   });
 }
 
 export async function unlinkMailboxUser(
   mailboxId: string,
-  userId: string
+  userId: string,
 ): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("DELETE", `/mailboxes/${mailboxId}/users/${userId}`);
 }
@@ -379,11 +408,11 @@ export interface MailboxLinkedUserList {
 export async function getMailboxUsers(
   mailboxId: string,
   cursor?: string,
-  limit?: number
+  limit?: number,
 ): Promise<RequestWithMeta<MailboxLinkedUserList>> {
   return requestWithMeta<MailboxLinkedUserList>(
     "GET",
-    `/mailboxes/${mailboxId}/users${pageQuery(cursor, limit)}`
+    `/mailboxes/${mailboxId}/users${pageQuery(cursor, limit)}`,
   );
 }
 
@@ -399,12 +428,22 @@ export async function listFolders(mailboxId: string): Promise<{ folders: Folder[
 
 export async function createFolder(mailboxId: string, name: string): Promise<{ folder: Folder }> {
   return request<{ folder: Folder }>("POST", `/mailboxes/${mailboxId}/folders`, {
-    body: { name }
+    body: { name },
   });
 }
 
 export async function deleteFolder(mailboxId: string, folderId: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("DELETE", `/mailboxes/${mailboxId}/folders/${folderId}`);
+}
+
+export async function renameFolder(
+  mailboxId: string,
+  folderId: string,
+  name: string,
+): Promise<{ folder: Folder }> {
+  return request<{ folder: Folder }>("PATCH", `/mailboxes/${mailboxId}/folders/${folderId}`, {
+    body: { name },
+  });
 }
 
 // --- Rulesets ---
@@ -436,46 +475,46 @@ export interface RulesetInput {
 export async function listRulesets(
   mailboxId: string,
   cursor?: string,
-  limit?: number
+  limit?: number,
 ): Promise<RequestWithMeta<RulesetList>> {
   return requestWithMeta<RulesetList>(
     "GET",
-    `/mailboxes/${mailboxId}/rulesets${pageQuery(cursor, limit)}`
+    `/mailboxes/${mailboxId}/rulesets${pageQuery(cursor, limit)}`,
   );
 }
 
 export async function createRuleset(
   mailboxId: string,
-  body: RulesetInput
+  body: RulesetInput,
 ): Promise<{ ruleset: RulesetDetail }> {
   return request<{ ruleset: RulesetDetail }>("POST", `/mailboxes/${mailboxId}/rulesets`, { body });
 }
 
 export async function getRuleset(
   mailboxId: string,
-  rulesetId: string
+  rulesetId: string,
 ): Promise<{ ruleset: RulesetDetail }> {
   return request<{ ruleset: RulesetDetail }>(
     "GET",
-    `/mailboxes/${mailboxId}/rulesets/${rulesetId}`
+    `/mailboxes/${mailboxId}/rulesets/${rulesetId}`,
   );
 }
 
 export async function updateRuleset(
   mailboxId: string,
   rulesetId: string,
-  body: RulesetInput
+  body: RulesetInput,
 ): Promise<{ ruleset: RulesetDetail }> {
   return request<{ ruleset: RulesetDetail }>(
     "PUT",
     `/mailboxes/${mailboxId}/rulesets/${rulesetId}`,
-    { body }
+    { body },
   );
 }
 
 export async function deleteRuleset(
   mailboxId: string,
-  rulesetId: string
+  rulesetId: string,
 ): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("DELETE", `/mailboxes/${mailboxId}/rulesets/${rulesetId}`);
 }
@@ -498,63 +537,63 @@ export interface MessageList {
 export async function listMessages(
   mailboxId: string,
   cursor?: string,
-  limit?: number
+  limit?: number,
 ): Promise<RequestWithMeta<MessageList>> {
   return requestWithMeta<MessageList>(
     "GET",
-    `/mailboxes/${mailboxId}/messages${pageQuery(cursor, limit)}`
+    `/mailboxes/${mailboxId}/messages${pageQuery(cursor, limit)}`,
   );
 }
 
 export async function getMessage(
   mailboxId: string,
-  messageId: string
+  messageId: string,
 ): Promise<{ message: MessageDetail }> {
   return request<{ message: MessageDetail }>(
     "GET",
-    `/mailboxes/${mailboxId}/messages/${messageId}`
+    `/mailboxes/${mailboxId}/messages/${messageId}`,
   );
 }
 
 export async function setMessageRead(
   mailboxId: string,
   messageId: string,
-  isRead: boolean
+  isRead: boolean,
 ): Promise<{ message: MessageDetail }> {
   return request<{ message: MessageDetail }>(
     "PATCH",
     `/mailboxes/${mailboxId}/messages/${messageId}/read`,
-    { body: { is_read: isRead } }
+    { body: { is_read: isRead } },
   );
 }
 
 export async function setMessageStarred(
   mailboxId: string,
   messageId: string,
-  isStarred: boolean
+  isStarred: boolean,
 ): Promise<{ message: MessageDetail }> {
   return request<{ message: MessageDetail }>(
     "PATCH",
     `/mailboxes/${mailboxId}/messages/${messageId}/star`,
-    { body: { is_starred: isStarred } }
+    { body: { is_starred: isStarred } },
   );
 }
 
 export async function moveMessage(
   mailboxId: string,
   messageId: string,
-  folderId: string
+  folderId: string,
 ): Promise<{ message: MessageDetail }> {
   return request<{ message: MessageDetail }>(
     "PATCH",
     `/mailboxes/${mailboxId}/messages/${messageId}/move`,
-    { body: { folder_id: folderId } }
+    { body: { folder_id: folderId } },
   );
 }
 
 export async function permanentDeleteMessage(
   mailboxId: string,
-  messageId: string
+  messageId: string,
 ): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("DELETE", `/mailboxes/${mailboxId}/messages/${messageId}`);
 }
@@ -566,10 +605,10 @@ export async function permanentDeleteMessage(
 export async function fetchRawEmail(mailboxId: string, messageId: string): Promise<Blob> {
   const res = await performAuthorizedFetch(
     "GET",
-    `/mailboxes/${mailboxId}/messages/${messageId}/raw`
+    `/mailboxes/${mailboxId}/messages/${messageId}/raw`,
   );
   if (!res.ok) {
-    let payload: unknown = null;
+    let payload: unknown;
     try {
       payload = await res.json();
     } catch {
@@ -622,9 +661,9 @@ export async function getSyncDelta(mailboxId: string, query?: SyncDeltaQuery): P
 
 export async function postMutations(
   mailboxId: string,
-  mutations: SyncMutationItem[]
+  mutations: SyncMutationItem[],
 ): Promise<{ results: MutationResult[] }> {
   return request<{ results: MutationResult[] }>("POST", `/mailboxes/${mailboxId}/sync/mutations`, {
-    body: { mutations }
+    body: { mutations },
   });
 }

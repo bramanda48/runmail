@@ -1,28 +1,35 @@
 {
   "name": "runmail",
   "main": "src/index.ts",
-  "compatibility_date": "2026-09-08",
+  "compatibility_date": "2026-09-15",
+  "workers_dev": true,
+  "preview_urls": false,
+  "dev": {
+    "port": 3001,
+  },
   "assets": {
     "directory": "../web/dist",
     "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
   },
   "vars": {
+    // Cloudflare OAuth credentials are stored as secrets, not vars
+    // Use: wrangler secret put CLOUDFLARE_OAUTH_CLIENT_ID
+    // Use: wrangler secret put CLOUDFLARE_OAUTH_CLIENT_SECRET
     "APP_ENV": "development",
-    "CLOUDFLARE_ACCOUNT_ID": "placeholder-account-id",
     "JWT_ACCESS_TTL_SECONDS": "900",
     "REFRESH_TOKEN_TTL_SECONDS": "2592000",
     "TRASH_SPAM_RETENTION_DAYS": "30",
-    "SYNC_RETENTION_DAYS": "30"
+    "SYNC_RETENTION_DAYS": "30",
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "runmail-dev",
       "database_id": "PLACEHOLDER-LOCAL-DEV",
-      "migrations_dir": "../../packages/db/src/migrations"
-    }
+      "migrations_dir": "../../packages/db/src/migrations",
+    },
   ],
   "r2_buckets": [{ "binding": "RAW_EMAIL_BUCKET", "bucket_name": "runmail-raw-dev" }],
-  "triggers": { "crons": ["0 3 * * *"] }
+  "triggers": { "crons": ["0 3 * * *"] },
 }

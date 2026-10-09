@@ -68,7 +68,7 @@ export function decodeCursor<T>(cursor: string): T | null {
 export function buildPageMeta<T>(
   rows: T[],
   limit: number,
-  toCursor: (row: T) => Record<string, unknown>
+  toCursor: (row: T) => Record<string, unknown>,
 ): PageMeta {
   const hasMore = rows.length > limit;
   const included = hasMore ? rows.slice(0, limit) : rows;

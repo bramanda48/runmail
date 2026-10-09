@@ -5,6 +5,6 @@ export default defineConfig({
   out: "./src/migrations",
   dialect: "sqlite",
   dbCredentials: {
-    url: "./runmail.db"
-  }
+    url: "./runmail.db",
+  },
 });

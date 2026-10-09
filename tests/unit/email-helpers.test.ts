@@ -7,7 +7,7 @@ import {
   normalizeSnippet,
   parseEmailAddress,
   resolveEmailDate,
-  serializeHeaders
+  serializeHeaders,
 } from "../../apps/worker/src/modules/email/helpers";
 
 describe("MAX_EMAIL_BYTES", () => {
@@ -20,21 +20,21 @@ describe("parseEmailAddress", () => {
   it("parses a valid address", () => {
     expect(parseEmailAddress("user@example.com")).toEqual({
       local_part: "user",
-      domain: "example.com"
+      domain: "example.com",
     });
   });
 
   it("splits at the last @", () => {
     expect(parseEmailAddress("weird@local@example.com")).toEqual({
       local_part: "weird@local",
-      domain: "example.com"
+      domain: "example.com",
     });
   });
 
   it("lowercases both parts", () => {
     expect(parseEmailAddress("User@Example.COM")).toEqual({
       local_part: "user",
-      domain: "example.com"
+      domain: "example.com",
     });
   });
 
@@ -54,8 +54,8 @@ describe("serializeHeaders", () => {
     expect(
       serializeHeaders([
         { key: "from", value: "a@b.c" },
-        { key: "x-mailer", value: "Outlook" }
-      ])
+        { key: "x-mailer", value: "Outlook" },
+      ]),
     ).toBe("from: a@b.c\nx-mailer: Outlook");
   });
 
@@ -89,7 +89,7 @@ describe("normalizeSnippet", () => {
 describe("resolveEmailDate", () => {
   it("parses a valid date header", () => {
     expect(resolveEmailDate("Wed, 10 Sep 2026 12:00:00 +0000", 123)).toBe(
-      Date.parse("Wed, 10 Sep 2026 12:00:00 +0000")
+      Date.parse("Wed, 10 Sep 2026 12:00:00 +0000"),
     );
   });
 
@@ -106,7 +106,7 @@ describe("resolveEmailDate", () => {
 describe("findHeader", () => {
   const headers = [
     { key: "subject", value: "Hi" },
-    { key: "message-id", value: "<a@b>" }
+    { key: "message-id", value: "<a@b>" },
   ];
 
   it("matches keys case-insensitively", () => {
@@ -117,7 +117,7 @@ describe("findHeader", () => {
   it("returns the first occurrence", () => {
     const dupes = [
       { key: "x-tag", value: "first" },
-      { key: "X-Tag", value: "second" }
+      { key: "X-Tag", value: "second" },
     ];
     expect(findHeader(dupes, "x-tag")).toBe("first");
   });
@@ -133,8 +133,8 @@ describe("buildRecipientRows", () => {
       buildRecipientRows(
         [{ address: "a@x.c", name: "A" }, { address: "" }],
         [{ name: "NoAddr" }],
-        []
-      )
+        [],
+      ),
     ).toEqual([{ recipient_type: "to", address: "a@x.c", name: "A" }]);
   });
 
@@ -143,24 +143,24 @@ describe("buildRecipientRows", () => {
       buildRecipientRows(
         [{ address: "t@x.c" }],
         [{ address: "c@x.c" }],
-        [{ address: "b@x.c" }]
-      ).map((r) => r.recipient_type)
+        [{ address: "b@x.c" }],
+      ).map((r) => r.recipient_type),
     ).toEqual(["to", "cc", "bcc"]);
   });
 
   it("caps at 90 with to rows preserved when cc/bcc overflow", () => {
     expect(MAX_RECIPIENT_ROWS).toBe(90);
     const to = Array.from({ length: 10 }, (_, i) => ({
-      address: `t${i}@x.c`
+      address: `t${i}@x.c`,
     }));
     const cc = Array.from({ length: 100 }, (_, i) => ({
-      address: `c${i}@x.c`
+      address: `c${i}@x.c`,
     }));
     const rows = buildRecipientRows(to, cc, []);
     expect(rows).toHaveLength(90);
     expect(rows.filter((r) => r.recipient_type === "to")).toHaveLength(10);
     expect(
-      rows.every((r, i) => (i < 10 ? r.recipient_type === "to" : r.recipient_type === "cc"))
+      rows.every((r, i) => (i < 10 ? r.recipient_type === "to" : r.recipient_type === "cc")),
     ).toBe(true);
   });
 

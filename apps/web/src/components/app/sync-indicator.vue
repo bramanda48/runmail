@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { computed } from "vue";
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
 import type { MailboxSyncStatus } from "@/stores/mailbox";
+import { computed } from "vue";
 
 interface Props {
   status: MailboxSyncStatus;
@@ -31,19 +31,16 @@ const state = computed(() => {
 
 const textClass = computed(() => {
   if (state.value.tone === "error") return "text-destructive";
-  if (state.value.tone === "warning") return "text-warning";
+  if (state.value.tone === "warning") return "text-muted-foreground";
   return "text-muted-foreground";
 });
 </script>
 
 <template>
   <div class="flex items-center gap-2 text-sm">
-    <Icon
-      :icon="state.icon"
-      :class="cn('size-4', textClass, state.spin && 'animate-spin')"
-    />
+    <Icon :icon="state.icon" :class="cn('size-4', textClass, state.spin && 'animate-spin')" />
     <span :class="cn('hidden sm:inline', textClass)">{{ state.text }}</span>
-    <Badge v-if="pendingCount" variant="pending" class="text-xs">
+    <Badge v-if="pendingCount" variant="outline" class="text-xs">
       {{ pendingCount }} tertunda
     </Badge>
   </div>

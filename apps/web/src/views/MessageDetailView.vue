@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import PostalMime from "postal-mime";
-import { computed, onMounted, ref, watch } from "vue";
 import AppShell from "@/components/app/app-shell.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
 import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
@@ -14,10 +12,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogRoot,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { IconButton } from "@/components/ui/icon-button";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
@@ -26,6 +29,8 @@ import { ApiError, fetchRawEmail, permanentDeleteMessage } from "@/lib/api";
 import { deleteCachedRaw, getCachedRaw, putCachedRaw } from "@/lib/raw-cache";
 import { sanitizeEmailHtml } from "@/lib/sanitize";
 import { cn } from "@/lib/utils";
+import PostalMime from "postal-mime";
+import { computed, onMounted, ref, watch } from "vue";
 
 const { route, router, mailboxStore, mailboxId } = useMailboxWorkspace();
 
@@ -53,17 +58,18 @@ const moveSubmitting = ref(false);
 
 const folderOptions = computed(() => folders.value.map((f) => ({ value: f.id, label: f.name })));
 const isTrash = computed(
-  () => folders.value.find((f) => f.id === message.value?.folder_id)?.name.toLowerCase() === "trash"
+  () =>
+    folders.value.find((f) => f.id === message.value?.folder_id)?.name.toLowerCase() === "trash",
 );
 
 function formatDate(ts: number) {
-  return new Date(ts * 1000).toLocaleString("id-ID", {
+  return new Date(ts).toLocaleString("id-ID", {
     weekday: "long",
     year: "numeric",
     month: "long",
     day: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 }
 
@@ -101,7 +107,7 @@ async function loadMessage(autoRead = false) {
     await mailboxStore.enqueue({
       message_id: row.id,
       mutation_type: "read",
-      mutation_value: true
+      mutation_value: true,
     });
     message.value.is_read = true;
   }
@@ -144,7 +150,7 @@ async function loadBody() {
       return {
         filename: a.filename ?? undefined,
         mimeType: a.mimeType ?? undefined,
-        size
+        size,
       };
     });
 
@@ -190,7 +196,7 @@ function toggleStar() {
   enqueue({
     message_id: message.value.id,
     mutation_type: "star",
-    mutation_value: !message.value.is_starred
+    mutation_value: !message.value.is_starred,
   });
 }
 
@@ -199,7 +205,7 @@ function toggleRead() {
   enqueue({
     message_id: message.value.id,
     mutation_type: "read",
-    mutation_value: !message.value.is_read
+    mutation_value: !message.value.is_read,
   });
 }
 
@@ -214,7 +220,7 @@ async function confirmMove() {
   await enqueue({
     message_id: message.value.id,
     mutation_type: "move",
-    mutation_value: moveTargetFolderId.value
+    mutation_value: moveTargetFolderId.value,
   });
   moveSubmitting.value = false;
   moveOpen.value = false;
@@ -270,9 +276,9 @@ watch(messageId, async () => {
 
     <template #topbar>
       <div class="flex items-center gap-3">
-        <IconButton :ariaLabel="'Kembali'" variant="ghost" size="sm" @click="back">
+        <Button aria-label="Kembali" variant="ghost" size="icon" @click="back">
           <Icon icon="lucide:arrow-left" />
-        </IconButton>
+        </Button>
         <MailboxSwitcher />
         <SyncIndicator
           :status="mailboxStore.syncStatus"
@@ -282,21 +288,29 @@ watch(messageId, async () => {
     </template>
 
     <main class="flex flex-1 flex-col p-4 lg:p-8">
-      <div v-if="!message && bodyState === 'loading'" class="space-y-4">
-        <Skeleton shape="detail" />
+      <div v-if="!message && bodyState === 'loading'" class="flex flex-col gap-4">
+        <Skeleton class="h-8 w-2/3" />
+        <Skeleton class="h-4 w-1/3" />
+        <div class="flex flex-col gap-2">
+          <Skeleton class="h-4 w-full" />
+          <Skeleton class="h-4 w-full" />
+          <Skeleton class="h-4 w-5/6" />
+        </div>
       </div>
 
-      <Alert v-else-if="bodyState === 'error'" variant="error">
+      <Alert v-else-if="bodyState === 'error'" variant="destructive">
         {{ fetchError }}
-        <Button variant="ghost" size="sm" class="ml-2" @click="loadMessage(false)">Coba Lagi</Button>
+        <Button variant="ghost" size="sm" class="ml-2" @click="loadMessage(false)"
+          >Coba Lagi</Button
+        >
       </Alert>
 
-      <div v-else-if="message" class="mx-auto w-full max-w-4xl space-y-4">
+      <div v-else-if="message" class="mx-auto w-full max-w-4xl flex flex-col gap-4">
         <!-- Header -->
-        <div class="rounded-2xl border bg-surface p-4 lg:p-6">
+        <div class="rounded-lg border bg-card p-4 lg:p-6">
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0 flex-1">
-              <h1 class="text-xl font-semibold text-foreground lg:text-2xl">
+              <h1 class="scroll-m-20 text-2xl font-semibold tracking-tight text-foreground">
                 {{ message.subject || "(Tanpa subjek)" }}
               </h1>
               <div class="mt-2 text-sm text-foreground">
@@ -312,10 +326,10 @@ watch(messageId, async () => {
             </div>
 
             <div class="flex flex-wrap items-center gap-1">
-              <IconButton
-                :ariaLabel="message.is_starred ? 'Hapus bintang' : 'Tandai bintang'"
+              <Button
+                :aria-label="message.is_starred ? 'Hapus bintang' : 'Tandai bintang'"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 @click="toggleStar"
               >
                 <Icon
@@ -323,47 +337,49 @@ watch(messageId, async () => {
                   :class="
                     cn(
                       'size-5',
-                      message.is_starred ? 'fill-current text-warning' : 'text-muted-foreground',
+                      message.is_starred ? 'fill-primary text-primary' : 'text-muted-foreground',
                     )
                   "
                 />
-              </IconButton>
+              </Button>
 
-              <IconButton
-                :ariaLabel="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
+              <Button
+                :aria-label="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 @click="toggleRead"
               >
                 <Icon :icon="message.is_read ? 'lucide:mail-open' : 'lucide:mail'" class="size-5" />
-              </IconButton>
+              </Button>
 
-              <IconButton
-                :ariaLabel="'Pindahkan ke folder'"
+              <Button
+                aria-label="Pindahkan ke folder"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 @click="openMove"
               >
                 <Icon icon="lucide:folder-input" class="size-5" />
-              </IconButton>
+              </Button>
 
-              <IconButton
+              <Button
                 v-if="isTrash"
-                :ariaLabel="'Hapus permanen'"
+                aria-label="Hapus permanen"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 @click="deleteOpen = true"
               >
                 <Icon icon="lucide:trash-2" class="size-5 text-destructive" />
-              </IconButton>
+              </Button>
             </div>
           </div>
         </div>
 
         <!-- Body -->
-        <div class="rounded-2xl border bg-surface p-4 lg:p-6">
-          <div v-if="bodyState === 'loading'" class="space-y-3">
-            <Skeleton shape="block" />
+        <div class="rounded-lg border bg-card p-4 lg:p-6">
+          <div v-if="bodyState === 'loading'" class="flex flex-col gap-2">
+            <Skeleton class="h-4 w-full" />
+            <Skeleton class="h-4 w-full" />
+            <Skeleton class="h-4 w-5/6" />
           </div>
 
           <RemoteImageNotice
@@ -376,26 +392,29 @@ watch(messageId, async () => {
             class="prose prose-sm max-w-none text-foreground"
             v-html="bodyHtml"
           />
+          <!-- Safe: HTML is sanitized via DOMPurify before rendering -->
 
           <pre
             v-else-if="bodyState === 'text'"
             class="whitespace-pre-wrap text-sm text-foreground"
-            >{{ bodyText }}</pre
-          >
+            >{{ bodyText }}</pre>
 
-          <div v-else-if="bodyState === 'empty'" class="py-8 text-center text-sm text-muted-foreground">
+          <div
+            v-else-if="bodyState === 'empty'"
+            class="py-8 text-center text-sm text-muted-foreground"
+          >
             Email ini tidak memiliki konten.
           </div>
 
-          <Alert v-else-if="bodyState === 'parse-error'" variant="warning">
+          <Alert v-else-if="bodyState === 'parse-error'">
             Email tidak dapat ditampilkan. Anda dapat mencoba memuat ulang.
             <Button variant="ghost" size="sm" class="ml-2" @click="loadBody">Coba Lagi</Button>
           </Alert>
 
           <!-- Attachments -->
-          <div v-if="attachments.length > 0" class="mt-6 space-y-2">
+          <div v-if="attachments.length > 0" class="mt-6 flex flex-col gap-2">
             <p class="text-sm font-medium text-foreground">Lampiran</p>
-            <ul class="space-y-1">
+            <ul class="flex flex-col gap-1">
               <li
                 v-for="(att, i) in attachments"
                 :key="i"
@@ -416,24 +435,30 @@ watch(messageId, async () => {
           <DialogHeader>
             <DialogTitle>Pindahkan Email</DialogTitle>
           </DialogHeader>
-          <div class="space-y-4 py-2">
-            <Select
-              v-model="moveTargetFolderId"
-              label="Folder tujuan"
-              id="select-move-target"
-              placeholder="Pilih folder"
-              :options="folderOptions"
-              :disabled="moveSubmitting"
-            />
+          <div class="flex flex-col gap-1.5 py-2">
+            <label for="select-move-target" class="text-sm font-medium text-foreground">
+              Folder tujuan
+            </label>
+            <Select v-model="moveTargetFolderId" :disabled="moveSubmitting">
+              <SelectTrigger id="select-move-target">
+                <SelectValue placeholder="Pilih folder" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="option in folderOptions"
+                  :key="option.value"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button variant="ghost" :disabled="moveSubmitting" @click="moveOpen = false">
               Batal
             </Button>
-            <Button
-              :disabled="!moveTargetFolderId || moveSubmitting"
-              @click="confirmMove"
-            >
+            <Button :disabled="!moveTargetFolderId || moveSubmitting" @click="confirmMove">
               <Icon v-if="moveSubmitting" icon="lucide:loader-circle" class="animate-spin" />
               <span>Pindahkan</span>
             </Button>
@@ -443,12 +468,10 @@ watch(messageId, async () => {
 
       <!-- Permanent delete dialog -->
       <DialogRoot v-model:open="deleteOpen">
-        <DialogContent variant="destructive" size="sm">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Hapus Permanen</DialogTitle>
-            <DialogDescription>
-              Email tidak dapat dikembalikan. Lanjutkan?
-            </DialogDescription>
+            <DialogDescription> Email tidak dapat dikembalikan. Lanjutkan? </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="ghost" @click="deleteOpen = false">Batal</Button>

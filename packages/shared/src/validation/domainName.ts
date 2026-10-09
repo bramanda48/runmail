@@ -13,7 +13,7 @@ function isValidHostname(value: string): boolean {
     (label) =>
       label.length >= 1 &&
       label.length <= DOMAIN_LABEL_MAX_LENGTH &&
-      DOMAIN_LABEL_PATTERN.test(label)
+      DOMAIN_LABEL_PATTERN.test(label),
   );
 }
 

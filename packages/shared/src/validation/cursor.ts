@@ -7,7 +7,7 @@ import { PAGINATION_MAX_LIMIT } from "../contracts/pagination";
  */
 export const cursorQuerySchema = z.object({
   cursor: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(PAGINATION_MAX_LIMIT).optional()
+  limit: z.coerce.number().int().min(1).max(PAGINATION_MAX_LIMIT).optional(),
 });
 
 export type CursorQuery = z.infer<typeof cursorQuerySchema>;

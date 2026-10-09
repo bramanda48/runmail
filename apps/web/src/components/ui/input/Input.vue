@@ -1,31 +1,24 @@
 <script setup lang="ts">
-import type { VariantProps } from "class-variance-authority";
-import type { HTMLAttributes, InputHTMLAttributes } from "vue";
-import { computed } from "vue";
 import { cn } from "@/lib/utils";
-import { inputVariants } from ".";
+import type { HTMLAttributes, InputHTMLAttributes } from "vue";
 
-interface Props {
-  modelValue?: string;
-  variant?: VariantProps<typeof inputVariants>["variant"];
-  size?: VariantProps<typeof inputVariants>["size"];
-  type?: InputHTMLAttributes["type"];
-  placeholder?: string;
-  disabled?: boolean;
-  class?: HTMLAttributes["class"];
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  type: "text",
-  variant: "default",
-  size: "md"
-});
-
-const emit = defineEmits<(e: "update:modelValue", value: string) => void>();
-
-const classes = computed(() =>
-  cn(inputVariants({ variant: props.variant, size: props.size }), props.class)
+const props = withDefaults(
+  defineProps<{
+    defaultValue?: string | number;
+    modelValue?: string | number;
+    type?: InputHTMLAttributes["type"];
+    placeholder?: string;
+    disabled?: boolean;
+    class?: HTMLAttributes["class"];
+  }>(),
+  {
+    type: "text",
+  },
 );
+
+const emit = defineEmits<{
+  (e: "update:modelValue", payload: string): void;
+}>();
 
 function onInput(event: Event) {
   emit("update:modelValue", (event.target as HTMLInputElement).value);
@@ -37,8 +30,16 @@ function onInput(event: Event) {
     :type="type"
     :placeholder="placeholder"
     :disabled="disabled"
-    :value="modelValue"
-    :class="classes"
+    :value="modelValue ?? defaultValue"
+    data-slot="input"
+    :class="
+      cn(
+        'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm',
+        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3',
+        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+        props.class,
+      )
+    "
     @input="onInput"
   />
 </template>

@@ -4,7 +4,7 @@ import { isRemoteUri, scrubRemoteCssUrls, srcsetHasRemote } from "../../apps/web
 describe("scrubRemoteCssUrls", () => {
   it("scrubs https url() in style attributes", () => {
     expect(scrubRemoteCssUrls("background: url(https://evil.test/x.png)")).toBe(
-      "background: url()"
+      "background: url()",
     );
   });
 
@@ -15,27 +15,27 @@ describe("scrubRemoteCssUrls", () => {
 
   it("scrubs case-insensitively", () => {
     expect(scrubRemoteCssUrls("BACKGROUND: URL(HTTPS://EVIL.TEST/A.PNG)")).toBe(
-      "BACKGROUND: url()"
+      "BACKGROUND: url()",
     );
   });
 
   it("scrubs multiple urls but keeps data: and cid: alone", () => {
     expect(
       scrubRemoteCssUrls(
-        "background: url(https://evil.test/a.png), url(data:image/png;base64,AAA); list-style: url(cid:img1)"
-      )
+        "background: url(https://evil.test/a.png), url(data:image/png;base64,AAA); list-style: url(cid:img1)",
+      ),
     ).toBe("background: url(), url(data:image/png;base64,AAA); list-style: url(cid:img1)");
   });
 
   it("keeps relative urls alone", () => {
     expect(scrubRemoteCssUrls("background: url(/assets/x.png)")).toBe(
-      "background: url(/assets/x.png)"
+      "background: url(/assets/x.png)",
     );
   });
 
   it("leaves css without urls untouched", () => {
     expect(scrubRemoteCssUrls("color: red; font-weight: bold")).toBe(
-      "color: red; font-weight: bold"
+      "color: red; font-weight: bold",
     );
   });
 });

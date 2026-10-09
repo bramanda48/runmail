@@ -24,13 +24,13 @@ export const messages = sqliteTable(
     folder_entered_at: integer("folder_entered_at"),
     raw_object_key: text("raw_object_key").notNull(),
     sync_version: integer("sync_version").notNull(),
-    updated_at: integer("updated_at").notNull()
+    updated_at: integer("updated_at").notNull(),
   },
   (t) => [
     index("messages_mailbox_folder_email_date_idx").on(t.mailbox_id, t.folder_id, t.email_date),
     index("messages_mailbox_updated_at_idx").on(t.mailbox_id, t.updated_at),
-    index("messages_mailbox_sync_version_idx").on(t.mailbox_id, t.sync_version)
-  ]
+    index("messages_mailbox_sync_version_idx").on(t.mailbox_id, t.sync_version),
+  ],
 );
 
 export type Message = typeof messages.$inferSelect;
@@ -48,12 +48,12 @@ export const messageRecipients = sqliteTable(
       .references(() => messages.id),
     recipient_type: text("recipient_type", { enum: recipientTypes }).notNull(),
     display_name: text("display_name"),
-    email_address: text("email_address").notNull()
+    email_address: text("email_address").notNull(),
   },
   (t) => [
     index("message_recipients_message_id_idx").on(t.message_id),
-    index("message_recipients_message_id_recipient_type_idx").on(t.message_id, t.recipient_type)
-  ]
+    index("message_recipients_message_id_recipient_type_idx").on(t.message_id, t.recipient_type),
+  ],
 );
 
 export type MessageRecipient = typeof messageRecipients.$inferSelect;

@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import type { ApiMeta, RulesetDetail } from "@runmail/shared";
-import { computed, onMounted, ref, watch } from "vue";
 import AppShell from "@/components/app/app-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
 import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
+import Pagination from "@/components/app/pagination.vue";
 import SyncIndicator from "@/components/app/sync-indicator.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -14,10 +13,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogRoot,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
-import { IconButton } from "@/components/ui/icon-button";
-import { Pagination } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -26,11 +23,13 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { Icon } from "@/icons";
 import { ApiError, deleteRuleset, getRuleset, listRulesets, updateRuleset } from "@/lib/api";
+import type { ApiMeta, RulesetDetail } from "@runmail/shared";
+import { computed, onMounted, ref, watch } from "vue";
 
 const {
   router,
@@ -40,11 +39,11 @@ const {
   unreadCounts,
   resolveMailbox,
   loadLocalFolders,
-  watchSyncStatus
+  watchSyncStatus,
 } = useMailboxWorkspace({
   onResolveError: () => {
     error.value = "Tidak dapat memuat mailbox. Coba lagi.";
-  }
+  },
 });
 
 const perPage = 10;
@@ -66,7 +65,7 @@ const start = computed(() => pageIndex.value * perPage + 1);
 const end = computed(() => start.value + rulesets.value.length - 1);
 const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
 const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage
+  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
 );
 
 async function init() {
@@ -85,7 +84,7 @@ async function load(cursor?: string) {
     const { data, meta: responseMeta } = (await listRulesets(
       mailboxId.value,
       cursor,
-      perPage
+      perPage,
     )) as unknown as {
       data: { rulesets: RulesetDetail[] };
       meta?: ApiMeta;
@@ -175,12 +174,12 @@ async function toggleEnabled(ruleset: RulesetDetail, value: boolean) {
       conditions: detail.conditions.map((c) => ({
         field: c.field,
         match_type: c.match_type,
-        condition_value: c.condition_value
+        condition_value: c.condition_value,
       })),
       actions: detail.actions.map((a) => ({
         action_type: a.action_type,
-        action_value: a.action_value
-      }))
+        action_value: a.action_value,
+      })),
     });
   } catch (err) {
     // Rollback
@@ -229,7 +228,11 @@ watchSyncStatus();
     <main class="flex flex-1 flex-col p-4 lg:p-8">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 class="text-2xl font-semibold text-foreground">Ruleset</h1>
+          <h1
+            class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl"
+          >
+            Ruleset
+          </h1>
           <p class="text-sm text-muted-foreground">
             Aturan pemrosesan email. Prioritas lebih kecil dieksekusi lebih dulu.
           </p>
@@ -240,12 +243,15 @@ watchSyncStatus();
         </Button>
       </div>
 
-      <div v-if="isLoading" class="space-y-4">
-        <Skeleton shape="list" :rows="4" />
+      <div v-if="isLoading" class="flex flex-col gap-4">
+        <Skeleton class="h-12 w-full" />
+        <Skeleton class="h-12 w-full" />
+        <Skeleton class="h-12 w-full" />
+        <Skeleton class="h-12 w-full" />
       </div>
 
-      <div v-else-if="error" class="space-y-4">
-        <Alert variant="error">{{ error }}</Alert>
+      <div v-else-if="error" class="flex flex-col gap-4">
+        <Alert variant="destructive">{{ error }}</Alert>
         <Button variant="ghost" @click="retry">Coba Lagi</Button>
       </div>
 
@@ -263,8 +269,8 @@ watchSyncStatus();
         </template>
       </EmptyState>
 
-      <div v-else class="space-y-4">
-        <div class="rounded-2xl border bg-surface p-4">
+      <div v-else class="flex flex-col gap-4">
+        <div class="rounded-lg border bg-card p-4">
           <div class="w-full overflow-x-auto">
             <Table>
               <TableHeader>
@@ -287,10 +293,10 @@ watchSyncStatus();
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="inactive">{{ ruleset.priority }}</Badge>
+                    <Badge variant="outline">{{ ruleset.priority }}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="inactive">{{ ruleset.logic_operator }}</Badge>
+                    <Badge variant="outline">{{ ruleset.logic_operator }}</Badge>
                   </TableCell>
                   <TableCell>
                     <Switch
@@ -302,22 +308,22 @@ watchSyncStatus();
                   </TableCell>
                   <TableCell>
                     <div class="flex items-center gap-1">
-                      <IconButton
-                        :ariaLabel="`Edit ruleset ${ruleset.name}`"
-variant="ghost"
-                    size="md"
+                      <Button
+                        :aria-label="`Edit ruleset ${ruleset.name}`"
+                        variant="ghost"
+                        size="icon"
                         @click="editRuleset(ruleset)"
                       >
                         <Icon icon="lucide:pencil" />
-                      </IconButton>
-                      <IconButton
-                        :ariaLabel="`Hapus ruleset ${ruleset.name}`"
-variant="ghost"
-                    size="md"
+                      </Button>
+                      <Button
+                        :aria-label="`Hapus ruleset ${ruleset.name}`"
+                        variant="ghost"
+                        size="icon"
                         @click="openDelete(ruleset)"
                       >
                         <Icon icon="lucide:trash" class="text-destructive" />
-                      </IconButton>
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -342,12 +348,13 @@ variant="ghost"
 
     <!-- Delete confirmation -->
     <DialogRoot v-model:open="deleteOpen">
-      <DialogContent variant="destructive" size="sm">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Hapus Ruleset</DialogTitle>
         </DialogHeader>
         <p class="text-sm text-foreground">
-          Hapus ruleset <strong>{{ rulesetToDelete?.name }}</strong>? Tindakan ini tidak dapat dibatalkan.
+          Hapus ruleset <strong>{{ rulesetToDelete?.name }}</strong
+          >? Tindakan ini tidak dapat dibatalkan.
         </p>
         <DialogFooter>
           <Button variant="ghost" :disabled="deleteSubmitting" @click="deleteOpen = false">

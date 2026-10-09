@@ -37,7 +37,7 @@ export interface SanitizeEmailResult {
 
 export function sanitizeEmailHtml(
   html: string,
-  opts: { allowRemoteContent: boolean }
+  opts: { allowRemoteContent: boolean },
 ): SanitizeEmailResult {
   const purify = DOMPurify(window);
   if (opts.allowRemoteContent) {
@@ -50,7 +50,7 @@ export function sanitizeEmailHtml(
     node: Element,
     attr: string,
     blockedAttr: string,
-    remoteOnly: boolean
+    remoteOnly: boolean,
   ): void => {
     const value = node.getAttribute(attr);
     if (!value) return;
@@ -131,7 +131,7 @@ export function sanitizeEmailHtml(
   try {
     return {
       html: purify.sanitize(html, { USE_PROFILES: { html: true } }),
-      blocked: blockedCount > 0
+      blocked: blockedCount > 0,
     };
   } finally {
     purify.removeHook("beforeSanitizeAttributes");

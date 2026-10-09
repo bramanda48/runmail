@@ -90,12 +90,12 @@ function runWrangler(args: string[]): SpawnResult {
     env: { ...process.env, CI: "1" },
     stderr: "pipe",
     stdin: "ignore",
-    stdout: "pipe"
+    stdout: "pipe",
   });
   return {
     exitCode: proc.exitCode,
     stderr: proc.stderr.toString(),
-    stdout: proc.stdout.toString()
+    stdout: proc.stdout.toString(),
   };
 }
 
@@ -133,7 +133,7 @@ function userExists(username: string, modeArgs: string[]): boolean {
     "wrangler.jsonc",
     "--json",
     "--command",
-    sql
+    sql,
   ]);
   if (res.exitCode !== 0) {
     console.error(res.stderr.trim());
@@ -152,7 +152,7 @@ async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
   if (!USERNAME_RE.test(args.username)) {
     fail(
-      `username tidak valid: '${args.username}' (harus 6-20 karakter: huruf, angka, tanda - _ .)`
+      `username tidak valid: '${args.username}' (harus 6-20 karakter: huruf, angka, tanda - _ .)`,
     );
   }
   if (args.remote && !args.yes) {
@@ -190,7 +190,7 @@ async function main(): Promise<void> {
     "wrangler.jsonc",
     "--json",
     "--command",
-    insert
+    insert,
   ]);
   if (res.exitCode !== 0) {
     console.error(res.stderr.trim());
@@ -201,7 +201,7 @@ async function main(): Promise<void> {
     fail(`verifikasi gagal: user '${args.username}' tidak ditemukan setelah INSERT`);
   }
   console.log(
-    `[seed:admin] Berhasil membuat user admin '${args.username}' (role: admin, mode: ${mode})`
+    `[seed:admin] Berhasil membuat user admin '${args.username}' (role: admin, mode: ${mode})`,
   );
   if (generated) {
     console.log(`[seed:admin] Password: ${password}`);

@@ -5,7 +5,7 @@ import {
   decodeCursor,
   PAGINATION_DEFAULT_LIMIT,
   passwordSchema,
-  usernameSchema
+  usernameSchema,
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -41,7 +41,7 @@ userRoutes.get("/", async (c) => {
 const createUserBodySchema = z.object({
   username: usernameSchema,
   password: passwordSchema,
-  role: z.enum(["admin", "member"])
+  role: z.enum(["admin", "member"]),
 });
 
 userRoutes.post("/", async (c) => {
@@ -56,10 +56,10 @@ userRoutes.post("/", async (c) => {
       {
         error: {
           code: API_ERROR_CODES.USERNAME_ALREADY_EXISTS,
-          message: "Username sudah digunakan"
-        }
+          message: "Username sudah digunakan",
+        },
       },
-      409
+      409,
     );
   }
 
@@ -73,10 +73,10 @@ userRoutes.get("/:user_id", async (c) => {
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Pengguna tidak ditemukan"
-        }
+          message: "Pengguna tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
   return c.json({ data: { user } }, 200);
@@ -86,10 +86,10 @@ const patchUserBodySchema = z
   .object({
     role: z.enum(["admin", "member"]).optional(),
     is_active: z.boolean().optional(),
-    password: passwordSchema.optional()
+    password: passwordSchema.optional(),
   })
   .refine((v) => v.role !== undefined || v.is_active !== undefined || v.password !== undefined, {
-    message: "At least one field is required"
+    message: "At least one field is required",
   });
 
 userRoutes.patch("/:user_id", async (c) => {
@@ -99,9 +99,9 @@ userRoutes.patch("/:user_id", async (c) => {
     return c.json(
       badRequest({
         ...flat.fieldErrors,
-        ...(flat.formErrors.length > 0 ? { _form: flat.formErrors } : {})
+        ...(flat.formErrors.length > 0 ? { _form: flat.formErrors } : {}),
       }),
-      400
+      400,
     );
   }
 
@@ -116,10 +116,10 @@ userRoutes.patch("/:user_id", async (c) => {
       {
         error: {
           code: API_ERROR_CODES.VALIDATION_ERROR,
-          message: "Tidak dapat menonaktifkan atau menurunkan peran akun sendiri"
-        }
+          message: "Tidak dapat menonaktifkan atau menurunkan peran akun sendiri",
+        },
       },
-      400
+      400,
     );
   }
 
@@ -129,10 +129,10 @@ userRoutes.patch("/:user_id", async (c) => {
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Pengguna tidak ditemukan"
-        }
+          message: "Pengguna tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
   return c.json({ data: { user: result.user } }, 200);

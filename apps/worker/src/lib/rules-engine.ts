@@ -67,7 +67,7 @@ function matchCondition(matchType: MatchType, target: string, value: string): bo
 
 function rulesetMatches(ruleset: EvaluableRuleset, ctx: MessageRuleContext): boolean {
   const results = ruleset.conditions.map((c) =>
-    matchCondition(c.match_type, targetFor(c.field, ctx), c.condition_value)
+    matchCondition(c.match_type, targetFor(c.field, ctx), c.condition_value),
   );
   if (ruleset.logic_operator === "OR") return results.some(Boolean);
   return results.every(Boolean);
@@ -92,7 +92,7 @@ function applyAction(action: RuleAction, decision: RulesDecision): void {
 
 export function evaluateRulesets(
   rulesets: EvaluableRuleset[],
-  ctx: MessageRuleContext
+  ctx: MessageRuleContext,
 ): RulesDecision {
   const ordered = [...rulesets].sort((a, b) => {
     if (a.priority !== b.priority) return a.priority - b.priority;
@@ -105,7 +105,7 @@ export function evaluateRulesets(
     folder_id: null,
     is_starred: false,
     is_read: false,
-    matched_ruleset_ids: []
+    matched_ruleset_ids: [],
   };
 
   for (const ruleset of ordered) {

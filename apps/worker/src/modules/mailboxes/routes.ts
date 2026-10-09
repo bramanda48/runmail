@@ -4,7 +4,7 @@ import {
   cursorQuerySchema,
   decodeCursor,
   localPartSchema,
-  PAGINATION_DEFAULT_LIMIT
+  PAGINATION_DEFAULT_LIMIT,
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -57,14 +57,14 @@ mailboxRoutes.get("/", jwtAuth, async (c) => {
     c,
     authUser.user_id,
     limit,
-    cursorId
+    cursorId,
   );
   return c.json({ data: { mailboxes }, meta }, 200);
 });
 
 const createMailboxBodySchema = z.object({
   domain_id: z.string().min(1),
-  local_part: localPartSchema
+  local_part: localPartSchema,
 });
 
 mailboxRoutes.post("/", jwtAuth, requireAdmin, async (c) => {
@@ -80,10 +80,10 @@ mailboxRoutes.post("/", jwtAuth, requireAdmin, async (c) => {
         {
           error: {
             code: API_ERROR_CODES.DOMAIN_NOT_ACTIVE,
-            message: "Domain tidak aktif"
-          }
+            message: "Domain tidak aktif",
+          },
         },
-        400
+        400,
       );
     }
     if (result.error === "MAILBOX_ADDRESS_ALREADY_EXISTS") {
@@ -92,20 +92,20 @@ mailboxRoutes.post("/", jwtAuth, requireAdmin, async (c) => {
           error: {
             code: API_ERROR_CODES.MAILBOX_ADDRESS_ALREADY_EXISTS,
             message: "Alamat mailbox sudah digunakan",
-            details: { field: "local_part" }
-          }
+            details: { field: "local_part" },
+          },
         },
-        409
+        409,
       );
     }
     return c.json(
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan"
-        }
+          message: "Mailbox tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
 
@@ -119,10 +119,10 @@ mailboxRoutes.get("/:mailbox_id", jwtAuth, requireMailboxAccess, async (c) => {
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan"
-        }
+          message: "Mailbox tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
   return c.json({ data: { mailbox } }, 200);
@@ -131,10 +131,10 @@ mailboxRoutes.get("/:mailbox_id", jwtAuth, requireMailboxAccess, async (c) => {
 const patchMailboxBodySchema = z
   .object({
     local_part: localPartSchema.optional(),
-    is_active: z.boolean().optional()
+    is_active: z.boolean().optional(),
   })
   .refine((v) => v.local_part !== undefined || v.is_active !== undefined, {
-    message: "At least one field is required"
+    message: "At least one field is required",
   });
 
 mailboxRoutes.patch("/:mailbox_id", jwtAuth, requireAdmin, async (c) => {
@@ -144,9 +144,9 @@ mailboxRoutes.patch("/:mailbox_id", jwtAuth, requireAdmin, async (c) => {
     return c.json(
       badRequest({
         ...flat.fieldErrors,
-        ...(flat.formErrors.length > 0 ? { _form: flat.formErrors } : {})
+        ...(flat.formErrors.length > 0 ? { _form: flat.formErrors } : {}),
       }),
-      400
+      400,
     );
   }
 
@@ -158,27 +158,27 @@ mailboxRoutes.patch("/:mailbox_id", jwtAuth, requireAdmin, async (c) => {
           error: {
             code: API_ERROR_CODES.MAILBOX_ADDRESS_ALREADY_EXISTS,
             message: "Alamat mailbox sudah digunakan",
-            details: { field: "local_part" }
-          }
+            details: { field: "local_part" },
+          },
         },
-        409
+        409,
       );
     }
     return c.json(
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan"
-        }
+          message: "Mailbox tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
   return c.json({ data: { mailbox: result.mailbox } }, 200);
 });
 
 const linkUserBodySchema = z.object({
-  user_id: z.string().min(1)
+  user_id: z.string().min(1),
 });
 
 mailboxRoutes.get("/:mailbox_id/users", jwtAuth, requireAdmin, async (c) => {
@@ -201,17 +201,17 @@ mailboxRoutes.get("/:mailbox_id/users", jwtAuth, requireAdmin, async (c) => {
     c,
     c.req.param("mailbox_id") ?? "",
     limit,
-    cursorId
+    cursorId,
   );
   if ("error" in result) {
     return c.json(
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan"
-        }
+          message: "Mailbox tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
   return c.json({ data: { users: result.users }, meta: result.meta }, 200);
@@ -230,20 +230,20 @@ mailboxRoutes.post("/:mailbox_id/users", jwtAuth, requireAdmin, async (c) => {
         {
           error: {
             code: API_ERROR_CODES.VALIDATION_ERROR,
-            message: "User sudah terhubung ke mailbox ini"
-          }
+            message: "User sudah terhubung ke mailbox ini",
+          },
         },
-        409
+        409,
       );
     }
     return c.json(
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox atau user tidak ditemukan"
-        }
+          message: "Mailbox atau user tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
   return c.json({ data: { ok: true } }, 201);
@@ -253,17 +253,17 @@ mailboxRoutes.delete("/:mailbox_id/users/:user_id", jwtAuth, requireAdmin, async
   const result = await service.unlinkUser(
     c,
     c.req.param("mailbox_id") ?? "",
-    c.req.param("user_id") ?? ""
+    c.req.param("user_id") ?? "",
   );
   if ("error" in result) {
     return c.json(
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Kaitan user tidak ditemukan"
-        }
+          message: "Kaitan user tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
   return c.json({ data: { ok: true } }, 200);

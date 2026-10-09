@@ -9,8 +9,8 @@ describe("badRequest", () => {
       error: {
         code: API_ERROR_CODES.VALIDATION_ERROR,
         details,
-        message: "Validasi gagal"
-      }
+        message: "Validasi gagal",
+      },
     });
   });
 
@@ -25,8 +25,8 @@ describe("badRequest", () => {
       error: {
         code: "VALIDATION_ERROR",
         details: {},
-        message: "Validasi gagal"
-      }
+        message: "Validasi gagal",
+      },
     });
   });
 });
@@ -36,8 +36,8 @@ describe("notFound", () => {
     expect(notFound("Mailbox tidak ditemukan")).toEqual({
       error: {
         code: API_ERROR_CODES.NOT_FOUND,
-        message: "Mailbox tidak ditemukan"
-      }
+        message: "Mailbox tidak ditemukan",
+      },
     });
   });
 

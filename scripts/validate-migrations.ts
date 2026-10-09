@@ -27,7 +27,7 @@ const EXPECTED_TABLES = [
   "ruleset_conditions",
   "rulesets",
   "sync_events",
-  "users"
+  "users",
 ];
 
 interface SpawnResult {
@@ -42,12 +42,12 @@ function runWrangler(args: string[], persistDir: string): SpawnResult {
     env: { ...process.env, CI: "1" },
     stderr: "pipe",
     stdin: "ignore",
-    stdout: "pipe"
+    stdout: "pipe",
   });
   return {
     exitCode: proc.exitCode,
     stderr: proc.stderr.toString(),
-    stdout: proc.stdout.toString()
+    stdout: proc.stdout.toString(),
   };
 }
 
@@ -81,7 +81,7 @@ async function main(): Promise<void> {
     console.log("[validate-migrations] 1/3 applying migrations (d1 migrations apply --local) ...");
     const apply = runWrangler(
       ["d1", "migrations", "apply", "runmail-dev", "--local", "--config", "wrangler.jsonc"],
-      persistDir
+      persistDir,
     );
     console.log(apply.stdout.trim());
     if (apply.exitCode !== 0) {
@@ -101,9 +101,9 @@ async function main(): Promise<void> {
         "wrangler.jsonc",
         "--json",
         "--command",
-        "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name"
+        "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name",
       ],
-      persistDir
+      persistDir,
     );
     if (tables.exitCode !== 0) {
       console.error(tables.stderr.trim());
@@ -120,7 +120,7 @@ async function main(): Promise<void> {
     const missing = EXPECTED_TABLES.filter((t) => !found.has(t));
     if (missing.length > 0) fail(`missing tables: ${missing.join(", ")}`);
     console.log(
-      `[validate-migrations] all ${EXPECTED_TABLES.length} expected tables present (${EXPECTED_TABLES.join(", ")})`
+      `[validate-migrations] all ${EXPECTED_TABLES.length} expected tables present (${EXPECTED_TABLES.join(", ")})`,
     );
 
     console.log("[validate-migrations] 3/3 checking PRAGMA foreign_keys ...");
@@ -134,9 +134,9 @@ async function main(): Promise<void> {
         "wrangler.jsonc",
         "--json",
         "--command",
-        "PRAGMA foreign_keys"
+        "PRAGMA foreign_keys",
       ],
-      persistDir
+      persistDir,
     );
     if (pragma.exitCode !== 0) {
       console.error(pragma.stderr.trim());
@@ -153,7 +153,7 @@ async function main(): Promise<void> {
       console.log("[validate-migrations] foreign_keys ON confirmed");
     } else {
       console.warn(
-        "[validate-migrations] WARN: PRAGMA foreign_keys is not 1 (per-connection setting on D1 local); continuing without hard fail"
+        "[validate-migrations] WARN: PRAGMA foreign_keys is not 1 (per-connection setting on D1 local); continuing without hard fail",
       );
     }
 

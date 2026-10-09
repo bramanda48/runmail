@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { useRouter } from "vue-router";
+import PasswordField from "@/components/app/password-field.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,12 +11,13 @@ import {
   DialogHeader,
   DialogRoot,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { PasswordInput } from "@/components/ui/password-input";
 import { Icon } from "@/icons";
 import { ApiError, changePassword } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
+import { ref } from "vue";
+import { useRouter } from "vue-router";
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -111,9 +111,11 @@ async function confirmLogout() {
 
 <template>
   <main class="flex min-h-screen flex-col items-center justify-center bg-background p-6">
-    <div class="w-full max-w-2xl space-y-6">
+    <div class="w-full max-w-2xl flex flex-col gap-6">
       <div>
-        <h1 class="text-2xl font-semibold text-foreground">Akun</h1>
+        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
+          Akun
+        </h1>
         <p class="text-sm text-muted-foreground">Kelola informasi akun dan keamanan Anda.</p>
       </div>
 
@@ -122,13 +124,13 @@ async function confirmLogout() {
           <CardTitle>Profil</CardTitle>
           <CardDescription>Informasi akun Anda saat ini.</CardDescription>
         </CardHeader>
-        <CardContent class="space-y-4">
+        <CardContent class="flex flex-col gap-4">
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm text-muted-foreground">Username</p>
               <p class="font-medium text-foreground">{{ auth.user?.username }}</p>
             </div>
-            <Badge :variant="auth.isAdmin ? 'success' : 'inactive'">
+            <Badge :variant="auth.isAdmin ? 'secondary' : 'outline'">
               {{ auth.isAdmin ? "Admin" : "Member" }}
             </Badge>
           </div>
@@ -140,7 +142,7 @@ async function confirmLogout() {
                 <span>Keluar</span>
               </Button>
             </DialogTrigger>
-            <DialogContent variant="destructive" size="sm">
+            <DialogContent>
               <DialogHeader>
                 <DialogTitle>Keluar</DialogTitle>
                 <DialogDescription>Apakah Anda yakin ingin keluar?</DialogDescription>
@@ -164,31 +166,29 @@ async function confirmLogout() {
             Setelah berhasil, Anda harus masuk kembali karena semua sesi akan diakhiri.
           </CardDescription>
         </CardHeader>
-        <CardContent class="space-y-4">
-          <Alert v-if="inlineError" variant="error">{{ inlineError }}</Alert>
-          <Alert v-if="successMessage" variant="success">{{ successMessage }}</Alert>
+        <CardContent class="flex flex-col gap-4">
+          <Alert v-if="inlineError" variant="destructive">{{ inlineError }}</Alert>
+          <Alert v-if="successMessage">{{ successMessage }}</Alert>
 
-          <form class="space-y-4" @submit.prevent="handleChangePassword">
-            <label class="block space-y-1.5">
+          <form class="flex flex-col gap-4" @submit.prevent="handleChangePassword">
+            <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Kata Sandi Saat Ini</span>
-              <PasswordInput
+              <PasswordField
                 v-model="currentPassword"
                 placeholder="Masukkan kata sandi saat ini"
                 :disabled="isSubmitting"
-                :variant="currentPasswordError ? 'error' : 'default'"
               />
               <p v-if="currentPasswordError" class="text-sm text-destructive">
                 {{ currentPasswordError }}
               </p>
             </label>
 
-            <label class="block space-y-1.5">
+            <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Kata Sandi Baru</span>
-              <PasswordInput
+              <PasswordField
                 v-model="newPassword"
                 placeholder="Minimal 8 karakter"
                 :disabled="isSubmitting"
-                :variant="newPasswordError ? 'error' : 'default'"
               />
               <p class="text-xs text-muted-foreground">Kata sandi harus 8–128 karakter.</p>
               <p v-if="newPasswordError" class="text-sm text-destructive">
@@ -196,13 +196,12 @@ async function confirmLogout() {
               </p>
             </label>
 
-            <label class="block space-y-1.5">
+            <label class="flex flex-col gap-1.5">
               <span class="text-sm font-medium text-foreground">Konfirmasi Kata Sandi Baru</span>
-              <PasswordInput
+              <PasswordField
                 v-model="confirmPassword"
                 placeholder="Ulangi kata sandi baru"
                 :disabled="isSubmitting"
-                :variant="confirmPasswordError ? 'error' : 'default'"
               />
               <p v-if="confirmPasswordError" class="text-sm text-destructive">
                 {{ confirmPasswordError }}

@@ -7,7 +7,7 @@ import {
   messages,
   rulesetActions,
   rulesetConditions,
-  rulesets
+  rulesets,
 } from "@runmail/db";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import PostalMime from "postal-mime";
@@ -15,6 +15,7 @@ import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/alloca
 import type { Bindings } from "../../lib/db";
 import { getDb } from "../../lib/db";
 import { uuidv7 } from "../../lib/ids";
+import { createExecutionLogger } from "../../lib/logger";
 import { deleteRawEmail, putRawEmail, rawObjectKey } from "../../lib/r2";
 import type { EvaluableRuleset } from "../../lib/rules-engine";
 import { evaluateRulesets } from "../../lib/rules-engine";
@@ -25,19 +26,24 @@ import {
   normalizeSnippet,
   parseEmailAddress,
   resolveEmailDate,
-  serializeHeaders
+  serializeHeaders,
 } from "./helpers";
 
 export async function handleInboundEmail(
   message: EmailMessage,
   env: Bindings,
-  _ctx: ExecutionContext
+  _ctx: ExecutionContext,
 ): Promise<void> {
+  const execution_id = crypto.randomUUID();
+  const logger = createExecutionLogger(execution_id, { event: "email_inbound" });
+
   if (message.rawSize > MAX_EMAIL_BYTES) {
     await message.setReject("Message exceeds 25 MB limit");
     return;
   }
 
+  // Buffered read is intentional: size validation requires the full payload,
+  // PostalMime.parse needs a complete buffer, and the R2 upload takes an ArrayBuffer.
   const rawBuf = new Uint8Array(await new Response(message.raw).arrayBuffer());
   if (rawBuf.byteLength > MAX_EMAIL_BYTES) {
     await message.setReject("Message exceeds 25 MB limit");
@@ -46,7 +52,7 @@ export async function handleInboundEmail(
 
   const parsed = await PostalMime.parse(rawBuf, {
     maxNestingDepth: 50,
-    maxHeadersSize: 512 * 1024
+    maxHeadersSize: 512 * 1024,
   });
 
   const recipient = parseEmailAddress(message.to);
@@ -66,8 +72,8 @@ export async function handleInboundEmail(
         eq(domains.domain_name, recipient.domain),
         eq(mailboxes.local_part, recipient.local_part),
         eq(domains.verification_status, "active"),
-        eq(mailboxes.is_active, true)
-      )
+        eq(mailboxes.is_active, true),
+      ),
     )
     .limit(1);
   if (!mailboxRow) {
@@ -80,7 +86,7 @@ export async function handleInboundEmail(
     .select({
       id: rulesets.id,
       priority: rulesets.priority,
-      logic_operator: rulesets.logic_operator
+      logic_operator: rulesets.logic_operator,
     })
     .from(rulesets)
     .where(and(eq(rulesets.mailbox_id, mailboxId), eq(rulesets.is_enabled, true)))
@@ -95,7 +101,7 @@ export async function handleInboundEmail(
           ruleset_id: rulesetConditions.ruleset_id,
           field: rulesetConditions.field,
           match_type: rulesetConditions.match_type,
-          condition_value: rulesetConditions.condition_value
+          condition_value: rulesetConditions.condition_value,
         })
         .from(rulesetConditions)
         .where(inArray(rulesetConditions.ruleset_id, ids))
@@ -104,11 +110,11 @@ export async function handleInboundEmail(
         .select({
           ruleset_id: rulesetActions.ruleset_id,
           action_type: rulesetActions.action_type,
-          action_value: rulesetActions.action_value
+          action_value: rulesetActions.action_value,
         })
         .from(rulesetActions)
         .where(inArray(rulesetActions.ruleset_id, ids))
-        .orderBy(asc(rulesetActions.action_order))
+        .orderBy(asc(rulesetActions.action_order)),
     ]);
     for (const row of rulesetRows) {
       evaluable.push({
@@ -120,14 +126,14 @@ export async function handleInboundEmail(
           .map((c) => ({
             field: c.field,
             match_type: c.match_type,
-            condition_value: c.condition_value
+            condition_value: c.condition_value,
           })),
         actions: actionRows
           .filter((a) => a.ruleset_id === row.id)
           .map((a) => ({
             action_type: a.action_type,
-            action_value: a.action_value
-          }))
+            action_value: a.action_value,
+          })),
       });
     }
   }
@@ -141,20 +147,15 @@ export async function handleInboundEmail(
   const decision = evaluateRulesets(evaluable, {
     from: fromDisplay,
     subject: parsed.subject ?? "",
-    rawHeaders: serializeHeaders(headers)
+    rawHeaders: serializeHeaders(headers),
   });
-  if (!decision.matched) {
-    await message.setReject("No ruleset matched this message");
-    return;
-  }
-
   let finalFolder: { id: string; folder_type: string; name: string } | null = null;
   if (decision.folder_id !== null) {
     const [target] = await db
       .select({
         id: folders.id,
         folder_type: folders.folder_type,
-        name: folders.name
+        name: folders.name,
       })
       .from(folders)
       .where(and(eq(folders.id, decision.folder_id), eq(folders.mailbox_id, mailboxId)))
@@ -166,26 +167,23 @@ export async function handleInboundEmail(
       .select({
         id: folders.id,
         folder_type: folders.folder_type,
-        name: folders.name
+        name: folders.name,
       })
       .from(folders)
       .where(
         and(
           eq(folders.mailbox_id, mailboxId),
           eq(folders.folder_type, "system"),
-          eq(folders.name, "inbox")
-        )
+          eq(folders.name, "inbox"),
+        ),
       )
       .limit(1);
     finalFolder = inbox ?? null;
   }
   if (!finalFolder) {
-    console.error(
-      JSON.stringify({
-        event: "ingest_inbox_folder_missing",
-        mailbox_id: mailboxId
-      })
-    );
+    logger.error("ingest_inbox_folder_missing", undefined, {
+      mailbox_id: mailboxId,
+    });
     await message.setReject("Internal mailbox error, please try again later");
     return;
   }
@@ -209,7 +207,7 @@ export async function handleInboundEmail(
 
   const rawBody: ArrayBuffer = rawBuf.buffer.slice(
     rawBuf.byteOffset,
-    rawBuf.byteOffset + rawBuf.byteLength
+    rawBuf.byteOffset + rawBuf.byteLength,
   );
   try {
     await putRawEmail(env, rawKey, rawBody);
@@ -239,7 +237,7 @@ export async function handleInboundEmail(
     raw_object_key: rawKey,
     sync_version: 0,
     updated_at: now,
-    to_addresses: toAddresses
+    to_addresses: toAddresses,
   });
   const payload = sql`json_object('message_id', ${messageId}, 'sync_version', ${versionSql}, 'message', json_set(json(${snapshotJson}), '$.sync_version', ${versionSql}))`;
 
@@ -262,7 +260,7 @@ export async function handleInboundEmail(
         folder_entered_at: folderEnteredAt,
         raw_object_key: rawKey,
         sync_version: versionSql as unknown as number,
-        updated_at: now
+        updated_at: now,
       }),
       ...recipientRows.map((row) =>
         db.insert(messageRecipients).values({
@@ -270,8 +268,8 @@ export async function handleInboundEmail(
           message_id: messageId,
           recipient_type: row.recipient_type,
           display_name: row.name,
-          email_address: row.address
-        })
+          email_address: row.address,
+        }),
       ),
       emitEventStmt(db, {
         mailbox_id: mailboxId,
@@ -279,8 +277,8 @@ export async function handleInboundEmail(
         message_id: messageId,
         payload,
         sync_version_sql: versionSql,
-        created_at: now
-      })
+        created_at: now,
+      }),
     ] as unknown as Parameters<typeof db.batch>[0]);
   } catch {
     await deleteRawEmail(env, rawKey);
@@ -288,12 +286,9 @@ export async function handleInboundEmail(
     return;
   }
 
-  console.log(
-    JSON.stringify({
-      event: "email_ingested",
-      mailbox_id: mailboxId,
-      message_id: messageId,
-      folder_id: finalFolder.id
-    })
-  );
+  logger.info("email_ingested", {
+    mailbox_id: mailboxId,
+    message_id: messageId,
+    folder_id: finalFolder.id,
+  });
 }

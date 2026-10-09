@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { useRoute, useRouter } from "vue-router";
 import AppShell from "@/components/app/app-shell.vue";
 import NavItem from "@/components/app/nav-item.vue";
 import Wordmark from "@/components/app/wordmark.vue";
 import { Badge } from "@/components/ui/badge";
-import { IconButton } from "@/components/ui/icon-button";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { useAuthStore } from "@/stores/auth";
+import { useRoute, useRouter } from "vue-router";
 
 const auth = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
 const adminNav = [
-  { label: "User", to: "/admin/users", icon: "lucide:users" },
   { label: "Domain", to: "/admin/domains", icon: "lucide:globe" },
-  { label: "Mailbox", to: "/admin/mailboxes", icon: "lucide:mail" }
+  { label: "Mailbox", to: "/admin/mailboxes", icon: "lucide:mail" },
+  { label: "User", to: "/admin/users", icon: "lucide:users" },
 ];
 
 async function logout() {
@@ -32,7 +32,7 @@ async function logout() {
       <div class="flex h-full flex-col">
         <div class="p-4">
           <Wordmark size="sm" class="mb-6" />
-          <nav class="space-y-1" aria-label="Navigasi admin">
+          <nav class="flex flex-col gap-1" aria-label="Navigasi admin">
             <NavItem
               v-for="item in adminNav"
               :key="item.to"
@@ -42,23 +42,14 @@ async function logout() {
               :active="route.path === item.to"
             />
             <div class="my-3 border-t" />
-            <NavItem
-              label="Kembali ke Mailbox"
-              icon="lucide:arrow-left"
-              to="/mailboxes"
-            />
+            <NavItem label="Kembali ke Mailbox" icon="lucide:arrow-left" to="/mailboxes" />
           </nav>
         </div>
         <div class="mt-auto p-4">
-          <IconButton
-            :ariaLabel="'Keluar'"
-            variant="ghost"
-            class="w-full"
-            @click="logout"
-          >
+          <Button aria-label="Keluar" variant="ghost" size="icon" class="w-full" @click="logout">
             <Icon icon="lucide:log-out" />
             <span>Keluar</span>
-          </IconButton>
+          </Button>
         </div>
       </div>
     </template>
@@ -66,7 +57,7 @@ async function logout() {
     <template #topbar>
       <div class="flex items-center gap-3">
         <Wordmark size="sm" />
-        <Badge variant="success">Admin</Badge>
+        <Badge variant="secondary">Admin</Badge>
       </div>
     </template>
 

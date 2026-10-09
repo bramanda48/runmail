@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import PasswordField from "@/components/app/password-field.vue";
 import Wordmark from "@/components/app/wordmark.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { PasswordInput } from "@/components/ui/password-input";
 import { Icon } from "@/icons";
 import { ApiError, listMailboxes } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
+import { computed, ref } from "vue";
+import { useRoute, useRouter } from "vue-router";
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -89,32 +89,29 @@ async function handleSubmit() {
         <CardDescription>Masuk untuk melanjutkan ke kotak surat Anda.</CardDescription>
       </CardHeader>
 
-      <CardContent class="space-y-4">
-        <Alert v-if="showRedirectInfo" variant="info">
-          Sesi Anda berakhir, silakan masuk kembali.
-        </Alert>
+      <CardContent class="flex flex-col gap-4">
+        <Alert v-if="showRedirectInfo"> Sesi Anda berakhir, silakan masuk kembali. </Alert>
 
-        <Alert v-if="apiError" variant="error">{{ apiError }}</Alert>
+        <Alert v-if="apiError" variant="destructive">{{ apiError }}</Alert>
 
-        <form class="space-y-4" @submit.prevent="handleSubmit">
-          <label class="block space-y-1.5">
+        <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Username</span>
             <Input
               v-model="username"
               placeholder="Masukkan username"
               :disabled="isSubmitting"
-              :variant="usernameError ? 'error' : 'default'"
+              :aria-invalid="Boolean(usernameError)"
             />
             <p v-if="usernameError" class="text-sm text-destructive">{{ usernameError }}</p>
           </label>
 
-          <label class="block space-y-1.5">
+          <label class="flex flex-col gap-1.5">
             <span class="text-sm font-medium text-foreground">Kata Sandi</span>
-            <PasswordInput
+            <PasswordField
               v-model="password"
               placeholder="Masukkan kata sandi"
               :disabled="isSubmitting"
-              :variant="passwordError ? 'error' : 'default'"
             />
             <p v-if="passwordError" class="text-sm text-destructive">{{ passwordError }}</p>
           </label>

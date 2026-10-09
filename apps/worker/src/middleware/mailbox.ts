@@ -13,10 +13,10 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan"
-        }
+          message: "Mailbox tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
   const db = getDb(c);
@@ -33,10 +33,10 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
       {
         error: {
           code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan"
-        }
+          message: "Mailbox tidak ditemukan",
+        },
       },
-      404
+      404,
     );
   }
 
@@ -45,10 +45,10 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
       {
         error: {
           code: API_ERROR_CODES.FORBIDDEN,
-          message: "Mailbox tidak aktif"
-        }
+          message: "Mailbox tidak aktif",
+        },
       },
-      403
+      403,
     );
   }
 

@@ -1,22 +1,23 @@
+import type { VariantProps } from "class-variance-authority";
 import { cva } from "class-variance-authority";
 
 export { default as Alert } from "./Alert.vue";
+export { default as AlertDescription } from "./AlertDescription.vue";
+export { default as AlertTitle } from "./AlertTitle.vue";
 
 export const alertVariants = cva(
-  "relative flex w-full items-start gap-3 rounded-lg border p-4 text-sm [&_svg]:size-4 [&_svg]:shrink-0",
+  "relative w-full rounded-lg border px-4 py-3 text-sm flex items-start gap-3",
   {
     variants: {
       variant: {
-        info: "border-border/50 bg-primary/20 text-primary-foreground",
-        success: "border-success/30 bg-success/15 text-success",
-        warning: "border-warning/30 bg-warning/15 text-warning",
-        error: "border-destructive/30 bg-destructive/15 text-destructive"
-      }
+        default: "bg-card text-card-foreground",
+        destructive: "text-destructive bg-card *:data-[slot=alert-description]:text-destructive/90",
+      },
     },
     defaultVariants: {
-      variant: "info"
-    }
-  }
+      variant: "default",
+    },
+  },
 );
 
-export type AlertVariants = typeof alertVariants;
+export type AlertVariants = VariantProps<typeof alertVariants>;

@@ -82,7 +82,7 @@ export async function applySyncEvent(tables: EventTables, event: SyncEvent): Pro
         folder_id: folderId,
         folder_entered_at: folderEnteredAt,
         sync_version: syncVersion,
-        updated_at: Date.now()
+        updated_at: Date.now(),
       });
       return;
     }
@@ -90,7 +90,7 @@ export async function applySyncEvent(tables: EventTables, event: SyncEvent): Pro
       if (!isRecord(payload.changes)) return;
       const patch: Partial<LocalMessage> = {
         sync_version: event.sync_version,
-        updated_at: Date.now()
+        updated_at: Date.now(),
       };
       if (typeof payload.changes.is_read === "boolean") patch.is_read = payload.changes.is_read;
       if (typeof payload.changes.is_starred === "boolean") {
@@ -110,7 +110,7 @@ export async function applySyncEvent(tables: EventTables, event: SyncEvent): Pro
         folder_id: folderId,
         folder_entered_at: asNumber(payload.folder_entered_at),
         sync_version: event.sync_version,
-        updated_at: Date.now()
+        updated_at: Date.now(),
       });
       return;
     }

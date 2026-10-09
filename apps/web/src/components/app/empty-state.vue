@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
+import type { HTMLAttributes } from "vue";
 
 interface Props {
   icon: string;
@@ -17,7 +17,7 @@ const props = defineProps<Props>();
   <div
     :class="
       cn(
-        'flex flex-col items-center justify-center rounded-2xl bg-muted/50 p-8 text-center',
+        'flex flex-col items-center justify-center rounded-lg bg-muted/50 p-8 text-center',
         props.class,
       )
     "
