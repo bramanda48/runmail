@@ -16,10 +16,10 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 p-3">
+  <div class="flex flex-col gap-4">
     <Button
       variant="secondary"
-      class="w-max rounded-full px-6 py-4 font-semibold"
+      class="h-auto w-max rounded-full border border-border px-6 py-4 font-semibold shadow-sm"
       @click="$emit('compose')"
     >
       <Icon icon="lucide:pencil" />
