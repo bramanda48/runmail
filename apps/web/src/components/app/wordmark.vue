@@ -15,7 +15,9 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const iconClass = computed(() => (props.size === "lg" ? "size-7" : "size-5"));
-const textClass = computed(() => (props.size === "lg" ? "text-xl" : "text-base"));
+const textClass = computed(() =>
+  props.size === "lg" ? "text-xl font-bold tracking-tight" : "text-base font-semibold",
+);
 </script>
 
 <template>

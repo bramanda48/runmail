@@ -19,10 +19,10 @@ function sync() {
 </script>
 
 <template>
-  <div class="flex items-center gap-2">
+  <div class="flex min-w-0 items-center gap-2">
     <button
       type="button"
-      class="inline-flex max-w-48 items-center gap-2 rounded-full border border-input bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      class="inline-flex h-9 max-w-48 items-center gap-2 rounded-full border border-input bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
       @click="switchMailbox"
     >
       <span class="truncate">{{ access.current?.address || "Pilih mailbox" }}</span>

@@ -285,9 +285,16 @@ watch(
 </script>
 
 <template>
-  <div class="flex h-screen flex-col overflow-hidden bg-background text-sm">
+  <div
+    class="flex h-screen flex-col overflow-hidden bg-background text-sm"
+    style="
+      background-image: url('https://ssl.gstatic.com/ui/v1/icons/mail/images/2/5/android/bg.png');
+      background-repeat: repeat-x;
+      background-position: left top;
+    "
+  >
     <header class="flex h-16 shrink-0 items-center justify-between gap-4 px-4">
-      <div class="flex w-auto shrink-0 items-center gap-2 lg:w-64">
+      <div class="flex w-auto min-w-0 shrink-0 items-center gap-4 lg:w-80">
         <Button
           variant="ghost"
           size="icon"
