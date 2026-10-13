@@ -35,16 +35,20 @@ function onInput(value: string) {
 </script>
 
 <template>
-  <div class="relative">
-    <Icon
-      icon="lucide:search"
-      class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-    />
+  <div
+    class="relative flex h-12 w-full items-center rounded-full bg-muted px-4 transition-all focus-within:border focus-within:border-border focus-within:bg-background focus-within:ring-1 focus-within:ring-ring"
+  >
+    <Icon icon="lucide:search" class="mr-3 size-4 shrink-0 text-muted-foreground" />
     <Input
       :model-value="searchQuery"
       :placeholder="placeholder || 'Search...'"
-      class="h-9 w-full rounded-full pl-9"
+      class="h-full flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
       @update:model-value="onInput"
+    />
+    <Icon
+      icon="lucide:sliders-horizontal"
+      class="ml-3 size-4 shrink-0 text-muted-foreground"
+      aria-hidden="true"
     />
   </div>
 </template>

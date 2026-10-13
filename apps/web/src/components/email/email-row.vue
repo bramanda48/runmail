@@ -8,9 +8,13 @@ import { computed } from "vue";
 interface Props {
   message: LocalMessage;
   pending?: boolean;
+  selected?: boolean;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  pending: false,
+  selected: false,
+});
 
 const emit = defineEmits<{
   (e: "click"): void;
@@ -18,6 +22,7 @@ const emit = defineEmits<{
   (e: "toggle-read"): void;
   (e: "move"): void;
   (e: "trash"): void;
+  (e: "toggle-select"): void;
 }>();
 
 const sender = computed(() => props.message.from_name || props.message.from_address);
@@ -40,98 +45,111 @@ const displayDate = computed(() => {
 </script>
 
 <template>
-  <button
-    type="button"
-    class="group flex w-full items-center gap-3 rounded-md border-b bg-card p-3 text-left transition-colors last:border-b-0 hover:bg-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+  <div
+    role="button"
+    tabindex="0"
+    :class="
+      cn(
+        'group flex w-full cursor-pointer items-center gap-3 border-b border-border px-4 py-2',
+        message.is_read ? 'bg-muted/30' : 'bg-background',
+      )
+    "
     @click="emit('click')"
+    @keydown.enter="emit('click')"
+    @keydown.space.prevent="emit('click')"
   >
-    <span
-      class="size-2 shrink-0 rounded-full"
-      :class="message.is_read ? 'bg-transparent' : 'bg-primary-foreground'"
-      aria-hidden="true"
-    />
+    <Button
+      aria-label="Pilih pesan"
+      :aria-pressed="selected"
+      variant="ghost"
+      size="icon"
+      @click.stop="emit('toggle-select')"
+    >
+      <Icon
+        :icon="selected ? 'lucide:square-check-big' : 'lucide:square'"
+        :class="cn('size-4', selected ? 'text-primary' : 'text-muted-foreground')"
+      />
+    </Button>
 
-    <div class="min-w-0 flex-1">
-      <div class="flex items-center gap-2">
-        <p
-          :class="
-            cn(
-              'truncate text-sm',
-              message.is_read ? 'font-normal text-foreground' : 'font-bold text-foreground',
-            )
-          "
-        >
-          {{ sender }}
-        </p>
-        <Icon
-          v-if="pending"
-          icon="lucide:loader-circle"
-          class="size-3.5 shrink-0 animate-spin text-muted-foreground"
-        />
-      </div>
-      <p
+    <Button
+      :aria-label="message.is_starred ? 'Hapus bintang' : 'Tandai bintang'"
+      variant="ghost"
+      size="icon"
+      @click.stop="emit('toggle-star')"
+    >
+      <Icon
+        icon="lucide:star"
+        :class="
+          cn('size-4', message.is_starred ? 'fill-primary text-primary' : 'text-muted-foreground')
+        "
+      />
+    </Button>
+
+    <div class="flex w-28 shrink-0 items-center gap-1 sm:w-48">
+      <span
         :class="
           cn(
             'truncate text-sm',
-            message.is_read ? 'font-normal text-muted-foreground' : 'font-bold text-foreground',
+            message.is_read ? 'font-medium text-foreground' : 'font-bold text-foreground',
+          )
+        "
+      >
+        {{ sender }}
+      </span>
+      <Icon
+        v-if="pending"
+        icon="lucide:loader-circle"
+        class="size-3.5 shrink-0 animate-spin text-muted-foreground"
+      />
+    </div>
+
+    <div class="min-w-0 flex-1 truncate">
+      <span
+        :class="
+          cn(
+            'text-sm',
+            message.is_read ? 'font-medium text-foreground' : 'font-bold text-foreground',
           )
         "
       >
         {{ message.subject }}
-      </p>
-      <p class="truncate text-xs text-muted-foreground">{{ message.snippet }}</p>
+      </span>
+      <span class="truncate text-sm text-muted-foreground"> - {{ message.snippet }}</span>
     </div>
 
-    <div class="flex shrink-0 items-center gap-2">
-      <span class="hidden text-xs text-muted-foreground sm:inline">{{ displayDate }}</span>
+    <span
+      :class="
+        cn(
+          'hidden w-16 shrink-0 text-right text-xs sm:inline lg:group-hover:hidden',
+          message.is_read ? 'font-medium text-muted-foreground' : 'font-bold text-foreground',
+        )
+      "
+    >
+      {{ displayDate }}
+    </span>
 
-      <div
-        class="flex items-center gap-1 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
+    <div class="hidden items-center gap-1 lg:group-hover:flex">
+      <Button
+        :aria-label="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
+        variant="ghost"
+        size="icon"
+        @click.stop="emit('toggle-read')"
       >
-        <Button
-          :aria-label="message.is_starred ? 'Hapus bintang' : 'Tandai bintang'"
-          variant="ghost"
-          size="icon"
-          @click.stop="emit('toggle-star')"
-        >
-          <Icon
-            icon="lucide:star"
-            :class="
-              cn(
-                'size-4',
-                message.is_starred ? 'fill-primary text-primary' : 'text-muted-foreground',
-              )
-            "
-          />
-        </Button>
+        <Icon :icon="message.is_read ? 'lucide:mail-open' : 'lucide:mail'" class="size-4" />
+      </Button>
 
-        <Button
-          :aria-label="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
-          variant="ghost"
-          size="icon"
-          @click.stop="emit('toggle-read')"
-        >
-          <Icon :icon="message.is_read ? 'lucide:mail-open' : 'lucide:mail'" class="size-4" />
-        </Button>
+      <Button
+        aria-label="Pindahkan ke folder"
+        variant="ghost"
+        size="icon"
+        @click.stop="emit('move')"
+      >
+        <Icon icon="lucide:folder-input" class="size-4" />
+      </Button>
 
-        <Button
-          aria-label="Pindahkan ke folder"
-          variant="ghost"
-          size="icon"
-          @click.stop="emit('move')"
-        >
-          <Icon icon="lucide:folder-input" class="size-4" />
-        </Button>
-
-        <Button
-          aria-label="Pindah ke Trash"
-          variant="ghost"
-          size="icon"
-          @click.stop="emit('trash')"
-        >
-          <Icon icon="lucide:trash" class="size-4 text-destructive" />
-        </Button>
-      </div>
+      <Button aria-label="Pindah ke Trash" variant="ghost" size="icon" @click.stop="emit('trash')">
+        <Icon icon="lucide:trash" class="size-4 text-destructive" />
+      </Button>
     </div>
-  </button>
+  </div>
 </template>

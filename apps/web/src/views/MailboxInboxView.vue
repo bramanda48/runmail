@@ -1,25 +1,30 @@
 <script setup lang="ts">
-import AppShell from "@/components/app/app-shell.vue";
-import FolderNavigation from "@/components/app/folder-navigation.vue";
-import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
 import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
-import SyncIndicator from "@/components/app/sync-indicator.vue";
+import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
+import Wordmark from "@/components/app/wordmark.vue";
+import AccessoryRail from "@/components/email/accessory-rail.vue";
+import ComposeModal from "@/components/email/compose-modal.vue";
 import EmailListContainer from "@/components/email/EmailListContainer.vue";
 import EmailMoveDialog from "@/components/email/EmailMoveDialog.vue";
+import InboxSidebar from "@/components/email/inbox-sidebar.vue";
 import { Button } from "@/components/ui/button";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { parseSearchQuery } from "@/lib/search";
 import { computeUnreadCounts } from "@/lib/unread-counts";
+import { useMailboxAccessStore } from "@/stores/mailboxAccess";
 import Dexie from "dexie";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, shallowRef, watch } from "vue";
+import { RouterLink } from "vue-router";
 
 const { route, router, mailboxStore, mailboxId, resolveMailbox } = useMailboxWorkspace({
   onResolveError: () => {
     listError.value = "Tidak dapat memuat mailbox. Coba lagi.";
   },
 });
+
+const mailboxAccess = useMailboxAccessStore();
 
 const folderIdParam = computed(() => route.params.folder_id as string | undefined);
 
@@ -44,11 +49,21 @@ const refreshTick = ref(0);
 const moveOpen = ref(false);
 const movingMessage = ref<LocalMessage | null>(null);
 
+const composeOpen = shallowRef(false);
+const drawerOpen = shallowRef(false);
+const starredOnly = shallowRef(false);
+
 const activeFolder = computed(() => folders.value.find((f) => f.id === activeFolderId.value));
 
 const trashFolder = computed(() => folders.value.find((f) => f.name.toLowerCase() === "trash"));
 
 const showPagination = computed(() => !debouncedSearch.value && totalMessages.value > perPage);
+
+const avatarInitials = computed(() => {
+  const address = mailboxAccess.current?.address;
+  if (!address) return "RM";
+  return address.slice(0, 2).toUpperCase() || "RM";
+});
 
 function onSearch(value: string) {
   debouncedSearch.value = value;
@@ -121,15 +136,15 @@ async function loadMessages() {
         .filter((m) => matchesSearch(m, filter))
         .limit(50)
         .toArray();
-      messages.value = results.sort(
+      const sorted = results.sort(
         (a, b) => b.email_date - a.email_date || b.received_at - a.received_at,
       );
+      messages.value = starredOnly.value ? sorted.filter((m) => m.is_starred) : sorted;
       totalMessages.value = messages.value.length;
       return;
     }
 
     const folderId = activeFolderId.value;
-    totalMessages.value = await db.messages.where("folder_id").equals(folderId).count();
 
     const offset = (page.value - 1) * perPage;
     const rows = await db.messages
@@ -140,9 +155,16 @@ async function loadMessages() {
       .limit(perPage)
       .toArray();
 
-    messages.value = rows.sort(
+    const sorted = rows.sort(
       (a, b) => b.email_date - a.email_date || b.received_at - a.received_at,
     );
+    if (starredOnly.value) {
+      messages.value = sorted.filter((m) => m.is_starred);
+      totalMessages.value = messages.value.length;
+    } else {
+      messages.value = sorted;
+      totalMessages.value = await db.messages.where("folder_id").equals(folderId).count();
+    }
   } catch (err) {
     listError.value = "Gagal memuat daftar email.";
   } finally {
@@ -256,6 +278,11 @@ watch(debouncedSearch, () => {
   loadMessages();
 });
 
+watch(starredOnly, () => {
+  page.value = 1;
+  loadMessages();
+});
+
 watch(
   () => mailboxStore.syncStatus,
   async (status) => {
@@ -268,78 +295,103 @@ watch(
 </script>
 
 <template>
-  <AppShell>
-    <template #navigation>
-      <div class="flex h-full flex-col">
-        <FolderNavigation
+  <div class="flex h-screen flex-col overflow-hidden bg-background text-sm">
+    <header class="flex h-16 shrink-0 items-center justify-between gap-4 px-4">
+      <div class="flex w-auto shrink-0 items-center gap-2 lg:w-64">
+        <Button
+          variant="ghost"
+          size="icon"
+          class="lg:hidden"
+          aria-label="Buka menu"
+          @click="drawerOpen = true"
+        >
+          <Icon icon="lucide:menu" />
+        </Button>
+        <RouterLink to="/mailboxes" aria-label="Runmail">
+          <Wordmark size="lg" />
+        </RouterLink>
+      </div>
+
+      <div class="max-w-2xl flex-1 px-4">
+        <MailboxSearchBar v-model="searchQuery" placeholder="Cari di email" @search="onSearch" />
+      </div>
+
+      <div class="flex shrink-0 items-center gap-2 lg:w-64 lg:justify-end">
+        <Button variant="ghost" size="icon" disabled title="Segera hadir" aria-label="Bantuan">
+          <Icon icon="lucide:circle-help" />
+        </Button>
+        <Button :as="RouterLink" to="/account" variant="ghost" size="icon" aria-label="Pengaturan">
+          <Icon icon="lucide:settings" />
+        </Button>
+        <Button :as="RouterLink" to="/mailboxes" variant="ghost" size="icon" aria-label="Aplikasi">
+          <Icon icon="lucide:layout-grid" />
+        </Button>
+        <RouterLink
+          to="/account"
+          class="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
+          aria-label="Akun"
+        >
+          {{ avatarInitials }}
+        </RouterLink>
+      </div>
+    </header>
+
+    <div class="relative flex min-w-0 flex-1 gap-0 overflow-hidden">
+      <aside class="hidden w-64 shrink-0 flex-col overflow-y-auto px-3 py-3 lg:flex">
+        <InboxSidebar
+          v-model:starredOnly="starredOnly"
           :mailbox-id="mailboxId"
           :folders="folders"
           :unread-counts="unreadCounts"
+          @compose="composeOpen = true"
         />
-      </div>
-    </template>
+      </aside>
 
-    <template #topbar>
-      <div class="flex items-center gap-3">
-        <MailboxSwitcher />
-        <SyncIndicator
-          :status="mailboxStore.syncStatus"
-          :pending-count="mailboxStore.pendingCount"
+      <MobileNavDrawer v-model:open="drawerOpen">
+        <InboxSidebar
+          v-model:starredOnly="starredOnly"
+          :mailbox-id="mailboxId"
+          :folders="folders"
+          :unread-counts="unreadCounts"
+          @compose="composeOpen = true"
         />
-        <div class="hidden lg:block">
-          <MailboxSearchBar
-            v-model="searchQuery"
-            placeholder="Cari from, to, atau subject..."
-            class="w-64"
-            @search="onSearch"
-          />
-        </div>
-      </div>
-    </template>
+      </MobileNavDrawer>
 
-    <main class="flex flex-1 flex-col p-4 lg:p-8">
-      <div class="mb-4 lg:hidden">
-        <MailboxSearchBar
-          v-model="searchQuery"
-          placeholder="Cari from, to, atau subject..."
-          @search="onSearch"
+      <main
+        class="z-10 mx-0 mt-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-t-3xl border-x border-t bg-background"
+      >
+        <h1 class="sr-only">{{ activeFolder?.name || "Inbox" }}</h1>
+        <EmailListContainer
+          :messages="messages"
+          :loading="isLoading"
+          :error="listError"
+          :has-more="showPagination"
+          :total="totalMessages"
+          :page="page"
+          :per-page="perPage"
+          :active-folder="activeFolder"
+          :search-query="debouncedSearch"
+          :pending-ids="pendingIds"
+          @click-message="openMessage"
+          @toggle-star="toggleStar"
+          @toggle-read="toggleRead"
+          @move="openMove"
+          @trash="moveToTrash"
+          @load-more="loadMessages"
+          @refresh="loadMessages"
+          @prev-page="goPrev"
+          @next-page="goNext"
         />
+      </main>
+
+      <div class="hidden shrink-0 md:flex">
+        <AccessoryRail />
       </div>
 
-      <div class="mb-4 flex items-center justify-between">
-        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
-          {{ activeFolder?.name || "Inbox" }}
-        </h1>
-        <Button variant="ghost" size="sm" @click="mailboxStore.runSync">
-          <Icon
-            icon="lucide:refresh-cw"
-            :class="mailboxStore.syncStatus === 'syncing' ? 'animate-spin' : ''"
-          />
-          <span class="hidden sm:inline">Sinkronkan</span>
-        </Button>
+      <div class="absolute bottom-0 right-[80px] z-50">
+        <ComposeModal v-model:open="composeOpen" />
       </div>
-
-      <EmailListContainer
-        :messages="messages"
-        :loading="isLoading"
-        :error="listError"
-        :has-more="showPagination"
-        :total="totalMessages"
-        :page="page"
-        :per-page="perPage"
-        :active-folder="activeFolder"
-        :search-query="debouncedSearch"
-        :pending-ids="pendingIds"
-        @click-message="openMessage"
-        @toggle-star="toggleStar"
-        @toggle-read="toggleRead"
-        @move="openMove"
-        @trash="moveToTrash"
-        @load-more="loadMessages"
-        @prev-page="goPrev"
-        @next-page="goNext"
-      />
-    </main>
+    </div>
 
     <EmailMoveDialog
       v-model:open="moveOpen"
@@ -347,5 +399,5 @@ watch(
       :current-folder-id="activeFolderId || undefined"
       @move-to-folder="confirmMove"
     />
-  </AppShell>
+  </div>
 </template>
