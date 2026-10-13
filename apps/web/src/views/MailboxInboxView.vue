@@ -52,6 +52,15 @@ const movingMessage = ref<LocalMessage | null>(null);
 
 const composeOpen = shallowRef(false);
 const drawerOpen = shallowRef(false);
+const sidebarCollapsed = shallowRef(false);
+
+function toggleSidebar() {
+  if (window.matchMedia("(min-width: 1024px)").matches) {
+    sidebarCollapsed.value = !sidebarCollapsed.value;
+  } else {
+    drawerOpen.value = true;
+  }
+}
 
 const activeFolder = computed(() => folders.value.find((f) => f.id === activeFolderId.value));
 
@@ -298,9 +307,8 @@ watch(
         <Button
           variant="ghost"
           size="icon"
-          class="lg:hidden"
-          aria-label="Buka menu"
-          @click="drawerOpen = true"
+          aria-label="Buka atau tutup menu"
+          @click="toggleSidebar"
         >
           <Icon icon="lucide:menu" />
         </Button>
@@ -335,7 +343,10 @@ watch(
     </header>
 
     <div class="relative flex min-w-0 flex-1 gap-0 overflow-hidden">
-      <aside class="hidden w-64 shrink-0 flex-col overflow-y-auto px-3 py-3 lg:flex">
+      <aside
+        v-if="!sidebarCollapsed"
+        class="hidden w-64 shrink-0 flex-col overflow-y-auto px-3 py-3 lg:flex"
+      >
         <InboxSidebar
           :mailbox-id="mailboxId"
           :folders="folders"

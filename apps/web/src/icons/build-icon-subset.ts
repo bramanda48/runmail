@@ -69,6 +69,7 @@ const USED_ICONS = [
   "refresh-cw",
   "search",
   "send",
+  "send-horizontal",
   "settings",
   "shield",
   "shield-alert",

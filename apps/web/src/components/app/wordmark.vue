@@ -22,7 +22,7 @@ const textClass = computed(() =>
 
 <template>
   <div :class="cn('inline-flex items-center gap-2', props.class)">
-    <Icon icon="lucide:mail" :class="cn('text-primary', iconClass)" />
+    <Icon icon="lucide:send-horizontal" :class="cn('text-primary', iconClass)" />
     <span :class="cn('font-semibold text-foreground', textClass)">Runmail</span>
   </div>
 </template>
