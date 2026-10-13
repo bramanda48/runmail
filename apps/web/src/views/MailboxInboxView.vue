@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
 import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
 import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
 import Wordmark from "@/components/app/wordmark.vue";
@@ -51,7 +52,6 @@ const movingMessage = ref<LocalMessage | null>(null);
 
 const composeOpen = shallowRef(false);
 const drawerOpen = shallowRef(false);
-const starredOnly = shallowRef(false);
 
 const activeFolder = computed(() => folders.value.find((f) => f.id === activeFolderId.value));
 
@@ -139,7 +139,7 @@ async function loadMessages() {
       const sorted = results.sort(
         (a, b) => b.email_date - a.email_date || b.received_at - a.received_at,
       );
-      messages.value = starredOnly.value ? sorted.filter((m) => m.is_starred) : sorted;
+      messages.value = sorted;
       totalMessages.value = messages.value.length;
       return;
     }
@@ -158,13 +158,8 @@ async function loadMessages() {
     const sorted = rows.sort(
       (a, b) => b.email_date - a.email_date || b.received_at - a.received_at,
     );
-    if (starredOnly.value) {
-      messages.value = sorted.filter((m) => m.is_starred);
-      totalMessages.value = messages.value.length;
-    } else {
-      messages.value = sorted;
-      totalMessages.value = await db.messages.where("folder_id").equals(folderId).count();
-    }
+    messages.value = sorted;
+    totalMessages.value = await db.messages.where("folder_id").equals(folderId).count();
   } catch (err) {
     listError.value = "Gagal memuat daftar email.";
   } finally {
@@ -278,11 +273,6 @@ watch(debouncedSearch, () => {
   loadMessages();
 });
 
-watch(starredOnly, () => {
-  page.value = 1;
-  loadMessages();
-});
-
 watch(
   () => mailboxStore.syncStatus,
   async (status) => {
@@ -310,6 +300,7 @@ watch(
         <RouterLink to="/mailboxes" aria-label="Runmail">
           <Wordmark size="lg" />
         </RouterLink>
+        <MailboxSwitcher />
       </div>
 
       <div class="max-w-2xl flex-1 px-4">
@@ -339,7 +330,6 @@ watch(
     <div class="relative flex min-w-0 flex-1 gap-0 overflow-hidden">
       <aside class="hidden w-64 shrink-0 flex-col overflow-y-auto px-3 py-3 lg:flex">
         <InboxSidebar
-          v-model:starredOnly="starredOnly"
           :mailbox-id="mailboxId"
           :folders="folders"
           :unread-counts="unreadCounts"
@@ -349,7 +339,6 @@ watch(
 
       <MobileNavDrawer v-model:open="drawerOpen">
         <InboxSidebar
-          v-model:starredOnly="starredOnly"
           :mailbox-id="mailboxId"
           :folders="folders"
           :unread-counts="unreadCounts"
