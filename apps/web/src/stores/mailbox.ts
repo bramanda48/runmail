@@ -1,5 +1,5 @@
 import { getMailboxDb } from "@/db/mailbox-db";
-import { useMailboxAccessStore } from "@/stores/mailboxAccess";
+import { useMailboxAccessStore } from "@/stores/mailbox-access";
 import { runDeltaSync } from "@/sync/engine";
 import type { PendingMutation } from "@/sync/queue";
 import { countPendingMutations, enqueueMutation, flushQueue } from "@/sync/queue";

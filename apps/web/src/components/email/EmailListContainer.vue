@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import EmptyState from "@/components/app/empty-state.vue";
-import Pagination from "@/components/app/pagination.vue";
-import CategoryTabs from "@/components/email/category-tabs.vue";
-import EmailRow from "@/components/email/email-row.vue";
+import EmptyState from "@/components/app/EmptyState.vue";
+import Pagination from "@/components/app/Pagination.vue";
+import CategoryTabs from "@/components/email/CategoryTabs.vue";
+import EmailRow from "@/components/email/EmailRow.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { LocalFolder, LocalMessage } from "@/db/mailbox-db";

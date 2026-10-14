@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import AppShell from "@/components/app/app-shell.vue";
-import EmptyState from "@/components/app/empty-state.vue";
-import FolderNavigation from "@/components/app/folder-navigation.vue";
-import MailboxSidebar from "@/components/app/mailbox-sidebar.vue";
+import AppShell from "@/components/app/AppShell.vue";
+import EmptyState from "@/components/app/EmptyState.vue";
+import FolderNavigation from "@/components/app/FolderNavigation.vue";
+import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
+import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { Icon } from "@/icons";
 import { ApiError, createFolder, deleteFolder, listFolders, renameFolder } from "@/lib/api";
 import type { Folder } from "@runmail/shared";

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AppShell from "@/components/app/app-shell.vue";
-import FolderNavigation from "@/components/app/folder-navigation.vue";
-import MailboxSidebar from "@/components/app/mailbox-sidebar.vue";
+import AppShell from "@/components/app/AppShell.vue";
+import FolderNavigation from "@/components/app/FolderNavigation.vue";
+import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
 import RulesetActionRow, { type ActionRow } from "@/components/app/RulesetActionRow.vue";
 import RulesetConditionRow, { type ConditionRow } from "@/components/app/RulesetConditionRow.vue";
 import { Alert } from "@/components/ui/alert";
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
+import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { Icon } from "@/icons";
 import { ApiError, createRuleset, getRuleset, updateRuleset } from "@/lib/api";
 import type { LogicOperator, RulesetDetail } from "@runmail/shared";

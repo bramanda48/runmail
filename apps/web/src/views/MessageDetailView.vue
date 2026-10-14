@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import AppShell from "@/components/app/app-shell.vue";
-import FolderNavigation from "@/components/app/folder-navigation.vue";
-import MailboxSidebar from "@/components/app/mailbox-sidebar.vue";
-import RemoteImageNotice from "@/components/email/remote-image-notice.vue";
+import AppShell from "@/components/app/AppShell.vue";
+import FolderNavigation from "@/components/app/FolderNavigation.vue";
+import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
+import RemoteImageNotice from "@/components/email/RemoteImageNotice.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
+import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { ApiError, fetchRawEmail, permanentDeleteMessage } from "@/lib/api";

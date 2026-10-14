@@ -2,7 +2,7 @@
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
-import { useMailboxAccessStore } from "@/stores/mailboxAccess";
+import { useMailboxAccessStore } from "@/stores/mailbox-access";
 import {
   DropdownMenuContent,
   DropdownMenuItem,

@@ -2,7 +2,7 @@ import { getMailboxDb, type LocalFolder } from "@/db/mailbox-db";
 import { ApiError, getMailbox } from "@/lib/api";
 import { computeUnreadCounts } from "@/lib/unread-counts";
 import { useMailboxStore } from "@/stores/mailbox";
-import { useMailboxAccessStore } from "@/stores/mailboxAccess";
+import { useMailboxAccessStore } from "@/stores/mailbox-access";
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 

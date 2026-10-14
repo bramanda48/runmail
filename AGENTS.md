@@ -125,8 +125,9 @@ bun run seed:admin [--username] [--password] [--remote --yes]
 ## 5. Konvensi Kode
 
 ### Naming Conventions
-- **Files/Folders:** kebab-case (email-list.vue, sync-queue.ts)
-- **Vue Components:** PascalCase export, kebab-case filename (EmailList.vue exports EmailList)
+- **Files/Folders:** kebab-case, kecuali Vue SFC (contoh: `sync-queue.ts`; SFC lihat baris berikut)
+- **Vue Components:** PascalCase file + PascalCase export, nama file = nama export (`EmailList.vue` exports `EmailList`)
+- **Dikecualikan:** `*.config.ts`, `*.d.ts` (nama bawaan tooling); akronim diperlakukan satu kata (`use-cloudflare-oauth.ts`, bukan `use-cloudflare-o-auth.ts`)
 - **TypeScript:** PascalCase untuk types/interfaces/classes, camelCase untuk functions/variables
 - **Constants:** SCREAMING_SNAKE_CASE untuk true constants
 - **Packages:** scoped dengan @runmail/* (@runmail/web, @runmail/worker, @runmail/db, @runmail/shared)
@@ -265,7 +266,7 @@ Git hooks menjalankan lint-staged:
 
 ### Branding Final
 - **Logo/wordmark Runmail:** belum tersedia, gunakan text wordmark netral
-  (`components/app/wordmark.vue`, ikon `text-primary` agar kontras di slate terang).
+  (`components/app/Wordmark.vue`, ikon `text-primary` agar kontras di slate terang).
 - **Font final: Inter** (diputuskan 2026-10-08 via DESIGN.md; dimuat dari Google
   Fonts di `apps/web/index.html`, fallback system-ui).
 - **Skala tipografi:** mengikuti standar shadcn-vue harfiah (H1

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PasswordField from "@/components/app/password-field.vue";
+import PasswordField from "@/components/app/PasswordField.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

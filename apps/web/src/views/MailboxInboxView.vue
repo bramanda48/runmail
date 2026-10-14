@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import AccountMenu from "@/components/app/account-menu.vue";
-import FolderNavigation from "@/components/app/folder-navigation.vue";
-import MailboxSidebar from "@/components/app/mailbox-sidebar.vue";
+import AccountMenu from "@/components/app/AccountMenu.vue";
+import FolderNavigation from "@/components/app/FolderNavigation.vue";
+import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
 import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
 import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
-import Wordmark from "@/components/app/wordmark.vue";
-import AccessoryRail from "@/components/email/accessory-rail.vue";
-import ComposeModal from "@/components/email/compose-modal.vue";
+import Wordmark from "@/components/app/Wordmark.vue";
+import AccessoryRail from "@/components/email/AccessoryRail.vue";
+import ComposeModal from "@/components/email/ComposeModal.vue";
 import EmailListContainer from "@/components/email/EmailListContainer.vue";
 import EmailMoveDialog from "@/components/email/EmailMoveDialog.vue";
 import { Button } from "@/components/ui/button";
-import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
+import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { parseSearchQuery } from "@/lib/search";

@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/stores/auth";
-import { useMailboxAccessStore } from "@/stores/mailboxAccess";
+import { useMailboxAccessStore } from "@/stores/mailbox-access";
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 
 declare module "vue-router" {

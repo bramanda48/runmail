@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import PasswordField from "@/components/app/password-field.vue";
-import Wordmark from "@/components/app/wordmark.vue";
+import PasswordField from "@/components/app/PasswordField.vue";
+import Wordmark from "@/components/app/Wordmark.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

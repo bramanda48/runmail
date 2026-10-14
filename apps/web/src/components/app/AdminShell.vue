@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AppShell from "@/components/app/app-shell.vue";
-import NavItem from "@/components/app/nav-item.vue";
-import Wordmark from "@/components/app/wordmark.vue";
+import AppShell from "@/components/app/AppShell.vue";
+import NavItem from "@/components/app/NavItem.vue";
+import Wordmark from "@/components/app/Wordmark.vue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";

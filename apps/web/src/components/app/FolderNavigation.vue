@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import NavItem from "@/components/app/nav-item.vue";
+import NavItem from "@/components/app/NavItem.vue";
 import type { LocalFolder } from "@/db/mailbox-db";
 import { computed } from "vue";
 import { useRoute } from "vue-router";

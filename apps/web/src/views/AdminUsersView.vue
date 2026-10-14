@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import AdminShell from "@/components/app/admin-shell.vue";
-import EmptyState from "@/components/app/empty-state.vue";
-import Pagination from "@/components/app/pagination.vue";
-import PasswordField from "@/components/app/password-field.vue";
+import AdminShell from "@/components/app/AdminShell.vue";
+import EmptyState from "@/components/app/EmptyState.vue";
+import Pagination from "@/components/app/Pagination.vue";
+import PasswordField from "@/components/app/PasswordField.vue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
