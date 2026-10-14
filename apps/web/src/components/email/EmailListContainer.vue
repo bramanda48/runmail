@@ -5,7 +5,6 @@ import CategoryTabs from "@/components/email/category-tabs.vue";
 import EmailRow from "@/components/email/email-row.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import type { LocalFolder, LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { computed, ref, shallowRef, watch } from "vue";
@@ -87,34 +86,7 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
 </script>
 
 <template>
-  <Alert v-if="isTrashFolder" class="mb-4">
-    Pesan di folder Trash akan dihapus otomatis dalam 30 hari.
-  </Alert>
-
-  <div v-if="loading" class="flex flex-col gap-2">
-    <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
-  </div>
-
-  <div v-else-if="error" class="flex flex-col gap-4">
-    <Alert variant="destructive">{{ error }}</Alert>
-    <Button variant="ghost" @click="emits('load-more')">Coba Lagi</Button>
-  </div>
-
-  <EmptyState
-    v-else-if="messages.length === 0 && searchQuery"
-    icon="lucide:search"
-    heading="Tidak ada hasil"
-    :description="`Pencarian untuk '${searchQuery}' tidak menemukan email.`"
-  />
-
-  <EmptyState
-    v-else-if="messages.length === 0"
-    :icon="emptyIcon()"
-    :heading="emptyTitle()"
-    description="Email yang masuk akan tampil di sini."
-  />
-
-  <div v-else class="flex flex-col">
+  <div class="flex flex-col">
     <div class="flex h-14 shrink-0 items-center gap-2 border-b border-border px-4">
       <Button variant="ghost" size="icon" aria-label="Pilih semua" @click="toggleSelectAll">
         <Icon :icon="allSelected ? 'lucide:square-check-big' : 'lucide:square'" class="size-4" />
@@ -137,24 +109,53 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
       />
     </div>
 
-    <CategoryTabs v-model="activeTab" />
+    <div v-if="loading" class="flex flex-col gap-2">
+      <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
+    </div>
 
-    <EmailRow
-      v-for="message in messages"
-      :key="message.id"
-      :message="message"
-      :pending="pendingIds.has(message.id)"
-      :selected="selectedIds.has(message.id)"
-      @click="emits('click-message', message)"
-      @toggle-star="emits('toggle-star', message)"
-      @toggle-read="emits('toggle-read', message)"
-      @move="emits('move', message)"
-      @trash="emits('trash', message)"
-      @toggle-select="toggleSelect(message.id)"
+    <div v-else-if="error" class="flex flex-col gap-4">
+      <Alert variant="destructive">{{ error }}</Alert>
+      <Button variant="ghost" @click="emits('load-more')">Coba Lagi</Button>
+    </div>
+
+    <EmptyState
+      v-else-if="messages.length === 0 && searchQuery"
+      icon="lucide:search"
+      heading="Tidak ada hasil"
+      :description="`Pencarian untuk '${searchQuery}' tidak menemukan email.`"
     />
 
-    <p v-if="searchQuery && messages.length >= 50" class="text-sm text-muted-foreground">
-      Menampilkan 50 hasil pertama.
-    </p>
+    <EmptyState
+      v-else-if="messages.length === 0"
+      :icon="emptyIcon()"
+      :heading="emptyTitle()"
+      description="Email yang masuk akan tampil di sini."
+    />
+
+    <template v-else>
+      <CategoryTabs v-model="activeTab" />
+
+      <Alert v-if="isTrashFolder" class="rounded-none">
+        Pesan di folder Trash akan dihapus otomatis dalam 30 hari.
+      </Alert>
+
+      <EmailRow
+        v-for="message in messages"
+        :key="message.id"
+        :message="message"
+        :pending="pendingIds.has(message.id)"
+        :selected="selectedIds.has(message.id)"
+        @click="emits('click-message', message)"
+        @toggle-star="emits('toggle-star', message)"
+        @toggle-read="emits('toggle-read', message)"
+        @move="emits('move', message)"
+        @trash="emits('trash', message)"
+        @toggle-select="toggleSelect(message.id)"
+      />
+
+      <p v-if="searchQuery && messages.length >= 50" class="text-sm text-muted-foreground">
+        Menampilkan 50 hasil pertama.
+      </p>
+    </template>
   </div>
 </template>

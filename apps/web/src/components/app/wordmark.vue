@@ -21,8 +21,12 @@ const textClass = computed(() =>
 </script>
 
 <template>
-  <div :class="cn('inline-flex items-center gap-2', props.class)">
-    <Icon icon="lucide:send-horizontal" :class="cn('text-primary', iconClass)" />
+  <RouterLink
+    to="/mailboxes"
+    :class="cn('inline-flex items-center gap-2', props.class)"
+    aria-label="Runmail"
+  >
+    <Icon icon="lucide:mail-badge" :class="cn('text-primary', iconClass)" />
     <span :class="cn('font-semibold text-foreground', textClass)">Runmail</span>
-  </div>
+  </RouterLink>
 </template>

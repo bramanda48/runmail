@@ -2,9 +2,8 @@
 import AppShell from "@/components/app/app-shell.vue";
 import EmptyState from "@/components/app/empty-state.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
-import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
+import MailboxSidebar from "@/components/app/mailbox-sidebar.vue";
 import Pagination from "@/components/app/pagination.vue";
-import SyncIndicator from "@/components/app/sync-indicator.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -206,23 +205,17 @@ watchSyncStatus();
 <template>
   <AppShell>
     <template #navigation>
-      <div class="flex h-full flex-col">
+      <MailboxSidebar>
         <FolderNavigation
           :mailbox-id="mailboxId"
           :folders="localFolders"
           :unread-counts="unreadCounts"
         />
-      </div>
+      </MailboxSidebar>
     </template>
 
     <template #topbar>
-      <div class="flex items-center gap-3">
-        <MailboxSwitcher />
-        <SyncIndicator
-          :status="mailboxStore.syncStatus"
-          :pending-count="mailboxStore.pendingCount"
-        />
-      </div>
+      <div class="flex items-center gap-3" />
     </template>
 
     <main class="flex flex-1 flex-col p-4 lg:p-8">

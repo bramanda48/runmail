@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
+import AccountMenu from "@/components/app/account-menu.vue";
+import FolderNavigation from "@/components/app/folder-navigation.vue";
+import MailboxSidebar from "@/components/app/mailbox-sidebar.vue";
 import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
 import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
 import Wordmark from "@/components/app/wordmark.vue";
@@ -7,14 +9,12 @@ import AccessoryRail from "@/components/email/accessory-rail.vue";
 import ComposeModal from "@/components/email/compose-modal.vue";
 import EmailListContainer from "@/components/email/EmailListContainer.vue";
 import EmailMoveDialog from "@/components/email/EmailMoveDialog.vue";
-import InboxSidebar from "@/components/email/inbox-sidebar.vue";
 import { Button } from "@/components/ui/button";
 import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { parseSearchQuery } from "@/lib/search";
 import { computeUnreadCounts } from "@/lib/unread-counts";
-import { useMailboxAccessStore } from "@/stores/mailboxAccess";
 import Dexie from "dexie";
 import { computed, onMounted, ref, shallowRef, watch } from "vue";
 import { RouterLink } from "vue-router";
@@ -24,8 +24,6 @@ const { route, router, mailboxStore, mailboxId, resolveMailbox } = useMailboxWor
     listError.value = "Tidak dapat memuat mailbox. Coba lagi.";
   },
 });
-
-const mailboxAccess = useMailboxAccessStore();
 
 const folderIdParam = computed(() => route.params.folder_id as string | undefined);
 
@@ -67,12 +65,6 @@ const activeFolder = computed(() => folders.value.find((f) => f.id === activeFol
 const trashFolder = computed(() => folders.value.find((f) => f.name.toLowerCase() === "trash"));
 
 const showPagination = computed(() => !debouncedSearch.value && totalMessages.value > perPage);
-
-const avatarInitials = computed(() => {
-  const address = mailboxAccess.current?.address;
-  if (!address) return "RM";
-  return address.slice(0, 2).toUpperCase() || "RM";
-});
 
 function onSearch(value: string) {
   debouncedSearch.value = value;
@@ -297,25 +289,23 @@ watch(
   <div
     class="flex h-screen flex-col overflow-hidden bg-background text-sm"
     style="
-      background-image: url('https://ssl.gstatic.com/ui/v1/icons/mail/images/2/5/android/bg.png');
+      background-image: url(&quot;https://ssl.gstatic.com/ui/v1/icons/mail/images/2/5/android/bg.png&quot;);
       background-repeat: repeat-x;
       background-position: left top;
     "
   >
     <header class="flex h-16 shrink-0 items-center justify-between gap-4 px-4">
-      <div class="flex w-auto min-w-0 shrink-0 items-center gap-4 lg:w-80">
+      <div class="flex w-auto min-w-0 shrink-0 items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
           aria-label="Buka atau tutup menu"
+          class="rounded-full"
           @click="toggleSidebar"
         >
           <Icon icon="lucide:menu" />
         </Button>
-        <RouterLink to="/mailboxes" aria-label="Runmail">
-          <Wordmark size="lg" />
-        </RouterLink>
-        <MailboxSwitcher />
+        <Wordmark size="lg" />
       </div>
 
       <div class="max-w-2xl flex-1 px-4">
@@ -332,40 +322,33 @@ watch(
         <Button :as="RouterLink" to="/mailboxes" variant="ghost" size="icon" aria-label="Aplikasi">
           <Icon icon="lucide:layout-grid" />
         </Button>
-        <RouterLink
-          to="/account"
-          class="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground"
-          aria-label="Akun"
-        >
-          {{ avatarInitials }}
-        </RouterLink>
+        <AccountMenu />
       </div>
     </header>
 
     <div class="relative flex min-w-0 flex-1 gap-0 overflow-hidden">
-      <aside
-        v-if="!sidebarCollapsed"
-        class="hidden w-64 shrink-0 flex-col overflow-y-auto px-3 py-3 lg:flex"
-      >
-        <InboxSidebar
-          :mailbox-id="mailboxId"
-          :folders="folders"
-          :unread-counts="unreadCounts"
-          @compose="composeOpen = true"
-        />
+      <aside v-if="!sidebarCollapsed" class="hidden w-64 shrink-0 flex-col overflow-hidden lg:flex">
+        <MailboxSidebar show-compose @compose="composeOpen = true">
+          <FolderNavigation
+            :mailbox-id="mailboxId"
+            :folders="folders"
+            :unread-counts="unreadCounts"
+          />
+        </MailboxSidebar>
       </aside>
 
       <MobileNavDrawer v-model:open="drawerOpen">
-        <InboxSidebar
-          :mailbox-id="mailboxId"
-          :folders="folders"
-          :unread-counts="unreadCounts"
-          @compose="composeOpen = true"
-        />
+        <MailboxSidebar show-compose @compose="composeOpen = true">
+          <FolderNavigation
+            :mailbox-id="mailboxId"
+            :folders="folders"
+            :unread-counts="unreadCounts"
+          />
+        </MailboxSidebar>
       </MobileNavDrawer>
 
       <main
-        class="z-10 mx-0 mt-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-t-3xl border-x border-t bg-background"
+        class="z-10 mx-0 mt-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-t-3xl shadow-xs border bg-background"
       >
         <h1 class="sr-only">{{ activeFolder?.name || "Inbox" }}</h1>
         <EmailListContainer
@@ -395,7 +378,7 @@ watch(
         <AccessoryRail />
       </div>
 
-      <div class="absolute bottom-0 right-[80px] z-50">
+      <div class="absolute bottom-0 right-20 z-50">
         <ComposeModal v-model:open="composeOpen" />
       </div>
     </div>

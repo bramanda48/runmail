@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import AppShell from "@/components/app/app-shell.vue";
 import FolderNavigation from "@/components/app/folder-navigation.vue";
-import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
-import SyncIndicator from "@/components/app/sync-indicator.vue";
+import MailboxSidebar from "@/components/app/mailbox-sidebar.vue";
 import RemoteImageNotice from "@/components/email/remote-image-notice.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -265,13 +264,13 @@ watch(messageId, async () => {
 <template>
   <AppShell>
     <template #navigation>
-      <div class="flex h-full flex-col">
+      <MailboxSidebar>
         <FolderNavigation
           :mailbox-id="mailboxId"
           :folders="folders"
           :unread-counts="unreadCounts"
         />
-      </div>
+      </MailboxSidebar>
     </template>
 
     <template #topbar>
@@ -279,11 +278,6 @@ watch(messageId, async () => {
         <Button aria-label="Kembali" variant="ghost" size="icon" @click="back">
           <Icon icon="lucide:arrow-left" />
         </Button>
-        <MailboxSwitcher />
-        <SyncIndicator
-          :status="mailboxStore.syncStatus"
-          :pending-count="mailboxStore.pendingCount"
-        />
       </div>
     </template>
 

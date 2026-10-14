@@ -23,7 +23,7 @@ function close() {
     v-if="open"
     role="dialog"
     aria-label="Tulis pesan baru"
-    class="flex h-[580px] max-h-full w-[560px] max-w-full flex-col overflow-hidden rounded-t-xl border bg-background"
+    class="flex w-140 h-145 max-h-full max-w-full flex-col overflow-hidden rounded-t-xl shadow-xs border bg-background"
   >
     <div class="flex items-center gap-2 bg-secondary px-4 py-3">
       <p class="truncate text-sm font-semibold">Pesan Baru</p>
