@@ -1,29 +1,34 @@
 <script setup lang="ts">
+import MoveFolderMenu from "@/components/email/MoveFolderMenu.vue";
 import { Button } from "@/components/ui/button";
-import type { LocalMessage } from "@/db/mailbox-db";
+import type { LocalFolder, LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 interface Props {
   message: LocalMessage;
   pending?: boolean;
   selected?: boolean;
+  folders?: LocalFolder[];
+  currentFolderId?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   pending: false,
   selected: false,
+  folders: () => [],
 });
 
 const emit = defineEmits<{
   (e: "click"): void;
   (e: "toggle-star"): void;
   (e: "toggle-read"): void;
-  (e: "move"): void;
+  (e: "move-to-folder", folderId: string): void;
   (e: "trash"): void;
   (e: "toggle-select"): void;
 }>();
+const menuOpen = ref(false);
 
 const sender = computed(() => props.message.from_name || props.message.from_address);
 
@@ -40,7 +45,7 @@ const displayDate = computed(() => {
   if (date.getFullYear() === now.getFullYear()) {
     return date.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
   }
-  return date.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+  return date.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "2-digit" });
 });
 </script>
 
@@ -50,8 +55,8 @@ const displayDate = computed(() => {
     tabindex="0"
     :class="
       cn(
-        'group flex w-full hover:shadow-sm cursor-pointer items-center gap-3 border-b border-border px-4 py-2',
-        message.is_read ? 'bg-muted/30' : 'bg-background',
+        'group flex w-full hover:shadow-sm items-center gap-3 border-b border-border px-4 py-2',
+        props.selected ? 'bg-accent/50' : message.is_read ? 'bg-muted/30' : 'bg-background',
       )
     "
     @click="emit('click')"
@@ -66,7 +71,7 @@ const displayDate = computed(() => {
       @click.stop="emit('toggle-select')"
     >
       <Icon
-        :icon="selected ? 'lucide:square-check-big' : 'lucide:square'"
+        :icon="selected ? 'lucide:square-check' : 'lucide:square'"
         :class="cn('size-4', selected ? 'text-primary' : 'text-muted-foreground')"
       />
     </Button>
@@ -120,7 +125,7 @@ const displayDate = computed(() => {
     <span
       :class="
         cn(
-          'hidden w-16 shrink-0 text-right text-xs sm:inline lg:group-hover:hidden',
+          'hidden shrink-0 text-right text-xs sm:inline lg:group-hover:hidden',
           message.is_read ? 'font-medium text-muted-foreground' : 'font-bold text-foreground',
         )
       "
@@ -128,7 +133,7 @@ const displayDate = computed(() => {
       {{ displayDate }}
     </span>
 
-    <div class="hidden items-center gap-1 lg:group-hover:flex">
+    <div :class="cn('items-center gap-1', menuOpen ? 'flex' : 'hidden lg:group-hover:flex')">
       <Button
         :aria-label="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
         variant="ghost"
@@ -138,14 +143,14 @@ const displayDate = computed(() => {
         <Icon :icon="message.is_read ? 'lucide:mail-open' : 'lucide:mail'" class="size-4" />
       </Button>
 
-      <Button
-        aria-label="Pindahkan ke folder"
-        variant="ghost"
-        size="icon"
-        @click.stop="emit('move')"
-      >
-        <Icon icon="lucide:folder-input" class="size-4" />
-      </Button>
+      <MoveFolderMenu
+        :folders="folders"
+        :current-folder-id="currentFolderId"
+        :open="menuOpen"
+        @click.stop
+        @update:open="menuOpen = $event"
+        @move-to-folder="(id: string) => emit('move-to-folder', id)"
+      />
 
       <Button aria-label="Pindah ke Trash" variant="ghost" size="icon" @click.stop="emit('trash')">
         <Icon icon="lucide:trash" class="size-4 text-destructive" />

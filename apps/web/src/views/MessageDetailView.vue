@@ -2,8 +2,8 @@
 import AppShell from "@/components/app/AppShell.vue";
 import FolderNavigation from "@/components/app/FolderNavigation.vue";
 import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
+import MoveFolderMenu from "@/components/email/MoveFolderMenu.vue";
 import RemoteImageNotice from "@/components/email/RemoteImageNotice.vue";
-import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
@@ -13,14 +13,6 @@ import {
   DialogRoot,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
@@ -51,11 +43,6 @@ const imagesAllowed = ref(false);
 const deleteOpen = ref(false);
 const isDeleting = ref(false);
 
-const moveOpen = ref(false);
-const moveTargetFolderId = ref("");
-const moveSubmitting = ref(false);
-
-const folderOptions = computed(() => folders.value.map((f) => ({ value: f.id, label: f.name })));
 const isTrash = computed(
   () =>
     folders.value.find((f) => f.id === message.value?.folder_id)?.name.toLowerCase() === "trash",
@@ -208,21 +195,15 @@ function toggleRead() {
   });
 }
 
-function openMove() {
-  moveTargetFolderId.value = "";
-  moveOpen.value = true;
-}
-
-async function confirmMove() {
-  if (!message.value || !moveTargetFolderId.value) return;
-  moveSubmitting.value = true;
-  await enqueue({
+async function moveSingle(folderId: string) {
+  if (!message.value) return;
+  await mailboxStore.enqueue({
     message_id: message.value.id,
     mutation_type: "move",
-    mutation_value: moveTargetFolderId.value,
+    mutation_value: folderId,
   });
-  moveSubmitting.value = false;
-  moveOpen.value = false;
+  message.value.folder_id = folderId;
+  await loadMessage();
 }
 
 async function confirmDelete() {
@@ -346,15 +327,13 @@ watch(messageId, async () => {
                 <Icon :icon="message.is_read ? 'lucide:mail-open' : 'lucide:mail'" class="size-5" />
               </Button>
 
-              <Button
-                aria-label="Pindahkan ke folder"
-                variant="ghost"
-                size="icon"
-                @click="openMove"
-              >
-                <Icon icon="lucide:folder-input" class="size-5" />
-              </Button>
-
+              <MoveFolderMenu
+                :folders="folders"
+                :current-folder-id="message?.folder_id"
+                label="Pindahkan ke folder"
+                icon-class="size-5"
+                @move-to-folder="moveSingle"
+              />
               <Button
                 v-if="isTrash"
                 aria-label="Hapus permanen"
@@ -422,43 +401,6 @@ watch(messageId, async () => {
           </div>
         </div>
       </div>
-
-      <!-- Move dialog -->
-      <DialogRoot v-model:open="moveOpen">
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Pindahkan Email</DialogTitle>
-          </DialogHeader>
-          <div class="flex flex-col gap-1.5 py-2">
-            <label for="select-move-target" class="text-sm font-medium text-foreground">
-              Folder tujuan
-            </label>
-            <Select v-model="moveTargetFolderId" :disabled="moveSubmitting">
-              <SelectTrigger id="select-move-target">
-                <SelectValue placeholder="Pilih folder" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="option in folderOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" :disabled="moveSubmitting" @click="moveOpen = false">
-              Batal
-            </Button>
-            <Button :disabled="!moveTargetFolderId || moveSubmitting" @click="confirmMove">
-              <Icon v-if="moveSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-              <span>Pindahkan</span>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </DialogRoot>
 
       <!-- Permanent delete dialog -->
       <DialogRoot v-model:open="deleteOpen">

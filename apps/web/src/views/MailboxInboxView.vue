@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import AccountMenu from "@/components/app/AccountMenu.vue";
 import FolderNavigation from "@/components/app/FolderNavigation.vue";
-import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
 import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
+import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
 import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
 import Wordmark from "@/components/app/Wordmark.vue";
 import AccessoryRail from "@/components/email/AccessoryRail.vue";
 import ComposeModal from "@/components/email/ComposeModal.vue";
 import EmailListContainer from "@/components/email/EmailListContainer.vue";
-import EmailMoveDialog from "@/components/email/EmailMoveDialog.vue";
 import { Button } from "@/components/ui/button";
 import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
@@ -44,9 +43,6 @@ const searchQuery = ref("");
 const debouncedSearch = ref("");
 
 const refreshTick = ref(0);
-
-const moveOpen = ref(false);
-const movingMessage = ref<LocalMessage | null>(null);
 
 const composeOpen = shallowRef(false);
 const drawerOpen = shallowRef(false);
@@ -220,19 +216,12 @@ function toggleRead(message: LocalMessage) {
   });
 }
 
-function openMove(message: LocalMessage) {
-  movingMessage.value = message;
-  moveOpen.value = true;
-}
-
-async function confirmMove(targetFolderId: string) {
-  if (!movingMessage.value || !targetFolderId) return;
+async function moveSingle(payload: { message: LocalMessage; folderId: string }) {
   await enqueueAndRefresh({
-    message_id: movingMessage.value.id,
+    message_id: payload.message.id,
     mutation_type: "move",
-    mutation_value: targetFolderId,
+    mutation_value: payload.folderId,
   });
-  moveOpen.value = false;
 }
 
 function moveToTrash(message: LocalMessage) {
@@ -242,6 +231,45 @@ function moveToTrash(message: LocalMessage) {
     mutation_type: "move",
     mutation_value: trashFolder.value.id,
   });
+}
+
+async function bulkTrash(ids: string[]) {
+  const trash = trashFolder.value;
+  if (!trash) return;
+  await Promise.all(
+    ids.map((id) =>
+      enqueueAndRefresh({
+        message_id: id,
+        mutation_type: "move",
+        mutation_value: trash.id,
+      }),
+    ),
+  );
+}
+
+async function bulkMarkRead(ids: string[]) {
+  const unreadIds = ids.filter((id) => {
+    const message = messages.value.find((m) => m.id === id);
+    return message ? !message.is_read : false;
+  });
+  if (unreadIds.length === 0) return;
+  await Promise.all(
+    unreadIds.map((id) =>
+      enqueueAndRefresh({ message_id: id, mutation_type: "read", mutation_value: true }),
+    ),
+  );
+}
+
+async function bulkMove(payload: { ids: string[]; folderId: string }) {
+  await Promise.all(
+    payload.ids.map((id) =>
+      enqueueAndRefresh({
+        message_id: id,
+        mutation_type: "move",
+        mutation_value: payload.folderId,
+      }),
+    ),
+  );
 }
 
 onMounted(() => initMailbox());
@@ -300,7 +328,6 @@ watch(
           variant="ghost"
           size="icon"
           aria-label="Buka atau tutup menu"
-          class="rounded-full"
           @click="toggleSidebar"
         >
           <Icon icon="lucide:menu" />
@@ -362,11 +389,15 @@ watch(
           :active-folder="activeFolder"
           :search-query="debouncedSearch"
           :pending-ids="pendingIds"
+          :folders="folders"
           @click-message="openMessage"
           @toggle-star="toggleStar"
           @toggle-read="toggleRead"
-          @move="openMove"
+          @move-to-single="moveSingle"
           @trash="moveToTrash"
+          @bulk-trash="bulkTrash"
+          @bulk-mark-read="bulkMarkRead"
+          @bulk-move="bulkMove"
           @load-more="loadMessages"
           @refresh="loadMessages"
           @prev-page="goPrev"
@@ -382,12 +413,5 @@ watch(
         <ComposeModal v-model:open="composeOpen" />
       </div>
     </div>
-
-    <EmailMoveDialog
-      v-model:open="moveOpen"
-      :folders="folders"
-      :current-folder-id="activeFolderId || undefined"
-      @move-to-folder="confirmMove"
-    />
   </div>
 </template>

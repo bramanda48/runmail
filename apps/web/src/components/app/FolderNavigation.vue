@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import NavItem from "@/components/app/NavItem.vue";
 import type { LocalFolder } from "@/db/mailbox-db";
+import { folderIcon, sortFolders } from "@/lib/folders";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
@@ -13,34 +14,10 @@ interface Props {
 const props = defineProps<Props>();
 const route = useRoute();
 
-const systemOrder = ["inbox", "archive", "spam", "trash"];
-
-const sortedFolders = computed(() => {
-  const system = props.folders
-    .filter((f) => f.folder_type === "system")
-    .sort((a, b) => {
-      const ai = systemOrder.indexOf(a.name.toLowerCase());
-      const bi = systemOrder.indexOf(b.name.toLowerCase());
-      if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
-      if (ai === -1) return 1;
-      if (bi === -1) return -1;
-      return ai - bi;
-    });
-  const custom = props.folders
-    .filter((f) => f.folder_type === "custom")
-    .sort((a, b) => a.name.localeCompare(b.name));
-  return [...system, ...custom];
-});
-
-function folderIcon(folder: LocalFolder) {
-  if (folder.folder_type !== "system") return "lucide:folder";
-  const name = folder.name.toLowerCase();
-  if (name === "inbox") return "lucide:inbox";
-  if (name === "archive") return "lucide:archive";
-  if (name === "spam") return "lucide:shield-alert";
-  if (name === "trash") return "lucide:trash";
-  return "lucide:folder";
-}
+// sortFolders already yields system-then-custom order; filtering preserves it.
+const sortedFolders = computed(() => sortFolders(props.folders));
+const systemFolders = computed(() => sortedFolders.value.filter((f) => f.folder_type === "system"));
+const customFolders = computed(() => sortedFolders.value.filter((f) => f.folder_type === "custom"));
 
 function folderRoute(folder: LocalFolder) {
   if (folder.folder_type === "system" && folder.name.toLowerCase() === "inbox") {
@@ -59,7 +36,7 @@ function isFolderActive(folder: LocalFolder) {
 <template>
   <nav class="flex flex-col gap-1" aria-label="Folder">
     <NavItem
-      v-for="folder in sortedFolders"
+      v-for="folder in systemFolders"
       :key="folder.id"
       :label="folder.name"
       :icon="folderIcon(folder)"
@@ -68,6 +45,24 @@ function isFolderActive(folder: LocalFolder) {
       :count="unreadCounts[folder.id] || undefined"
       active-class="bg-accent text-accent-foreground font-semibold"
     />
+
+    <div class="my-3 border-t" />
+
+    <h2 class="mb-3 px-4 text-sm font-semibold text-muted-foreground">Folders</h2>
+
+    <NavItem
+      v-for="folder in customFolders"
+      :key="folder.id"
+      :label="folder.name"
+      :icon="folderIcon(folder)"
+      :to="folderRoute(folder)"
+      :active="isFolderActive(folder)"
+      :count="unreadCounts[folder.id] || undefined"
+      active-class="bg-accent text-accent-foreground font-semibold"
+    />
+    <p v-if="customFolders.length === 0" class="px-4 text-xs text-muted-foreground">
+      Belum ada folder
+    </p>
 
     <div class="my-3 border-t" />
 
