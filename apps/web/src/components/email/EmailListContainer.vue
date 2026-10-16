@@ -29,6 +29,7 @@ const props = defineProps<{
   folders: LocalFolder[];
   searchQuery: string;
   pendingIds: Set<string>;
+  syncing: boolean;
 }>();
 
 const emits = defineEmits<{
@@ -172,8 +173,15 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
         </DropdownMenu>
       </div>
       <template v-if="!hasSelection">
-        <Button variant="ghost" size="icon" aria-label="Muat ulang" @click="emits('refresh')">
-          <Icon icon="lucide:refresh-cw" class="size-4" />
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Sinkronkan"
+          title="Sinkronkan"
+          :disabled="syncing"
+          @click="emits('refresh')"
+        >
+          <Icon icon="lucide:refresh-cw" :class="cn('size-4', syncing && 'animate-spin')" />
         </Button>
       </template>
       <template v-else>

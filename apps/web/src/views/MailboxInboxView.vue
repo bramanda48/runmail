@@ -337,6 +337,7 @@ watch(
       :active-folder="activeFolder"
       :search-query="debouncedSearch"
       :pending-ids="pendingIds"
+      :syncing="mailboxStore.syncStatus === 'syncing'"
       :folders="folders"
       @click-message="openMessage"
       @toggle-star="toggleStar"
@@ -347,7 +348,7 @@ watch(
       @bulk-mark-read="bulkMarkRead"
       @bulk-move="bulkMove"
       @load-more="loadMessages"
-      @refresh="loadMessages"
+      @refresh="mailboxStore.runSync"
       @prev-page="goPrev"
       @next-page="goNext"
     />

@@ -35,7 +35,7 @@ export const useMailboxStore = defineStore("mailbox", () => {
 
   async function runSync(): Promise<void> {
     const id = mailboxId.value;
-    if (!id) return;
+    if (!id || syncStatus.value === "syncing") return;
     syncStatus.value = "syncing";
     const result = await runDeltaSync(id);
     // The user may have switched mailboxes mid-sync; never write status for
