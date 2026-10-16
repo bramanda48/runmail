@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import AppShell from "@/components/app/AppShell.vue";
 import EmptyState from "@/components/app/EmptyState.vue";
-import FolderNavigation from "@/components/app/FolderNavigation.vue";
-import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
   DialogContent,
   DialogFooter,
@@ -15,26 +13,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { Icon } from "@/icons";
 import { ApiError, createFolder, deleteFolder, listFolders, renameFolder } from "@/lib/api";
+import { useMailboxStore } from "@/stores/mailbox";
 import type { Folder } from "@runmail/shared";
 import { folderNameSchema, isReservedFolderName } from "@runmail/shared";
 import { computed, onMounted, ref, watch } from "vue";
 
-const {
-  mailboxStore,
-  mailboxId,
-  localFolders,
-  unreadCounts,
-  resolveMailbox,
-  loadLocalFolders,
-  watchSyncStatus,
-} = useMailboxWorkspace({
-  onResolveError: () => {
-    error.value = "Tidak dapat memuat mailbox. Coba lagi.";
-  },
-});
+const props = defineProps<{
+  mailboxId: string;
+}>();
+
+const mailboxStore = useMailboxStore();
 
 const folders = ref<Folder[]>([]);
 const isLoading = ref(false);
@@ -69,20 +59,12 @@ const customFolders = computed(() =>
 );
 const hasCustomFolders = computed(() => customFolders.value.length > 0);
 
-async function init() {
-  error.value = "";
-  await resolveMailbox();
-  if (mailboxStore.mailboxId === mailboxId.value) {
-    await loadLocalFolders();
-    await load();
-  }
-}
-
 async function load() {
+  if (!props.mailboxId) return;
   isLoading.value = true;
   error.value = "";
   try {
-    const { folders: list } = await listFolders(mailboxId.value);
+    const { folders: list } = await listFolders(props.mailboxId);
     folders.value = list;
   } catch (err) {
     if (err instanceof ApiError) {
@@ -154,7 +136,7 @@ async function submitCreate() {
 
   createSubmitting.value = true;
   try {
-    await createFolder(mailboxId.value, newFolderName.value.trim());
+    await createFolder(props.mailboxId, newFolderName.value.trim());
     createOpen.value = false;
     await load();
     void mailboxStore.runSync();
@@ -178,7 +160,7 @@ async function confirmDelete() {
   if (!folderToDelete.value) return;
   deleteSubmitting.value = true;
   try {
-    await deleteFolder(mailboxId.value, folderToDelete.value.id);
+    await deleteFolder(props.mailboxId, folderToDelete.value.id);
     deleteOpen.value = false;
     await load();
     void mailboxStore.runSync();
@@ -255,7 +237,7 @@ async function submitEdit() {
 
   editSubmitting.value = true;
   try {
-    await renameFolder(mailboxId.value, folderToEdit.value.id, editFolderName.value.trim());
+    await renameFolder(props.mailboxId, folderToEdit.value.id, editFolderName.value.trim());
     editOpen.value = false;
     await load();
     void mailboxStore.runSync();
@@ -270,58 +252,49 @@ async function submitEdit() {
   }
 }
 
-onMounted(() => init());
-watch(mailboxId, () => init());
-watchSyncStatus();
+onMounted(() => load());
+watch(
+  () => props.mailboxId,
+  () => load(),
+);
 </script>
 
 <template>
-  <AppShell>
-    <template #navigation>
-      <MailboxSidebar>
-        <FolderNavigation
-          :mailbox-id="mailboxId"
-          :folders="localFolders"
-          :unread-counts="unreadCounts"
-        />
-      </MailboxSidebar>
-    </template>
-
-    <template #topbar>
-      <div class="flex items-center gap-3" />
-    </template>
-
-    <main class="flex flex-1 flex-col p-4 lg:p-8">
-      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1
-            class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl"
-          >
-            Kelola Folder
-          </h1>
-          <p class="text-sm text-muted-foreground">
-            Buat dan hapus folder kustom pada mailbox ini.
-          </p>
-        </div>
-        <Button @click="openCreate">
-          <Icon icon="lucide:folder-plus" />
-          <span>Buat Folder</span>
-        </Button>
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <h2 class="text-lg font-semibold text-foreground">Folder</h2>
+        <p class="text-sm text-muted-foreground">Buat dan hapus folder kustom pada mailbox ini.</p>
       </div>
+      <Button @click="openCreate">
+        <Icon icon="lucide:folder-plus" />
+        <span>Buat Folder</span>
+      </Button>
+    </div>
 
-      <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton v-for="n in 4" :key="n" class="h-[52px] w-full" />
-      </div>
+    <div v-if="isLoading" class="flex flex-col gap-4">
+      <Skeleton v-for="n in 4" :key="n" class="h-13 w-full" />
+    </div>
 
-      <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="destructive">{{ error }}</Alert>
-        <Button variant="ghost" @click="load">Coba Lagi</Button>
-      </div>
+    <div v-else-if="error" class="flex flex-col gap-4">
+      <Alert variant="destructive">{{ error }}</Alert>
+      <Button variant="ghost" @click="load">Coba Lagi</Button>
+    </div>
 
-      <div v-else class="flex flex-col gap-4">
-        <!-- System folders -->
-        <div class="rounded-lg border bg-card p-4">
-          <h2 class="mb-3 text-sm font-semibold text-muted-foreground">Folder Sistem</h2>
+    <div v-else class="flex flex-col gap-4">
+      <!-- System folders -->
+      <Collapsible class="rounded-lg border bg-card p-4">
+        <CollapsibleTrigger class="mb-3">
+          <h3 class="text-sm font-semibold text-muted-foreground">Folder Sistem</h3>
+          <span class="flex items-center gap-2">
+            <Badge variant="outline">{{ systemFolders.length }}</Badge>
+            <Icon
+              icon="lucide:chevron-down"
+              class="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+            />
+          </span>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
           <ul class="divide-y">
             <li
               v-for="folder in systemFolders"
@@ -336,12 +309,22 @@ watchSyncStatus();
               <Icon icon="lucide:lock" class="size-4 shrink-0 text-muted-foreground" />
             </li>
           </ul>
-        </div>
+        </CollapsibleContent>
+      </Collapsible>
 
-        <!-- Custom folders -->
-        <div class="rounded-lg border bg-card p-4">
-          <h2 class="mb-3 text-sm font-semibold text-muted-foreground">Folder Kustom</h2>
-
+      <!-- Custom folders -->
+      <Collapsible default-open class="rounded-lg border bg-card p-4">
+        <CollapsibleTrigger class="mb-3">
+          <h3 class="text-sm font-semibold text-muted-foreground">Folder Kustom</h3>
+          <span class="flex items-center gap-2">
+            <Badge variant="outline">{{ customFolders.length }}</Badge>
+            <Icon
+              icon="lucide:chevron-down"
+              class="size-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
+            />
+          </span>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
           <EmptyState
             v-if="!hasCustomFolders"
             icon="lucide:folder-open"
@@ -380,9 +363,9 @@ watchSyncStatus();
               </div>
             </li>
           </ul>
-        </div>
-      </div>
-    </main>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
 
     <!-- Create folder dialog -->
     <DialogRoot v-model:open="createOpen">
@@ -475,5 +458,5 @@ watchSyncStatus();
         </DialogFooter>
       </DialogContent>
     </DialogRoot>
-  </AppShell>
+  </div>
 </template>

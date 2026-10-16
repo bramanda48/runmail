@@ -64,21 +64,5 @@ function isFolderActive(folder: LocalFolder) {
       Belum ada folder
     </p>
 
-    <div class="my-3 border-t" />
-
-    <NavItem
-      label="Kelola Folder"
-      icon="lucide:folder-plus"
-      :to="`/mailboxes/${mailboxId}/folders`"
-      :active="route.path === `/mailboxes/${mailboxId}/folders`"
-      active-class="bg-accent text-accent-foreground font-semibold"
-    />
-    <NavItem
-      label="Ruleset"
-      icon="lucide:filter"
-      :to="`/mailboxes/${mailboxId}/rulesets`"
-      :active="route.path === `/mailboxes/${mailboxId}/rulesets`"
-      active-class="bg-accent text-accent-foreground font-semibold"
-    />
   </nav>
 </template>

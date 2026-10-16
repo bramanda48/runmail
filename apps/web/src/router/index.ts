@@ -42,22 +42,32 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, mailboxScoped: true },
   },
   {
-    path: "/mailboxes/:mailbox_id/folders",
-    name: "folders",
-    component: () => import("@/views/FolderManagementView.vue"),
+    path: "/mailboxes/:mailbox_id/settings",
+    component: () => import("@/views/MailboxSettingsView.vue"),
     meta: { requiresAuth: true, mailboxScoped: true },
-  },
-  {
-    path: "/mailboxes/:mailbox_id/rulesets",
-    name: "rulesets",
-    component: () => import("@/views/RulesetListView.vue"),
-    meta: { requiresAuth: true, mailboxScoped: true },
-  },
-  {
-    path: "/mailboxes/:mailbox_id/rulesets/:ruleset_id",
-    name: "ruleset-editor",
-    component: () => import("@/views/RulesetEditorView.vue"),
-    meta: { requiresAuth: true, mailboxScoped: true },
+    redirect: (to) => ({ name: "settings-folders", params: { mailbox_id: to.params.mailbox_id } }),
+    children: [
+      {
+        path: "folders",
+        name: "settings-folders",
+        component: () => import("@/components/settings/FolderSettingsTab.vue"),
+      },
+      {
+        path: "rulesets",
+        name: "settings-rulesets",
+        component: () => import("@/components/settings/RulesetSettingsTab.vue"),
+      },
+      {
+        path: "rulesets/new",
+        name: "settings-ruleset-new",
+        component: () => import("@/components/settings/RulesetEditorTab.vue"),
+      },
+      {
+        path: "rulesets/:ruleset_id",
+        name: "settings-ruleset-edit",
+        component: () => import("@/components/settings/RulesetEditorTab.vue"),
+      },
+    ],
   },
   {
     path: "/account",

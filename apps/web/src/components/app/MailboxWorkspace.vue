@@ -74,15 +74,15 @@ function onSearch(value: string) {
         />
       </div>
 
-      <div class="flex shrink-0 items-center gap-2 lg:w-64 lg:justify-end">
-        <Button variant="ghost" size="icon" disabled title="Segera hadir" aria-label="Bantuan">
-          <Icon icon="lucide:circle-help" />
-        </Button>
-        <Button :as="RouterLink" to="/account" variant="ghost" size="icon" aria-label="Pengaturan">
+      <div class="flex shrink-0 items-center gap-4 lg:w-64 lg:justify-end">
+        <Button
+          :as="RouterLink"
+          :to="`/mailboxes/${mailboxId}/settings`"
+          variant="ghost"
+          size="icon"
+          aria-label="Pengaturan"
+        >
           <Icon icon="lucide:settings" />
-        </Button>
-        <Button :as="RouterLink" to="/mailboxes" variant="ghost" size="icon" aria-label="Aplikasi">
-          <Icon icon="lucide:layout-grid" />
         </Button>
         <AccountMenu />
       </div>
