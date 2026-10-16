@@ -1,29 +1,22 @@
 <script setup lang="ts">
-import AppShell from "@/components/app/AppShell.vue";
-import FolderNavigation from "@/components/app/FolderNavigation.vue";
-import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
-import MoveFolderMenu from "@/components/email/MoveFolderMenu.vue";
-import RemoteImageNotice from "@/components/email/RemoteImageNotice.vue";
+import MailboxWorkspace from "@/components/app/MailboxWorkspace.vue";
+import ComposeModal, { type ComposeDraft } from "@/components/email/ComposeModal.vue";
+import EmailDetailBody, { type EmailBodyState } from "@/components/email/EmailDetailBody.vue";
+import EmailDetailHeader from "@/components/email/EmailDetailHeader.vue";
+import EmailDetailToolbar from "@/components/email/EmailDetailToolbar.vue";
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import {
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
-import { Icon } from "@/icons";
-import { ApiError, fetchRawEmail, permanentDeleteMessage } from "@/lib/api";
-import { deleteCachedRaw, getCachedRaw, putCachedRaw } from "@/lib/raw-cache";
+import { ApiError, fetchRawEmail } from "@/lib/api";
+import { getCachedRaw, putCachedRaw } from "@/lib/raw-cache";
 import { sanitizeEmailHtml } from "@/lib/sanitize";
-import { cn } from "@/lib/utils";
+import { computeUnreadCounts } from "@/lib/unread-counts";
 import PostalMime from "postal-mime";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, shallowRef, watch } from "vue";
 
-const { route, router, mailboxStore, mailboxId } = useMailboxWorkspace();
+const { route, router, mailboxStore, mailboxId, resolveMailbox } = useMailboxWorkspace();
 
 const messageId = computed(() => route.params.message_id as string);
 
@@ -31,53 +24,62 @@ const message = ref<LocalMessage | null>(null);
 const folders = ref<LocalFolder[]>([]);
 const unreadCounts = ref<Record<string, number>>({});
 
-const bodyState = ref<"loading" | "empty" | "html" | "text" | "error" | "parse-error">("loading");
+const bodyState = ref<EmailBodyState>("loading");
 const bodyHtml = ref("");
 const rawHtml = ref("");
 const bodyText = ref("");
+const headers = ref<{ key: string; value: string }[]>([]);
 const attachments = ref<{ filename?: string; mimeType?: string; size?: number }[]>([]);
 const fetchError = ref("");
 const remoteImagesBlocked = ref(false);
 const imagesAllowed = ref(false);
 
-const deleteOpen = ref(false);
-const isDeleting = ref(false);
+const composeOpen = shallowRef(false);
+const composeDraft = ref<ComposeDraft | null>(null);
 
-const isTrash = computed(
-  () =>
-    folders.value.find((f) => f.id === message.value?.folder_id)?.name.toLowerCase() === "trash",
-);
+const searchQuery = ref("");
 
-function formatDate(ts: number) {
-  return new Date(ts).toLocaleString("id-ID", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+// Prev/next neighbors inside the current folder, newest-first.
+const siblingIds = ref<string[]>([]);
+
+const position = computed(() => {
+  if (!message.value) return null;
+  const idx = siblingIds.value.indexOf(message.value.id);
+  return idx === -1 ? null : idx + 1;
+});
+const total = computed(() => siblingIds.value.length);
+const hasOlder = computed(() => position.value !== null && position.value < total.value);
+const hasNewer = computed(() => position.value !== null && position.value > 1);
+
+function goSibling(direction: "older" | "newer") {
+  if (position.value === null) return;
+  const target =
+    direction === "older" ? siblingIds.value[position.value] : siblingIds.value[position.value - 2];
+  if (!target) return;
+  router.push(`/mailboxes/${mailboxId.value}/messages/${target}`);
 }
 
-function formatSize(bytes?: number) {
-  if (bytes === undefined) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-async function loadFolders() {
-  const db = getMailboxDb(mailboxId.value);
-  folders.value = await db.folders.toArray();
-  const counts: Record<string, number> = {};
-  for (const folder of folders.value) {
-    counts[folder.id] = await db.messages
-      .where("folder_id")
-      .equals(folder.id)
-      .and((m) => !m.is_read)
-      .count();
+async function loadSiblings() {
+  if (!message.value || mailboxStore.mailboxId !== mailboxId.value) return;
+  try {
+    const db = getMailboxDb(mailboxId.value);
+    // Newest-first, same ordering as the list view.
+    const all = await db.messages.where("folder_id").equals(message.value.folder_id).toArray();
+    all.sort((a, b) => b.email_date - a.email_date || b.received_at - a.received_at);
+    siblingIds.value = all.map((m) => m.id);
+  } catch {
+    siblingIds.value = message.value ? [message.value.id] : [];
   }
-  unreadCounts.value = counts;
+}
+
+function sanitizeWithImageBlock(html: string) {
+  const result = sanitizeEmailHtml(html, { allowRemoteContent: false });
+  remoteImagesBlocked.value = result.blocked;
+  return result.html;
+}
+
+function sanitizeWithoutImageBlock(html: string) {
+  return sanitizeEmailHtml(html, { allowRemoteContent: true }).html;
 }
 
 async function loadMessage(autoRead = false) {
@@ -97,17 +99,8 @@ async function loadMessage(autoRead = false) {
     });
     message.value.is_read = true;
   }
+  await loadSiblings();
   await loadBody();
-}
-
-function sanitizeWithImageBlock(html: string) {
-  const result = sanitizeEmailHtml(html, { allowRemoteContent: false });
-  remoteImagesBlocked.value = result.blocked;
-  return result.html;
-}
-
-function sanitizeWithoutImageBlock(html: string) {
-  return sanitizeEmailHtml(html, { allowRemoteContent: true }).html;
 }
 
 async function loadBody() {
@@ -123,6 +116,7 @@ async function loadBody() {
       await putCachedRaw(mailboxId.value, messageId.value, blob);
     }
     const parsed = await PostalMime.parse(await blob.arrayBuffer());
+    headers.value = parsed.headers ?? [];
     attachments.value = (parsed.attachments || []).map((a) => {
       const content = a.content;
       let size: number | undefined;
@@ -167,32 +161,20 @@ function allowImages() {
   imagesAllowed.value = true;
 }
 
-async function enqueue(mutation: {
-  message_id: string;
-  mutation_type: "read" | "star" | "move";
-  mutation_value: boolean | string;
-}) {
-  await mailboxStore.enqueue(mutation);
-  await loadMessage(false);
-  await loadFolders();
+async function loadFolders() {
+  const db = getMailboxDb(mailboxId.value);
+  folders.value = await db.folders.toArray();
+  unreadCounts.value = await computeUnreadCounts(db);
 }
 
-function toggleStar() {
+async function toggleRead() {
   if (!message.value) return;
-  enqueue({
-    message_id: message.value.id,
-    mutation_type: "star",
-    mutation_value: !message.value.is_starred,
-  });
-}
-
-function toggleRead() {
-  if (!message.value) return;
-  enqueue({
+  await mailboxStore.enqueue({
     message_id: message.value.id,
     mutation_type: "read",
     mutation_value: !message.value.is_read,
   });
+  back();
 }
 
 async function moveSingle(folderId: string) {
@@ -202,22 +184,59 @@ async function moveSingle(folderId: string) {
     mutation_type: "move",
     mutation_value: folderId,
   });
-  message.value.folder_id = folderId;
-  await loadMessage();
+  back();
 }
 
-async function confirmDelete() {
+function quoteBody(): string {
+  return bodyText.value
+    ? `\n\n---\n${bodyText.value}`
+    : "\n\n---\n(Isi email asli dalam format HTML.)";
+}
+
+function openReply() {
   if (!message.value) return;
-  isDeleting.value = true;
-  try {
-    await permanentDeleteMessage(mailboxId.value, message.value.id);
-    await deleteCachedRaw(mailboxId.value, message.value.id);
-    await getMailboxDb(mailboxId.value).messages.delete(messageId.value);
-    router.back();
-  } catch (err) {
-    isDeleting.value = false;
-    fetchError.value = err instanceof ApiError ? err.message : "Gagal menghapus email.";
-  }
+  const subject = message.value.subject.startsWith("Re:")
+    ? message.value.subject
+    : `Re: ${message.value.subject}`;
+  composeDraft.value = {
+    to: message.value.from_address,
+    subject,
+    body: quoteBody(),
+    title: "Balas",
+  };
+  composeOpen.value = true;
+}
+
+function openForward() {
+  if (!message.value) return;
+  const subject = message.value.subject.startsWith("Fwd:")
+    ? message.value.subject
+    : `Fwd: ${message.value.subject}`;
+  composeDraft.value = {
+    to: "",
+    subject,
+    body: quoteBody(),
+    title: "Teruskan",
+  };
+  composeOpen.value = true;
+}
+
+function openCompose() {
+  composeDraft.value = null;
+  composeOpen.value = true;
+}
+
+function onSearch(value: string) {
+  const folder = message.value
+    ? folders.value.find((f) => f.id === message.value?.folder_id)
+    : undefined;
+  const base =
+    folder?.folder_type === "system" && folder.name.toLowerCase() === "inbox"
+      ? `/mailboxes/${mailboxId.value}/inbox`
+      : folder
+        ? `/mailboxes/${mailboxId.value}/folders/${folder.id}`
+        : `/mailboxes/${mailboxId.value}/inbox`;
+  router.push({ path: base, query: value ? { q: value } : {} });
 }
 
 function back() {
@@ -230,194 +249,99 @@ function back() {
   }
 }
 
-onMounted(async () => {
+async function init() {
+  await resolveMailbox();
+  if (mailboxStore.mailboxId !== mailboxId.value) return;
   await loadFolders();
   await loadMessage(true);
-});
+}
+
+onMounted(() => init());
 
 watch(messageId, async () => {
   imagesAllowed.value = false;
   remoteImagesBlocked.value = false;
+  siblingIds.value = [];
+  headers.value = [];
   await loadMessage(true);
 });
+
+watch(mailboxId, () => init());
 </script>
 
 <template>
-  <AppShell>
-    <template #navigation>
-      <MailboxSidebar>
-        <FolderNavigation
-          :mailbox-id="mailboxId"
-          :folders="folders"
-          :unread-counts="unreadCounts"
-        />
-      </MailboxSidebar>
-    </template>
+  <MailboxWorkspace
+    v-model:search-query="searchQuery"
+    :mailbox-id="mailboxId"
+    :folders="folders"
+    :unread-counts="unreadCounts"
+    :live-search="false"
+    @search="onSearch"
+    @compose="openCompose"
+  >
+    <h1 class="sr-only">{{ message?.subject || "Detail email" }}</h1>
 
-    <template #topbar>
-      <div class="flex items-center gap-3">
-        <Button aria-label="Kembali" variant="ghost" size="icon" @click="back">
-          <Icon icon="lucide:arrow-left" />
-        </Button>
-      </div>
-    </template>
+    <EmailDetailToolbar
+      v-if="message"
+      :folders="folders"
+      :current-folder-id="message.folder_id"
+      :is-read="message.is_read"
+      :position="position"
+      :total="total"
+      :has-older="hasOlder"
+      :has-newer="hasNewer"
+      @back="back"
+      @toggle-read="toggleRead"
+      @move-to="moveSingle"
+      @older="goSibling('older')"
+      @newer="goSibling('newer')"
+    />
 
-    <main class="flex flex-1 flex-col p-4 lg:p-8">
-      <div v-if="!message && bodyState === 'loading'" class="flex flex-col gap-4">
-        <Skeleton class="h-8 w-2/3" />
-        <Skeleton class="h-4 w-1/3" />
-        <div class="flex flex-col gap-2">
-          <Skeleton class="h-4 w-full" />
-          <Skeleton class="h-4 w-full" />
-          <Skeleton class="h-4 w-5/6" />
-        </div>
-      </div>
-
-      <Alert v-else-if="bodyState === 'error'" variant="destructive">
-        {{ fetchError }}
-        <Button variant="ghost" size="sm" class="ml-2" @click="loadMessage(false)"
-          >Coba Lagi</Button
-        >
-      </Alert>
-
-      <div v-else-if="message" class="mx-auto w-full max-w-4xl flex flex-col gap-4">
-        <!-- Header -->
-        <div class="rounded-lg border bg-card p-4 lg:p-6">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="min-w-0 flex-1">
-              <h1 class="scroll-m-20 text-2xl font-semibold tracking-tight text-foreground">
-                {{ message.subject || "(Tanpa subjek)" }}
-              </h1>
-              <div class="mt-2 text-sm text-foreground">
-                <span class="font-medium">{{ message.from_name || message.from_address }}</span>
-                <span class="text-muted-foreground">&lt;{{ message.from_address }}&gt;</span>
-              </div>
-              <div class="text-sm text-muted-foreground">
-                Kepada: {{ message.to_addresses.join(", ") }}
-              </div>
-              <div class="mt-1 text-xs text-muted-foreground">
-                {{ formatDate(message.email_date) }}
-              </div>
-            </div>
-
-            <div class="flex flex-wrap items-center gap-1">
-              <Button
-                :aria-label="message.is_starred ? 'Hapus bintang' : 'Tandai bintang'"
-                variant="ghost"
-                size="icon"
-                @click="toggleStar"
-              >
-                <Icon
-                  icon="lucide:star"
-                  :class="
-                    cn(
-                      'size-5',
-                      message.is_starred ? 'fill-primary text-primary' : 'text-muted-foreground',
-                    )
-                  "
-                />
-              </Button>
-
-              <Button
-                :aria-label="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
-                variant="ghost"
-                size="icon"
-                @click="toggleRead"
-              >
-                <Icon :icon="message.is_read ? 'lucide:mail-open' : 'lucide:mail'" class="size-5" />
-              </Button>
-
-              <MoveFolderMenu
-                :folders="folders"
-                :current-folder-id="message?.folder_id"
-                label="Pindahkan ke folder"
-                icon-class="size-5"
-                @move-to-folder="moveSingle"
-              />
-              <Button
-                v-if="isTrash"
-                aria-label="Hapus permanen"
-                variant="ghost"
-                size="icon"
-                @click="deleteOpen = true"
-              >
-                <Icon icon="lucide:trash-2" class="size-5 text-destructive" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Body -->
-        <div class="rounded-lg border bg-card p-4 lg:p-6">
-          <div v-if="bodyState === 'loading'" class="flex flex-col gap-2">
+    <div class="min-h-0 flex-1 overflow-y-auto">
+      <div
+        v-if="!message && (bodyState === 'loading' || bodyState === 'error')"
+        class="flex flex-col gap-4 px-4 pt-8 sm:px-8"
+      >
+        <template v-if="bodyState === 'loading'">
+          <Skeleton class="h-8 w-2/3" />
+          <Skeleton class="h-4 w-1/3" />
+          <div class="flex flex-col gap-2">
             <Skeleton class="h-4 w-full" />
             <Skeleton class="h-4 w-full" />
             <Skeleton class="h-4 w-5/6" />
           </div>
-
-          <RemoteImageNotice
-            v-if="bodyState === 'html' && remoteImagesBlocked && !imagesAllowed"
-            @load="allowImages"
-          />
-
-          <div
-            v-if="bodyState === 'html'"
-            class="prose prose-sm max-w-none text-foreground"
-            v-html="bodyHtml"
-          />
-          <!-- Safe: HTML is sanitized via DOMPurify before rendering -->
-
-          <pre
-            v-else-if="bodyState === 'text'"
-            class="whitespace-pre-wrap text-sm text-foreground"
-            >{{ bodyText }}</pre>
-
-          <div
-            v-else-if="bodyState === 'empty'"
-            class="py-8 text-center text-sm text-muted-foreground"
-          >
-            Email ini tidak memiliki konten.
-          </div>
-
-          <Alert v-else-if="bodyState === 'parse-error'">
-            Email tidak dapat ditampilkan. Anda dapat mencoba memuat ulang.
-            <Button variant="ghost" size="sm" class="ml-2" @click="loadBody">Coba Lagi</Button>
-          </Alert>
-
-          <!-- Attachments -->
-          <div v-if="attachments.length > 0" class="mt-6 flex flex-col gap-2">
-            <p class="text-sm font-medium text-foreground">Lampiran</p>
-            <ul class="flex flex-col gap-1">
-              <li
-                v-for="(att, i) in attachments"
-                :key="i"
-                class="flex items-center gap-2 text-sm text-muted-foreground"
-              >
-                <Icon icon="lucide:paperclip" class="size-4" />
-                <span>{{ att.filename || "lampiran" }}</span>
-                <span v-if="att.size">({{ formatSize(att.size) }})</span>
-              </li>
-            </ul>
-          </div>
-        </div>
+        </template>
+        <Alert v-else variant="destructive">
+          {{ fetchError }}
+          <Button variant="ghost" size="sm" class="ml-2" @click="loadMessage(false)">
+            Coba Lagi
+          </Button>
+        </Alert>
       </div>
 
-      <!-- Permanent delete dialog -->
-      <DialogRoot v-model:open="deleteOpen">
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Hapus Permanen</DialogTitle>
-            <DialogDescription> Email tidak dapat dikembalikan. Lanjutkan? </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="ghost" @click="deleteOpen = false">Batal</Button>
-            <Button variant="destructive" :disabled="isDeleting" @click="confirmDelete">
-              <Icon v-if="isDeleting" icon="lucide:loader-circle" class="animate-spin" />
-              <span>Hapus</span>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </DialogRoot>
-    </main>
-  </AppShell>
+      <template v-else-if="message">
+        <EmailDetailHeader :message="message" :headers="headers" @reply="openReply" />
+
+        <EmailDetailBody
+          :body-state="bodyState"
+          :body-html="bodyHtml"
+          :body-text="bodyText"
+          :error="fetchError"
+          :remote-images-blocked="remoteImagesBlocked"
+          :images-allowed="imagesAllowed"
+          :attachments="attachments"
+          @retry="bodyState === 'parse-error' ? loadBody() : loadMessage(false)"
+          @allow-images="allowImages"
+          @reply="openReply"
+          @forward="openForward"
+        />
+      </template>
+    </div>
+
+    <template #overlays>
+      <div class="absolute bottom-0 right-20 z-50">
+        <ComposeModal v-model:open="composeOpen" :draft="composeDraft" />
+      </div>
+    </template>
+  </MailboxWorkspace>
 </template>

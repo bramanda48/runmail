@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { Icon } from "@/icons";
-import { shallowRef } from "vue";
+import { shallowRef, watch } from "vue";
+
+export interface ComposeDraft {
+  to: string;
+  subject: string;
+  body: string;
+  /** Dialog title */
+  title?: string;
+}
+
+const props = defineProps<{
+  draft?: ComposeDraft | null;
+}>();
 
 const open = defineModel<boolean>("open", { default: false });
 
@@ -8,6 +20,17 @@ const to = shallowRef("");
 const subject = shallowRef("");
 const body = shallowRef("");
 const minimized = shallowRef(false);
+
+watch(
+  () => props.draft,
+  (draft) => {
+    if (!draft) return;
+    to.value = draft.to;
+    subject.value = draft.subject;
+    body.value = draft.body;
+    minimized.value = false;
+  },
+);
 
 function toggleMinimized() {
   minimized.value = !minimized.value;
@@ -26,7 +49,7 @@ function close() {
     class="flex w-140 h-145 max-h-full max-w-full flex-col overflow-hidden rounded-t-xl shadow-xs border bg-background"
   >
     <div class="flex items-center gap-2 bg-secondary px-4 py-3">
-      <p class="truncate text-sm font-semibold">Pesan Baru</p>
+      <p class="truncate text-sm font-semibold">{{ draft?.title ?? "Pesan Baru" }}</p>
       <div class="ml-auto flex items-center gap-1">
         <button
           type="button"

@@ -6,6 +6,8 @@ import { ref, watch } from "vue";
 const props = defineProps<{
   modelValue: string;
   placeholder?: string;
+  /** When false, typing only updates the model; search fires on Enter. */
+  liveSearch?: boolean;
 }>();
 
 const emits = defineEmits<{
@@ -27,10 +29,17 @@ function onInput(value: string) {
   searchQuery.value = value;
   emits("update:modelValue", value);
 
+  if (props.liveSearch === false) return;
+
   if (searchTimeout) clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
     emits("search", value.trim());
   }, 300);
+}
+
+function onEnter() {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  emits("search", searchQuery.value.trim());
 }
 </script>
 
@@ -44,6 +53,7 @@ function onInput(value: string) {
       :placeholder="placeholder || 'Search...'"
       class="h-full flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
       @update:model-value="onInput"
+      @keydown.enter="onEnter"
     />
     <Icon
       icon="lucide:sliders-horizontal"

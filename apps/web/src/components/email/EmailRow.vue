@@ -55,7 +55,7 @@ const displayDate = computed(() => {
     tabindex="0"
     :class="
       cn(
-        'group flex w-full hover:shadow-sm items-center gap-3 border-b border-border px-4 py-2',
+        'group flex w-full hover:shadow-sm cursor-pointer items-center gap-3 border-b border-border px-4 py-2',
         props.selected ? 'bg-accent/50' : message.is_read ? 'bg-muted/30' : 'bg-background',
       )
     "

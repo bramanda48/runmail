@@ -1,19 +1,14 @@
 <script setup lang="ts">
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
-import { cn } from "@/lib/utils";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 
 type State = "blocked" | "loading" | "loaded";
 
 const state = ref<State>("blocked");
 
 const emit = defineEmits<(e: "load") => void>();
-
-const icon = computed(() =>
-  state.value === "loading" ? "lucide:loader-circle" : "lucide:image-off",
-);
-const spin = computed(() => state.value === "loading");
 
 function load() {
   state.value = "loading";
@@ -28,17 +23,18 @@ defineExpose({ markLoaded });
 </script>
 
 <template>
-  <div
-    v-if="state !== 'loaded'"
-    class="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/50 px-4 py-3"
-  >
-    <div class="flex items-center gap-3">
-      <Icon :icon="icon" :class="cn('size-4 text-muted-foreground', spin && 'animate-spin')" />
-      <p class="text-sm text-muted-foreground">Gambar eksternal diblokir untuk keamanan.</p>
-    </div>
-    <Button variant="ghost" size="sm" :disabled="state === 'loading'" @click="load">
-      <Icon v-if="state === 'loading'" icon="lucide:loader-circle" class="size-4 animate-spin" />
+  <Alert v-if="state !== 'loaded'" class="items-center">
+    <Icon icon="lucide:image-off" class="size-4" />
+    <AlertDescription class="flex-1"> Gambar eksternal diblokir untuk keamanan. </AlertDescription>
+    <Button
+      variant="ghost"
+      size="sm"
+      class="shrink-0"
+      :disabled="state === 'loading'"
+      @click="load"
+    >
+      <Icon v-if="state === 'loading'" icon="lucide:loader-circle" class="animate-spin" />
       <span>Tampilkan gambar</span>
     </Button>
-  </div>
+  </Alert>
 </template>

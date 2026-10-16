@@ -1,22 +1,13 @@
 <script setup lang="ts">
-import AccountMenu from "@/components/app/AccountMenu.vue";
-import FolderNavigation from "@/components/app/FolderNavigation.vue";
-import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
-import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
-import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
-import Wordmark from "@/components/app/Wordmark.vue";
-import AccessoryRail from "@/components/email/AccessoryRail.vue";
+import MailboxWorkspace from "@/components/app/MailboxWorkspace.vue";
 import ComposeModal from "@/components/email/ComposeModal.vue";
 import EmailListContainer from "@/components/email/EmailListContainer.vue";
-import { Button } from "@/components/ui/button";
 import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
-import { Icon } from "@/icons";
 import { parseSearchQuery } from "@/lib/search";
 import { computeUnreadCounts } from "@/lib/unread-counts";
 import Dexie from "dexie";
 import { computed, onMounted, ref, shallowRef, watch } from "vue";
-import { RouterLink } from "vue-router";
 
 const { route, router, mailboxStore, mailboxId, resolveMailbox } = useMailboxWorkspace({
   onResolveError: () => {
@@ -45,15 +36,16 @@ const debouncedSearch = ref("");
 const refreshTick = ref(0);
 
 const composeOpen = shallowRef(false);
-const drawerOpen = shallowRef(false);
-const sidebarCollapsed = shallowRef(false);
 
-function toggleSidebar() {
-  if (window.matchMedia("(min-width: 1024px)").matches) {
-    sidebarCollapsed.value = !sidebarCollapsed.value;
-  } else {
-    drawerOpen.value = true;
-  }
+function queryParamValue() {
+  const q = route.query.q;
+  return typeof q === "string" ? q : "";
+}
+
+function applyQueryParam() {
+  const value = queryParamValue();
+  searchQuery.value = value;
+  debouncedSearch.value = value;
 }
 
 const activeFolder = computed(() => folders.value.find((f) => f.id === activeFolderId.value));
@@ -64,6 +56,9 @@ const showPagination = computed(() => !debouncedSearch.value && totalMessages.va
 
 function onSearch(value: string) {
   debouncedSearch.value = value;
+  const current = queryParamValue();
+  if ((value || "") === current) return;
+  router.replace({ query: value ? { q: value } : {} });
 }
 
 async function loadFolders() {
@@ -176,6 +171,7 @@ function goPrev() {
 
 async function initMailbox() {
   page.value = 1;
+  applyQueryParam();
   await resolveMailbox();
   if (mailboxStore.mailboxId === mailboxId.value) {
     await loadFolders();
@@ -303,6 +299,13 @@ watch(debouncedSearch, () => {
 });
 
 watch(
+  () => route.query.q,
+  () => {
+    if (queryParamValue() !== debouncedSearch.value) applyQueryParam();
+  },
+);
+
+watch(
   () => mailboxStore.syncStatus,
   async (status) => {
     if (status === "synced") {
@@ -314,104 +317,44 @@ watch(
 </script>
 
 <template>
-  <div
-    class="flex h-screen flex-col overflow-hidden bg-background text-sm"
-    style="
-      background-image: url(&quot;https://ssl.gstatic.com/ui/v1/icons/mail/images/2/5/android/bg.png&quot;);
-      background-repeat: repeat-x;
-      background-position: left top;
-    "
+  <MailboxWorkspace
+    v-model:search-query="searchQuery"
+    :mailbox-id="mailboxId"
+    :folders="folders"
+    :unread-counts="unreadCounts"
+    @search="onSearch"
+    @compose="composeOpen = true"
   >
-    <header class="flex h-16 shrink-0 items-center justify-between gap-4 px-4">
-      <div class="flex w-auto min-w-0 shrink-0 items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Buka atau tutup menu"
-          @click="toggleSidebar"
-        >
-          <Icon icon="lucide:menu" />
-        </Button>
-        <Wordmark size="lg" />
-      </div>
-
-      <div class="max-w-2xl flex-1 px-4">
-        <MailboxSearchBar v-model="searchQuery" placeholder="Cari di email" @search="onSearch" />
-      </div>
-
-      <div class="flex shrink-0 items-center gap-2 lg:w-64 lg:justify-end">
-        <Button variant="ghost" size="icon" disabled title="Segera hadir" aria-label="Bantuan">
-          <Icon icon="lucide:circle-help" />
-        </Button>
-        <Button :as="RouterLink" to="/account" variant="ghost" size="icon" aria-label="Pengaturan">
-          <Icon icon="lucide:settings" />
-        </Button>
-        <Button :as="RouterLink" to="/mailboxes" variant="ghost" size="icon" aria-label="Aplikasi">
-          <Icon icon="lucide:layout-grid" />
-        </Button>
-        <AccountMenu />
-      </div>
-    </header>
-
-    <div class="relative flex min-w-0 flex-1 gap-0 overflow-hidden">
-      <aside v-if="!sidebarCollapsed" class="hidden w-64 shrink-0 flex-col overflow-hidden lg:flex">
-        <MailboxSidebar show-compose @compose="composeOpen = true">
-          <FolderNavigation
-            :mailbox-id="mailboxId"
-            :folders="folders"
-            :unread-counts="unreadCounts"
-          />
-        </MailboxSidebar>
-      </aside>
-
-      <MobileNavDrawer v-model:open="drawerOpen">
-        <MailboxSidebar show-compose @compose="composeOpen = true">
-          <FolderNavigation
-            :mailbox-id="mailboxId"
-            :folders="folders"
-            :unread-counts="unreadCounts"
-          />
-        </MailboxSidebar>
-      </MobileNavDrawer>
-
-      <main
-        class="z-10 mx-0 mt-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-t-3xl shadow-xs border bg-background"
-      >
-        <h1 class="sr-only">{{ activeFolder?.name || "Inbox" }}</h1>
-        <EmailListContainer
-          :messages="messages"
-          :loading="isLoading"
-          :error="listError"
-          :has-more="showPagination"
-          :total="totalMessages"
-          :page="page"
-          :per-page="perPage"
-          :active-folder="activeFolder"
-          :search-query="debouncedSearch"
-          :pending-ids="pendingIds"
-          :folders="folders"
-          @click-message="openMessage"
-          @toggle-star="toggleStar"
-          @toggle-read="toggleRead"
-          @move-to-single="moveSingle"
-          @trash="moveToTrash"
-          @bulk-trash="bulkTrash"
-          @bulk-mark-read="bulkMarkRead"
-          @bulk-move="bulkMove"
-          @load-more="loadMessages"
-          @refresh="loadMessages"
-          @prev-page="goPrev"
-          @next-page="goNext"
-        />
-      </main>
-
-      <div class="hidden shrink-0 md:flex">
-        <AccessoryRail />
-      </div>
-
+    <h1 class="sr-only">{{ activeFolder?.name || "Inbox" }}</h1>
+    <EmailListContainer
+      :messages="messages"
+      :loading="isLoading"
+      :error="listError"
+      :has-more="showPagination"
+      :total="totalMessages"
+      :page="page"
+      :per-page="perPage"
+      :active-folder="activeFolder"
+      :search-query="debouncedSearch"
+      :pending-ids="pendingIds"
+      :folders="folders"
+      @click-message="openMessage"
+      @toggle-star="toggleStar"
+      @toggle-read="toggleRead"
+      @move-to-single="moveSingle"
+      @trash="moveToTrash"
+      @bulk-trash="bulkTrash"
+      @bulk-mark-read="bulkMarkRead"
+      @bulk-move="bulkMove"
+      @load-more="loadMessages"
+      @refresh="loadMessages"
+      @prev-page="goPrev"
+      @next-page="goNext"
+    />
+    <template #overlays>
       <div class="absolute bottom-0 right-20 z-50">
         <ComposeModal v-model:open="composeOpen" />
       </div>
-    </div>
-  </div>
+    </template>
+  </MailboxWorkspace>
 </template>
