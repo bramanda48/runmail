@@ -1,4 +1,5 @@
 import { clearAllRawCaches } from "@/lib/raw-cache";
+import { clearLastMailboxId } from "@/stores/mailbox-access";
 import Dexie from "dexie";
 import {
   clearKnownMailboxDbNames,
@@ -33,4 +34,5 @@ export async function wipeLocalData(): Promise<void> {
   }
   clearKnownMailboxDbNames();
   await clearAllRawCaches();
+  clearLastMailboxId();
 }

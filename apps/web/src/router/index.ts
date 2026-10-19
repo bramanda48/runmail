@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/stores/auth";
-import { useMailboxAccessStore } from "@/stores/mailbox-access";
+import { getLastMailboxId, useMailboxAccessStore } from "@/stores/mailbox-access";
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 
 declare module "vue-router" {
@@ -109,15 +109,27 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore();
+  const access = useMailboxAccessStore();
 
-  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+  if (!auth.isAuthenticated) {
     const restored = await auth.restoreSession();
-    if (!restored) {
+    if (to.meta.requiresAuth && !restored) {
       return { path: "/login", query: { redirect: to.fullPath } };
+    }
+    if (to.name === "login" && !restored) {
+      // No session to restore — stay on the login page.
+      return true;
     }
   }
 
   if (to.name === "login" && auth.isAuthenticated) {
+    const mailboxId = getLastMailboxId();
+    if (mailboxId !== null) {
+      const verdict = await access.ensureAccessible(mailboxId);
+      if (verdict === "ok") {
+        return { path: `/mailboxes/${mailboxId}/inbox` };
+      }
+    }
     return { path: "/mailboxes" };
   }
 
@@ -126,7 +138,6 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.mailboxScoped && typeof to.params.mailbox_id === "string") {
-    const access = useMailboxAccessStore();
     const verdict = await access.ensureAccessible(to.params.mailbox_id);
     if (verdict === "forbidden" || verdict === "not_found" || verdict === "inactive") {
       return { path: "/mailboxes" };
