@@ -1,18 +1,11 @@
 <script setup lang="ts">
+import MemberShell from "@/components/app/MemberShell.vue";
 import PasswordField from "@/components/app/PasswordField.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogRoot,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 import { Icon } from "@/icons";
 import { ApiError, changePassword } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
@@ -32,8 +25,6 @@ const confirmPasswordError = ref("");
 const inlineError = ref("");
 const successMessage = ref("");
 const isSubmitting = ref(false);
-const isLoggingOut = ref(false);
-const logoutOpen = ref(false);
 
 const PASSWORD_MIN = 8;
 const PASSWORD_MAX = 128;
@@ -101,21 +92,13 @@ async function handleChangePassword() {
     }
   }
 }
-
-async function confirmLogout() {
-  isLoggingOut.value = true;
-  await auth.logout();
-  await router.push("/login");
-}
 </script>
 
 <template>
-  <main class="flex min-h-screen flex-col items-center justify-center bg-background p-6">
-    <div class="w-full max-w-2xl flex flex-col gap-6">
-      <div>
-        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
-          Akun
-        </h1>
+  <MemberShell>
+    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      <div class="flex flex-col gap-1">
+        <h1 class="scroll-m-20 text-3xl font-extrabold tracking-tight text-foreground">Profile</h1>
         <p class="text-sm text-muted-foreground">Kelola informasi akun dan keamanan Anda.</p>
       </div>
 
@@ -134,28 +117,6 @@ async function confirmLogout() {
               {{ auth.isAdmin ? "Admin" : "Member" }}
             </Badge>
           </div>
-
-          <DialogRoot v-model:open="logoutOpen">
-            <DialogTrigger as-child>
-              <Button variant="destructive" class="w-full sm:w-auto">
-                <Icon icon="lucide:log-out" />
-                <span>Keluar</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Keluar</DialogTitle>
-                <DialogDescription>Apakah Anda yakin ingin keluar?</DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant="ghost" @click="logoutOpen = false">Batal</Button>
-                <Button variant="destructive" :disabled="isLoggingOut" @click="confirmLogout">
-                  <Icon v-if="isLoggingOut" icon="lucide:loader-circle" class="animate-spin" />
-                  <span>Keluar</span>
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </DialogRoot>
         </CardContent>
       </Card>
 
@@ -216,5 +177,5 @@ async function confirmLogout() {
         </CardContent>
       </Card>
     </div>
-  </main>
+  </MemberShell>
 </template>

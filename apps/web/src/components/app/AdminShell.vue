@@ -1,66 +1,74 @@
 <script setup lang="ts">
-import AppShell from "@/components/app/AppShell.vue";
-import NavItem from "@/components/app/NavItem.vue";
+import AccountMenu from "@/components/app/AccountMenu.vue";
+import AdminSidebar from "@/components/app/AdminSidebar.vue";
+import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
 import Wordmark from "@/components/app/Wordmark.vue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
-import { useAuthStore } from "@/stores/auth";
-import { useRoute, useRouter } from "vue-router";
+import { shallowRef } from "vue";
 
-const auth = useAuthStore();
-const router = useRouter();
-const route = useRoute();
+const drawerOpen = shallowRef(false);
+const sidebarCollapsed = shallowRef(false);
 
-const adminNav = [
-  { label: "Domain", to: "/admin/domains", icon: "lucide:globe" },
-  { label: "Mailbox", to: "/admin/mailboxes", icon: "lucide:mail" },
-  { label: "User", to: "/admin/users", icon: "lucide:users" },
-];
-
-async function logout() {
-  if (window.confirm("Apakah Anda yakin ingin keluar?")) {
-    await auth.logout();
-    await router.push("/login");
+function toggleSidebar() {
+  if (window.matchMedia("(min-width: 1024px)").matches) {
+    sidebarCollapsed.value = !sidebarCollapsed.value;
+  } else {
+    drawerOpen.value = true;
   }
 }
 </script>
 
 <template>
-  <AppShell>
-    <template #navigation>
-      <div class="flex h-full flex-col">
-        <div class="p-4">
-          <Wordmark size="sm" class="mb-6" />
-          <nav class="flex flex-col gap-1" aria-label="Navigasi admin">
-            <NavItem
-              v-for="item in adminNav"
-              :key="item.to"
-              :label="item.label"
-              :icon="item.icon"
-              :to="item.to"
-              :active="route.path === item.to"
-            />
-            <div class="my-3 border-t" />
-            <NavItem label="Kembali ke Mailbox" icon="lucide:arrow-left" to="/mailboxes" />
-          </nav>
-        </div>
-        <div class="mt-auto p-4">
-          <Button aria-label="Keluar" variant="ghost" size="icon" class="w-full" @click="logout">
-            <Icon icon="lucide:log-out" />
-            <span>Keluar</span>
-          </Button>
+  <div
+    class="flex h-screen flex-col overflow-hidden bg-background text-sm"
+    style="
+      background-image: url(&quot;https://ssl.gstatic.com/ui/v1/icons/mail/images/2/5/android/bg.png&quot;);
+      background-repeat: repeat-x;
+      background-position: left top;
+    "
+  >
+    <header class="flex h-16 shrink-0 items-center justify-between gap-4 px-4">
+      <div class="flex w-auto min-w-0 shrink-0 items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Buka atau tutup menu"
+          @click="toggleSidebar"
+        >
+          <Icon icon="lucide:menu" />
+        </Button>
+        <div class="flex items-center gap-2">
+          <Wordmark size="lg" />
+          <Badge variant="secondary">Admin</Badge>
         </div>
       </div>
-    </template>
 
-    <template #topbar>
-      <div class="flex items-center gap-3">
-        <Wordmark size="sm" />
-        <Badge variant="secondary">Admin</Badge>
+      <!-- spacer to keep right-aligned AccountMenu same position as mail -->
+      <div class="hidden max-w-2xl flex-1 px-4 lg:block" aria-hidden="true" />
+
+      <div class="flex shrink-0 items-center gap-4 lg:w-64 lg:justify-end">
+        <AccountMenu />
       </div>
-    </template>
+    </header>
 
-    <slot />
-  </AppShell>
+    <div class="relative flex min-w-0 flex-1 gap-0 overflow-hidden">
+      <aside v-if="!sidebarCollapsed" class="hidden w-64 shrink-0 flex-col overflow-hidden lg:flex">
+        <AdminSidebar />
+      </aside>
+
+      <MobileNavDrawer v-model:open="drawerOpen">
+        <AdminSidebar />
+      </MobileNavDrawer>
+
+      <main
+        class="z-10 mx-0 mt-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-t-3xl border bg-background shadow-xs"
+      >
+        <div class="min-w-0 flex-1 overflow-y-auto p-4 lg:p-8">
+          <slot />
+        </div>
+      </main>
+    </div>
+  </div>
 </template>

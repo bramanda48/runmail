@@ -382,12 +382,8 @@ async function unlinkUser(user: MailboxLinkedUser) {
   <AdminShell>
     <main class="p-4 lg:p-8">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1
-            class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl"
-          >
-            Manajemen Mailbox
-          </h1>
+        <div class="flex flex-col gap-1">
+          <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">Mailbox</h1>
           <p class="text-sm text-muted-foreground">Buat dan kelola mailbox serta akses user.</p>
         </div>
         <Button @click="openCreateDialog">

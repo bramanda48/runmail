@@ -21,6 +21,7 @@ const mailboxAccess = useMailboxAccessStore();
 
 const username = computed(() => auth.user?.username ?? "Pengguna");
 const address = computed(() => mailboxAccess.current?.address ?? "");
+const isAdmin = computed(() => auth.user?.role === "admin");
 const initials = computed(() => {
   const source = address.value || username.value;
   if (!source) return "RM";
@@ -61,16 +62,27 @@ async function logout() {
           <p v-if="address" class="truncate text-xs text-muted-foreground">{{ address }}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator class="-mx-1 my-1 h-px bg-border" />
-        <DropdownMenuItem :class="itemClass" @select="go('/account')">
+
+        <DropdownMenuItem :class="itemClass" @select="go('/profile')">
           <Icon icon="lucide:settings" class="size-4 text-muted-foreground" />
-          Akun
+          Profile
         </DropdownMenuItem>
         <DropdownMenuItem :class="itemClass" @select="go('/mailboxes')">
           <Icon icon="lucide:layout-grid" class="size-4 text-muted-foreground" />
-          Ganti mailbox
+          Ganti Mailbox
         </DropdownMenuItem>
+        <template v-if="isAdmin">
+          <DropdownMenuSeparator class="-mx-1 my-1 h-px bg-border" />
+          <DropdownMenuItem :class="itemClass" @select="go('/admin/domains')">
+            <Icon icon="lucide:shield" class="size-4 text-muted-foreground" />
+            Admin Menu
+          </DropdownMenuItem>
+        </template>
         <DropdownMenuSeparator class="-mx-1 my-1 h-px bg-border" />
-        <DropdownMenuItem :class="cn(itemClass, 'text-destructive focus:text-destructive')" @select="logout">
+        <DropdownMenuItem
+          :class="cn(itemClass, 'text-destructive focus:text-destructive')"
+          @select="logout"
+        >
           <Icon icon="lucide:log-out" class="size-4" />
           Keluar
         </DropdownMenuItem>

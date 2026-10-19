@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import EmptyState from "@/components/app/EmptyState.vue";
+import MemberShell from "@/components/app/MemberShell.vue";
 import Pagination from "@/components/app/Pagination.vue";
-import Wordmark from "@/components/app/Wordmark.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -86,13 +86,6 @@ function selectMailbox(mailbox: Mailbox) {
   router.push(`/mailboxes/${mailbox.id}/inbox`);
 }
 
-async function logout() {
-  if (window.confirm("Apakah Anda yakin ingin keluar?")) {
-    await auth.logout();
-    await router.push("/login");
-  }
-}
-
 onMounted(() => load(undefined));
 
 function rowClasses(isActive: boolean) {
@@ -104,47 +97,22 @@ function rowClasses(isActive: boolean) {
 </script>
 
 <template>
-  <div class="flex min-h-screen flex-col bg-background">
-    <header
-      class="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-card px-4 lg:px-8"
-    >
-      <Wordmark size="sm" />
-      <div class="flex items-center gap-3">
-        <span class="hidden text-sm text-foreground sm:inline">
-          {{ auth.user?.username }}
-        </span>
-        <Button
-          v-if="auth.isAdmin"
-          variant="ghost"
-          size="sm"
-          aria-label="Buka halaman admin"
-          @click="router.push('/admin/domains')"
-        >
-          <Icon icon="lucide:shield" />
-          <span>Admin</span>
-        </Button>
-        <Button variant="ghost" size="sm" @click="logout">
-          <Icon icon="lucide:log-out" />
-          <span>Keluar</span>
-        </Button>
-      </div>
-    </header>
-
-    <main class="mx-auto w-full max-w-2xl flex-1 p-4 lg:p-8">
-      <div class="mb-6">
-        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
-          Pilih Mailbox
+  <MemberShell>
+    <main class="mx-auto flex w-full max-w-2xl flex-col gap-6">
+      <div class="flex flex-col gap-1">
+        <h1 class="scroll-m-20 text-3xl font-extrabold tracking-tight text-foreground">
+          Mailboxes
         </h1>
         <p class="text-sm text-muted-foreground">Pilih mailbox yang ingin Anda akses.</p>
       </div>
 
       <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton v-for="n in 4" :key="n" class="h-[72px] w-full" />
+        <Skeleton v-for="n in 4" :key="n" class="h-18 w-full" />
       </div>
 
       <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="destructive">{{ error }}</Alert>
-        <Button variant="ghost" @click="retry">Coba Lagi</Button>
+        <Button variant="outline" @click="retry">Coba Lagi</Button>
       </div>
 
       <EmptyState
@@ -201,5 +169,5 @@ function rowClasses(isActive: boolean) {
         </Pagination>
       </div>
     </main>
-  </div>
+  </MemberShell>
 </template>

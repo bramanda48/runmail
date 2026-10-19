@@ -70,9 +70,9 @@ const routes: RouteRecordRaw[] = [
     ],
   },
   {
-    path: "/account",
-    name: "account",
-    component: () => import("@/views/AccountView.vue"),
+    path: "/profile",
+    name: "profile",
+    component: () => import("@/views/ProfileView.vue"),
     meta: { requiresAuth: true },
   },
   {

@@ -3,7 +3,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { ApiError, completeCloudflareOAuthCallback } from "@/lib/api";
-import { nextTick, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
@@ -11,8 +11,6 @@ const router = useRouter();
 
 const isLoading = ref(true);
 const errorMessage = ref("");
-const errorPanel = ref<HTMLElement | null>(null);
-
 function queryValue(value: unknown): string | null {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
@@ -28,8 +26,6 @@ function decodeQueryValue(value: string): string {
 async function showError(message: string) {
   isLoading.value = false;
   errorMessage.value = message;
-  await nextTick();
-  errorPanel.value?.focus();
 }
 
 async function returnToDomains() {
@@ -87,9 +83,7 @@ onMounted(() => {
 
     <section
       v-else
-      ref="errorPanel"
-      class="flex w-full max-w-md flex-col items-stretch gap-5 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-4"
-      tabindex="-1"
+      class="flex w-full max-w-md flex-col items-stretch gap-5"
       aria-labelledby="oauth-error-title"
       aria-describedby="oauth-error-message"
     >
