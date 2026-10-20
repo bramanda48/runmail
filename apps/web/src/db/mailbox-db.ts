@@ -76,7 +76,7 @@ const instances = new Map<string, MailboxDb>();
  * Registry of known per-mailbox DB names (Safari <16.4 fallback: no
  * `indexedDB.databases()`, so `wipeLocalData` cannot enumerate DBs).
  */
-const KNOWN_DBS_KEY = "runmail-known-mailbox-dbs";
+const KNOWN_DBS_KEY = "runmail_mailbox_dbs";
 
 export function readKnownMailboxDbNames(): string[] {
   if (typeof localStorage === "undefined") return [];

@@ -16,13 +16,13 @@ export type { IdCursorPayload, MessageCursorPayload, PageMeta } from "./contract
 export type { Domain, DomainVerificationStatus, VerifyDomainResponse } from "./types/domain";
 export type { Folder, FolderType } from "./types/folder";
 export type { Mailbox, MailboxWithDomain } from "./types/mailbox";
-export type { MailboxLinkedUser, MailboxUserLink } from "./types/mailboxUser";
+export type { MailboxLinkedUser, MailboxUserLink } from "./types/mailbox-user";
 export type { Message } from "./types/message";
-export type { MessageRecipient, RecipientType } from "./types/messageRecipient";
+export type { MessageRecipient, RecipientType } from "./types/message-recipient";
 // types
 export type { Role } from "./types/role";
 export type { Ruleset, RulesetAction, RulesetCondition, RulesetDetail } from "./types/ruleset";
-export { SYNC_EVENT_TYPES } from "./types/syncEvent";
+export { SYNC_EVENT_TYPES } from "./types/sync-event";
 export type {
   MessageCreatedPayload,
   MessageDeletedPayload,
@@ -31,7 +31,7 @@ export type {
   MessageUpdatedPayload,
   SyncEventPayload,
   SyncEventType,
-} from "./types/syncEvent";
+} from "./types/sync-event";
 export type { User } from "./types/user";
 export { cursorQuerySchema } from "./validation/cursor";
 export type { CursorQuery } from "./validation/cursor";
@@ -40,7 +40,7 @@ export {
   DOMAIN_LABEL_MAX_LENGTH,
   DOMAIN_MAX_LENGTH,
   domainNameSchema,
-} from "./validation/domainName";
+} from "./validation/domain-name";
 export {
   FOLDER_NAME_MAX_LENGTH,
   FOLDER_NAME_MIN_LENGTH,
@@ -49,13 +49,13 @@ export {
   folderNameSchema,
   isReservedFolderName,
   isSystemFolder,
-} from "./validation/folderName";
+} from "./validation/folder-name";
 export {
   LOCAL_PART_MAX_LENGTH,
   LOCAL_PART_MIN_LENGTH,
   LOCAL_PART_PATTERN,
   localPartSchema,
-} from "./validation/localPart";
+} from "./validation/local-part";
 export { loginSchema } from "./validation/login";
 export type { LoginInput } from "./validation/login";
 export { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, passwordSchema } from "./validation/password";
@@ -75,6 +75,6 @@ export {
   MUTATION_TYPES,
   syncMutationItemSchema,
   syncMutationSchema,
-} from "./validation/syncMutation";
-export type { MutationType, SyncMutationInput, SyncMutationItem } from "./validation/syncMutation";
+} from "./validation/sync-mutation";
+export type { MutationType, SyncMutationInput, SyncMutationItem } from "./validation/sync-mutation";
 export { USERNAME_PATTERN, usernameSchema } from "./validation/username";

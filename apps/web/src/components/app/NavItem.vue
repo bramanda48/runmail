@@ -12,20 +12,20 @@ interface Props {
   count?: number;
   to?: RouteLocationRaw;
   active?: boolean;
+  activeClass?: string;
   class?: HTMLAttributes["class"];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   active: false,
+  activeClass: "bg-primary text-primary-foreground",
 });
 
 const baseClasses =
   "flex w-full items-center gap-3 rounded-full px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
 const stateClasses = computed(() =>
-  props.active
-    ? "bg-primary text-primary-foreground"
-    : "text-foreground hover:bg-accent hover:text-accent-foreground",
+  props.active ? props.activeClass : "text-foreground hover:bg-accent hover:text-accent-foreground",
 );
 
 const classes = computed(() => cn(baseClasses, stateClasses.value, props.class));

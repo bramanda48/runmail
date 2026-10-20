@@ -15,12 +15,18 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const iconClass = computed(() => (props.size === "lg" ? "size-7" : "size-5"));
-const textClass = computed(() => (props.size === "lg" ? "text-xl" : "text-base"));
+const textClass = computed(() =>
+  props.size === "lg" ? "text-xl font-bold tracking-tight" : "text-base font-semibold",
+);
 </script>
 
 <template>
-  <div :class="cn('inline-flex items-center gap-2', props.class)">
-    <Icon icon="lucide:mail" :class="cn('text-primary', iconClass)" />
+  <RouterLink
+    to="/mailboxes"
+    :class="cn('inline-flex items-center gap-2', props.class)"
+    aria-label="Runmail"
+  >
+    <Icon icon="lucide:mail-badge" :class="cn('text-primary', iconClass)" />
     <span :class="cn('font-semibold text-foreground', textClass)">Runmail</span>
-  </div>
+  </RouterLink>
 </template>

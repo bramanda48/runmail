@@ -1,5 +1,5 @@
 import { useAuthStore } from "@/stores/auth";
-import { useMailboxAccessStore } from "@/stores/mailboxAccess";
+import { getLastMailboxId, useMailboxAccessStore } from "@/stores/mailbox-access";
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 
 declare module "vue-router" {
@@ -42,27 +42,37 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, mailboxScoped: true },
   },
   {
-    path: "/mailboxes/:mailbox_id/folders",
-    name: "folders",
-    component: () => import("@/views/FolderManagementView.vue"),
+    path: "/mailboxes/:mailbox_id/settings",
+    component: () => import("@/views/MailboxSettingsView.vue"),
     meta: { requiresAuth: true, mailboxScoped: true },
+    redirect: (to) => ({ name: "settings-folders", params: { mailbox_id: to.params.mailbox_id } }),
+    children: [
+      {
+        path: "folders",
+        name: "settings-folders",
+        component: () => import("@/components/settings/FolderSettingsTab.vue"),
+      },
+      {
+        path: "rulesets",
+        name: "settings-rulesets",
+        component: () => import("@/components/settings/RulesetSettingsTab.vue"),
+      },
+      {
+        path: "rulesets/new",
+        name: "settings-ruleset-new",
+        component: () => import("@/components/settings/RulesetEditorTab.vue"),
+      },
+      {
+        path: "rulesets/:ruleset_id",
+        name: "settings-ruleset-edit",
+        component: () => import("@/components/settings/RulesetEditorTab.vue"),
+      },
+    ],
   },
   {
-    path: "/mailboxes/:mailbox_id/rulesets",
-    name: "rulesets",
-    component: () => import("@/views/RulesetListView.vue"),
-    meta: { requiresAuth: true, mailboxScoped: true },
-  },
-  {
-    path: "/mailboxes/:mailbox_id/rulesets/:ruleset_id",
-    name: "ruleset-editor",
-    component: () => import("@/views/RulesetEditorView.vue"),
-    meta: { requiresAuth: true, mailboxScoped: true },
-  },
-  {
-    path: "/account",
-    name: "account",
-    component: () => import("@/views/AccountView.vue"),
+    path: "/profile",
+    name: "profile",
+    component: () => import("@/views/ProfileView.vue"),
     meta: { requiresAuth: true },
   },
   {
@@ -99,15 +109,27 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const auth = useAuthStore();
+  const access = useMailboxAccessStore();
 
-  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+  if (!auth.isAuthenticated) {
     const restored = await auth.restoreSession();
-    if (!restored) {
+    if (to.meta.requiresAuth && !restored) {
       return { path: "/login", query: { redirect: to.fullPath } };
+    }
+    if (to.name === "login" && !restored) {
+      // No session to restore — stay on the login page.
+      return true;
     }
   }
 
   if (to.name === "login" && auth.isAuthenticated) {
+    const mailboxId = getLastMailboxId();
+    if (mailboxId !== null) {
+      const verdict = await access.ensureAccessible(mailboxId);
+      if (verdict === "ok") {
+        return { path: `/mailboxes/${mailboxId}/inbox` };
+      }
+    }
     return { path: "/mailboxes" };
   }
 
@@ -116,7 +138,6 @@ router.beforeEach(async (to) => {
   }
 
   if (to.meta.mailboxScoped && typeof to.params.mailbox_id === "string") {
-    const access = useMailboxAccessStore();
     const verdict = await access.ensureAccessible(to.params.mailbox_id);
     if (verdict === "forbidden" || verdict === "not_found" || verdict === "inactive") {
       return { path: "/mailboxes" };

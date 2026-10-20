@@ -1,19 +1,13 @@
 <script setup lang="ts">
-import AppShell from "@/components/app/app-shell.vue";
-import FolderNavigation from "@/components/app/folder-navigation.vue";
-import MailboxSwitcher from "@/components/app/mailbox-switcher.vue";
-import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
-import SyncIndicator from "@/components/app/sync-indicator.vue";
+import MailboxWorkspace from "@/components/app/MailboxWorkspace.vue";
+import ComposeModal from "@/components/email/ComposeModal.vue";
 import EmailListContainer from "@/components/email/EmailListContainer.vue";
-import EmailMoveDialog from "@/components/email/EmailMoveDialog.vue";
-import { Button } from "@/components/ui/button";
-import { useMailboxWorkspace } from "@/composables/useMailboxWorkspace";
+import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
-import { Icon } from "@/icons";
 import { parseSearchQuery } from "@/lib/search";
 import { computeUnreadCounts } from "@/lib/unread-counts";
 import Dexie from "dexie";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, shallowRef, watch } from "vue";
 
 const { route, router, mailboxStore, mailboxId, resolveMailbox } = useMailboxWorkspace({
   onResolveError: () => {
@@ -41,8 +35,18 @@ const debouncedSearch = ref("");
 
 const refreshTick = ref(0);
 
-const moveOpen = ref(false);
-const movingMessage = ref<LocalMessage | null>(null);
+const composeOpen = shallowRef(false);
+
+function queryParamValue() {
+  const q = route.query.q;
+  return typeof q === "string" ? q : "";
+}
+
+function applyQueryParam() {
+  const value = queryParamValue();
+  searchQuery.value = value;
+  debouncedSearch.value = value;
+}
 
 const activeFolder = computed(() => folders.value.find((f) => f.id === activeFolderId.value));
 
@@ -52,6 +56,9 @@ const showPagination = computed(() => !debouncedSearch.value && totalMessages.va
 
 function onSearch(value: string) {
   debouncedSearch.value = value;
+  const current = queryParamValue();
+  if ((value || "") === current) return;
+  router.replace({ query: value ? { q: value } : {} });
 }
 
 async function loadFolders() {
@@ -121,15 +128,15 @@ async function loadMessages() {
         .filter((m) => matchesSearch(m, filter))
         .limit(50)
         .toArray();
-      messages.value = results.sort(
+      const sorted = results.sort(
         (a, b) => b.email_date - a.email_date || b.received_at - a.received_at,
       );
+      messages.value = sorted;
       totalMessages.value = messages.value.length;
       return;
     }
 
     const folderId = activeFolderId.value;
-    totalMessages.value = await db.messages.where("folder_id").equals(folderId).count();
 
     const offset = (page.value - 1) * perPage;
     const rows = await db.messages
@@ -140,9 +147,11 @@ async function loadMessages() {
       .limit(perPage)
       .toArray();
 
-    messages.value = rows.sort(
+    const sorted = rows.sort(
       (a, b) => b.email_date - a.email_date || b.received_at - a.received_at,
     );
+    messages.value = sorted;
+    totalMessages.value = await db.messages.where("folder_id").equals(folderId).count();
   } catch (err) {
     listError.value = "Gagal memuat daftar email.";
   } finally {
@@ -162,6 +171,7 @@ function goPrev() {
 
 async function initMailbox() {
   page.value = 1;
+  applyQueryParam();
   await resolveMailbox();
   if (mailboxStore.mailboxId === mailboxId.value) {
     await loadFolders();
@@ -202,19 +212,12 @@ function toggleRead(message: LocalMessage) {
   });
 }
 
-function openMove(message: LocalMessage) {
-  movingMessage.value = message;
-  moveOpen.value = true;
-}
-
-async function confirmMove(targetFolderId: string) {
-  if (!movingMessage.value || !targetFolderId) return;
+async function moveSingle(payload: { message: LocalMessage; folderId: string }) {
   await enqueueAndRefresh({
-    message_id: movingMessage.value.id,
+    message_id: payload.message.id,
     mutation_type: "move",
-    mutation_value: targetFolderId,
+    mutation_value: payload.folderId,
   });
-  moveOpen.value = false;
 }
 
 function moveToTrash(message: LocalMessage) {
@@ -224,6 +227,45 @@ function moveToTrash(message: LocalMessage) {
     mutation_type: "move",
     mutation_value: trashFolder.value.id,
   });
+}
+
+async function bulkTrash(ids: string[]) {
+  const trash = trashFolder.value;
+  if (!trash) return;
+  await Promise.all(
+    ids.map((id) =>
+      enqueueAndRefresh({
+        message_id: id,
+        mutation_type: "move",
+        mutation_value: trash.id,
+      }),
+    ),
+  );
+}
+
+async function bulkMarkRead(ids: string[]) {
+  const unreadIds = ids.filter((id) => {
+    const message = messages.value.find((m) => m.id === id);
+    return message ? !message.is_read : false;
+  });
+  if (unreadIds.length === 0) return;
+  await Promise.all(
+    unreadIds.map((id) =>
+      enqueueAndRefresh({ message_id: id, mutation_type: "read", mutation_value: true }),
+    ),
+  );
+}
+
+async function bulkMove(payload: { ids: string[]; folderId: string }) {
+  await Promise.all(
+    payload.ids.map((id) =>
+      enqueueAndRefresh({
+        message_id: id,
+        mutation_type: "move",
+        mutation_value: payload.folderId,
+      }),
+    ),
+  );
 }
 
 onMounted(() => initMailbox());
@@ -257,6 +299,13 @@ watch(debouncedSearch, () => {
 });
 
 watch(
+  () => route.query.q,
+  () => {
+    if (queryParamValue() !== debouncedSearch.value) applyQueryParam();
+  },
+);
+
+watch(
   () => mailboxStore.syncStatus,
   async (status) => {
     if (status === "synced") {
@@ -268,84 +317,45 @@ watch(
 </script>
 
 <template>
-  <AppShell>
-    <template #navigation>
-      <div class="flex h-full flex-col">
-        <FolderNavigation
-          :mailbox-id="mailboxId"
-          :folders="folders"
-          :unread-counts="unreadCounts"
-        />
-      </div>
-    </template>
-
-    <template #topbar>
-      <div class="flex items-center gap-3">
-        <MailboxSwitcher />
-        <SyncIndicator
-          :status="mailboxStore.syncStatus"
-          :pending-count="mailboxStore.pendingCount"
-        />
-        <div class="hidden lg:block">
-          <MailboxSearchBar
-            v-model="searchQuery"
-            placeholder="Cari from, to, atau subject..."
-            class="w-64"
-            @search="onSearch"
-          />
-        </div>
-      </div>
-    </template>
-
-    <main class="flex flex-1 flex-col p-4 lg:p-8">
-      <div class="mb-4 lg:hidden">
-        <MailboxSearchBar
-          v-model="searchQuery"
-          placeholder="Cari from, to, atau subject..."
-          @search="onSearch"
-        />
-      </div>
-
-      <div class="mb-4 flex items-center justify-between">
-        <h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl">
-          {{ activeFolder?.name || "Inbox" }}
-        </h1>
-        <Button variant="ghost" size="sm" @click="mailboxStore.runSync">
-          <Icon
-            icon="lucide:refresh-cw"
-            :class="mailboxStore.syncStatus === 'syncing' ? 'animate-spin' : ''"
-          />
-          <span class="hidden sm:inline">Sinkronkan</span>
-        </Button>
-      </div>
-
-      <EmailListContainer
-        :messages="messages"
-        :loading="isLoading"
-        :error="listError"
-        :has-more="showPagination"
-        :total="totalMessages"
-        :page="page"
-        :per-page="perPage"
-        :active-folder="activeFolder"
-        :search-query="debouncedSearch"
-        :pending-ids="pendingIds"
-        @click-message="openMessage"
-        @toggle-star="toggleStar"
-        @toggle-read="toggleRead"
-        @move="openMove"
-        @trash="moveToTrash"
-        @load-more="loadMessages"
-        @prev-page="goPrev"
-        @next-page="goNext"
-      />
-    </main>
-
-    <EmailMoveDialog
-      v-model:open="moveOpen"
+  <MailboxWorkspace
+    v-model:search-query="searchQuery"
+    :mailbox-id="mailboxId"
+    :folders="folders"
+    :unread-counts="unreadCounts"
+    @search="onSearch"
+    @compose="composeOpen = true"
+  >
+    <h1 class="sr-only">{{ activeFolder?.name || "Inbox" }}</h1>
+    <EmailListContainer
+      :messages="messages"
+      :loading="isLoading"
+      :error="listError"
+      :has-more="showPagination"
+      :total="totalMessages"
+      :page="page"
+      :per-page="perPage"
+      :active-folder="activeFolder"
+      :search-query="debouncedSearch"
+      :pending-ids="pendingIds"
+      :syncing="mailboxStore.syncStatus === 'syncing'"
       :folders="folders"
-      :current-folder-id="activeFolderId || undefined"
-      @move-to-folder="confirmMove"
+      @click-message="openMessage"
+      @toggle-star="toggleStar"
+      @toggle-read="toggleRead"
+      @move-to-single="moveSingle"
+      @trash="moveToTrash"
+      @bulk-trash="bulkTrash"
+      @bulk-mark-read="bulkMarkRead"
+      @bulk-move="bulkMove"
+      @load-more="loadMessages"
+      @refresh="mailboxStore.runSync"
+      @prev-page="goPrev"
+      @next-page="goNext"
     />
-  </AppShell>
+    <template #overlays>
+      <div class="absolute bottom-0 right-20 z-50">
+        <ComposeModal v-model:open="composeOpen" />
+      </div>
+    </template>
+  </MailboxWorkspace>
 </template>

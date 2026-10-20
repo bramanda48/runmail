@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AdminShell from "@/components/app/admin-shell.vue";
-import EmptyState from "@/components/app/empty-state.vue";
-import Pagination from "@/components/app/pagination.vue";
+import AdminShell from "@/components/app/AdminShell.vue";
+import EmptyState from "@/components/app/EmptyState.vue";
+import Pagination from "@/components/app/Pagination.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCloudflareOAuth } from "@/composables/useCloudflareOAuth";
+import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
 import { Icon } from "@/icons";
 import { ApiError, addDomain, listAvailableDomains, listDomains, verifyDomain } from "@/lib/api";
 import type { ApiMeta, Domain, DomainVerificationStatus } from "@runmail/shared";
@@ -209,12 +209,8 @@ async function submitAdd() {
   <AdminShell>
     <main class="p-4 lg:p-8" :inert="redirecting">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1
-            class="scroll-m-20 text-4xl font-extrabold tracking-tight text-foreground lg:text-5xl"
-          >
-            Manajemen Domain
-          </h1>
+        <div class="flex flex-col gap-1">
+          <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">Domain</h1>
           <p class="text-sm text-muted-foreground">
             Tambahkan domain Cloudflare dan pantau status verifikasinya.
           </p>
