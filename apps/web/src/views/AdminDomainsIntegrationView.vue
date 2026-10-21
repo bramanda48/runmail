@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { translateApiError } from "@/i18n/api-errors";
 import { Icon } from "@/icons";
 import { ApiError, completeCloudflareOAuthCallback } from "@/lib/api";
 import { onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 
+const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 
@@ -43,7 +46,7 @@ async function handleCallback() {
   const code = queryValue(route.query.code);
   const state = queryValue(route.query.state);
   if (!code || !state) {
-    await showError("Invalid callback URL");
+    await showError(t("admin.integration.invalidCallback"));
     return;
   }
 
@@ -52,10 +55,10 @@ async function handleCallback() {
     await router.replace("/admin/domains");
   } catch (error) {
     if (error instanceof ApiError) {
-      await showError(error.message);
+      await showError(translateApiError(error));
       return;
     }
-    await showError("Tidak dapat menyelesaikan koneksi Cloudflare.");
+    await showError(t("admin.integration.callbackError"));
   }
 }
 
@@ -78,7 +81,7 @@ onMounted(() => {
         class="size-7 animate-spin text-primary motion-reduce:animate-none"
         aria-hidden="true"
       />
-      <p class="text-base font-medium text-foreground">Menghubungkan Cloudflare...</p>
+      <p class="text-base font-medium text-foreground">{{ t("admin.integration.connecting") }}</p>
     </section>
 
     <section
@@ -89,12 +92,12 @@ onMounted(() => {
     >
       <Alert variant="destructive" class="items-start">
         <div class="min-w-0">
-          <h1 id="oauth-error-title" class="font-semibold">Gagal menghubungkan Cloudflare</h1>
+          <h1 id="oauth-error-title" class="font-semibold">{{ t("admin.integration.errorTitle") }}</h1>
           <p id="oauth-error-message" class="mt-1 wrap-break-words">{{ errorMessage }}</p>
         </div>
       </Alert>
       <Button class="min-h-11 w-full" @click="returnToDomains">
-        Kembali ke Domain Management
+        {{ t("admin.integration.back") }}
       </Button>
     </section>
   </main>

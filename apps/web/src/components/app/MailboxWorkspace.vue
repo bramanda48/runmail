@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AccountMenu from "@/components/app/AccountMenu.vue";
 import FolderNavigation from "@/components/app/FolderNavigation.vue";
+import LocaleSwitcher from "@/components/app/LocaleSwitcher.vue";
 import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
 import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
 import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import type { LocalFolder } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { shallowRef } from "vue";
+import { useI18n } from "vue-i18n";
 import { RouterLink } from "vue-router";
 
 defineProps<{
@@ -21,6 +23,8 @@ defineProps<{
 }>();
 
 const searchQuery = defineModel<string>("searchQuery", { default: "" });
+
+const { t } = useI18n();
 
 const emits = defineEmits<{
   search: [value: string];
@@ -57,7 +61,7 @@ function onSearch(value: string) {
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Buka atau tutup menu"
+          :aria-label="t('shell.topbar.toggleMenu')"
           @click="toggleSidebar"
         >
           <Icon icon="lucide:menu" />
@@ -68,7 +72,7 @@ function onSearch(value: string) {
       <div class="max-w-2xl flex-1 px-4">
         <MailboxSearchBar
           v-model="searchQuery"
-          placeholder="Cari di email"
+          :placeholder="t('shell.mailboxWorkspace.searchPlaceholder')"
           :live-search="liveSearch"
           @search="onSearch"
         />
@@ -80,10 +84,11 @@ function onSearch(value: string) {
           :to="`/mailboxes/${mailboxId}/settings`"
           variant="ghost"
           size="icon"
-          aria-label="Pengaturan"
+          :aria-label="t('shell.mailboxWorkspace.settings')"
         >
           <Icon icon="lucide:settings" />
         </Button>
+        <LocaleSwitcher />
         <AccountMenu />
       </div>
     </header>

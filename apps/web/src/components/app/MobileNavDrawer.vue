@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Icon } from "@/icons";
 import { watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";
 
 const props = defineProps<{
@@ -21,6 +22,7 @@ const emits = defineEmits<{
 }>();
 
 const route = useRoute();
+const { t } = useI18n();
 
 watch(
   () => route.fullPath,
@@ -40,7 +42,7 @@ function onOpenChange(value: boolean) {
       <DialogOverlay class="fixed inset-0 z-40 bg-black/50 lg:hidden" />
       <DialogContent class="fixed inset-y-0 left-0 z-50 w-64 bg-card p-0 outline-none lg:hidden">
         <Button
-          aria-label="Tutup menu"
+          :aria-label="t('shell.drawer.closeMenu')"
           variant="ghost"
           size="icon"
           class="absolute right-2 top-2"
@@ -48,8 +50,10 @@ function onOpenChange(value: boolean) {
         >
           <Icon icon="lucide:x" />
         </Button>
-        <DialogTitle class="sr-only">Navigasi</DialogTitle>
-        <DialogDescription class="sr-only"> Menu navigasi aplikasi </DialogDescription>
+        <DialogTitle class="sr-only">{{ t("shell.drawer.title") }}</DialogTitle>
+        <DialogDescription class="sr-only">
+          {{ t("shell.drawer.description") }}
+        </DialogDescription>
         <slot />
       </DialogContent>
     </DialogPortal>

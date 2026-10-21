@@ -1,6 +1,6 @@
 import { folders, messages, rulesetActions, rulesets } from "@runmail/db";
 import type { Folder } from "@runmail/shared";
-import { isReservedFolderName, isSystemFolder } from "@runmail/shared";
+import { isReservedFolderName, isSystemFolderKey } from "@runmail/shared";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/allocate";
 import { getDb } from "../../lib/db";
@@ -98,7 +98,7 @@ export async function deleteFolder(
     .from(folders)
     .where(and(eq(folders.mailbox_id, mailboxId), eq(folders.folder_type, "system")));
   const inbox = systemFolders.find(
-    (f) => f.name.toLowerCase() === "inbox" && isSystemFolder(f.name),
+    (f) => f.name.toLowerCase() === "system.inbox" && isSystemFolderKey(f.name),
   );
   if (!inbox) return { error: "NOT_FOUND" };
 

@@ -1,0 +1,178 @@
+{
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "role": {
+    "admin": "Admin",
+    "member": "Member"
+  },
+  "domainStatus": {
+    "active": "Active",
+    "pendingVerification": "Pending verification"
+  },
+  "connectionError": "Could not reach the server. Please try again.",
+  "users": {
+    "title": "Users",
+    "description": "Create and manage Runmail users.",
+    "create": "Create user",
+    "table": {
+      "username": "Username",
+      "role": "Role",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "empty": {
+      "title": "No users yet",
+      "description": "No users have been registered yet."
+    },
+    "editAria": "Edit {username}",
+    "activeSwitchAria": "User active status",
+    "loadError": "Could not load users. Please try again.",
+    "createError": "Could not create the user. Please try again.",
+    "updateError": "Could not update the user. Please try again.",
+    "createDialog": {
+      "title": "Create user",
+      "description": "Fill in the details for the new user.",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "name.surname",
+      "passwordLabel": "Initial password",
+      "passwordPlaceholder": "Enter a password",
+      "roleLabel": "Role",
+      "rolePlaceholder": "Select a role"
+    },
+    "editDialog": {
+      "title": "Edit user",
+      "description": "Change the user's role, status, or password.",
+      "roleLabel": "Role",
+      "rolePlaceholder": "Select a role",
+      "activeLabel": "Active status",
+      "activeHint": "Deactivate to end the user's sessions.",
+      "passwordLabel": "New password (optional)",
+      "passwordPlaceholder": "Leave empty to keep it unchanged",
+      "submit": "Save changes"
+    },
+    "deactivateDialog": {
+      "title": "Deactivate user",
+      "description": "Deactivate this user? Their sessions will be ended.",
+      "submit": "Deactivate"
+    },
+    "validation": {
+      "usernameRequired": "Username is required",
+      "passwordRequired": "Password is required"
+    }
+  },
+  "domains": {
+    "title": "Domains",
+    "description": "Add Cloudflare domains and track their verification status.",
+    "add": "Add domain",
+    "table": {
+      "domain": "Domain",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "empty": {
+      "title": "No domains yet",
+      "description": "Add an available Cloudflare domain."
+    },
+    "verifyAria": "Verify {domain} again",
+    "closeNoticeAria": "Dismiss notification",
+    "loadError": "Could not load domains. Please try again.",
+    "verifyError": "Could not verify the domain. Please try again.",
+    "availableError": "Could not load available domains.",
+    "addError": "Could not add the domain. Please try again.",
+    "cloudflare": {
+      "checking": "Checking the Cloudflare connection…",
+      "checkAgain": "Check again",
+      "connectTitle": "Connect your Cloudflare account",
+      "reconnectTitle": "Reconnect Cloudflare",
+      "connectDescription": "Connect Cloudflare to add and verify domains.",
+      "redirectNotice": "You will be redirected to Cloudflare to grant access.",
+      "connect": "Connect Cloudflare",
+      "connecting": "Connecting…",
+      "redirecting": "Opening Cloudflare…",
+      "redirectHint": "Finish granting access in Cloudflare to return to Domain Management."
+    },
+    "addDialog": {
+      "title": "Add domain",
+      "description": "Choose an available Cloudflare domain.",
+      "loading": "Loading available domains…",
+      "none": "No Cloudflare domains are available.",
+      "domainLabel": "Domain",
+      "domainPlaceholder": "Select a domain",
+      "submit": "Add"
+    },
+    "validation": {
+      "domainRequired": "Select a domain first"
+    }
+  },
+  "mailboxes": {
+    "title": "Mailboxes",
+    "description": "Create and manage mailboxes and user access.",
+    "create": "Create mailbox",
+    "table": {
+      "address": "Address",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "empty": {
+      "title": "No mailboxes yet",
+      "description": "No mailboxes have been created yet."
+    },
+    "editAria": "Edit {address}",
+    "manageAria": "Manage users for {address}",
+    "activeSwitchAria": "Mailbox active status",
+    "loadError": "Could not load mailboxes. Please try again.",
+    "domainLoadError": "Could not load domains.",
+    "createError": "Could not create the mailbox. Please try again.",
+    "updateError": "Could not update the mailbox. Please try again.",
+    "createDialog": {
+      "title": "Create mailbox",
+      "description": "Choose an active domain and enter the local part of the address.",
+      "noActiveDomains": "Activate a domain before creating a mailbox.",
+      "domainLabel": "Domain",
+      "domainPlaceholder": "Select a domain",
+      "addressLabel": "Email address",
+      "localPartPlaceholder": "name",
+      "domainFallback": "domain",
+      "submit": "Create"
+    },
+    "editDialog": {
+      "title": "Edit mailbox",
+      "description": "Change the mailbox active status.",
+      "addressLabel": "Address",
+      "activeLabel": "Active status",
+      "activeHint": "An inactive mailbox does not receive email."
+    },
+    "deactivateDialog": {
+      "title": "Deactivate mailbox",
+      "description": "An inactive mailbox does not receive email. Continue?",
+      "submit": "Deactivate"
+    },
+    "manageDialog": {
+      "title": "Manage mailbox users",
+      "description": "Add or remove user access to {address}.",
+      "loading": "Loading users…",
+      "userLabel": "Select user",
+      "userPlaceholder": "Select a user",
+      "add": "Add",
+      "linkedUsers": "Linked users ({count})",
+      "empty": "No users are linked to this mailbox yet.",
+      "loadUsersError": "Could not load the user list.",
+      "loadLinkedError": "Could not load linked users.",
+      "linkError": "Could not add the user.",
+      "unlinkError": "Could not remove the user link."
+    },
+    "validation": {
+      "domainRequired": "Select an active domain first",
+      "localPartRequired": "The local part of the address is required"
+    }
+  },
+  "integration": {
+    "connecting": "Connecting to Cloudflare…",
+    "errorTitle": "Could not connect to Cloudflare",
+    "invalidCallback": "Invalid callback URL",
+    "callbackError": "Could not complete the Cloudflare connection.",
+    "back": "Back to Domain Management"
+  }
+}

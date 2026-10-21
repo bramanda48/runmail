@@ -8,9 +8,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Icon } from "@/icons";
+import { folderDisplayName } from "@/i18n/folders";
 import type { ActionType } from "@runmail/shared";
 import { ACTION_TYPES } from "@runmail/shared";
 import { computed, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
 export interface ActionRow {
   id: string;
@@ -21,6 +23,7 @@ export interface ActionRow {
 export interface FolderOption {
   id: string;
   name: string;
+  folder_type: "system" | "custom";
 }
 
 const props = defineProps<{
@@ -41,19 +44,24 @@ const emits = defineEmits<{
   "move-down": [];
 }>();
 
+const { t } = useI18n();
+
+const ACTION_TYPE_LABEL_KEYS: Record<ActionType, string> = {
+  move_to_folder: "rulesets.action.moveToFolder",
+  mark_as_star: "rulesets.action.markAsStar",
+  mark_as_read: "rulesets.action.markAsRead",
+};
+
 const actionTypeOptions = computed(() =>
-  ACTION_TYPES.map((v) => ({
-    value: v,
-    label:
-      v === "move_to_folder"
-        ? "Pindah ke folder"
-        : v === "mark_as_star"
-          ? "Tandai bintang"
-          : "Tandai sudah dibaca",
-  })),
+  ACTION_TYPES.map((value) => ({ value, label: t(ACTION_TYPE_LABEL_KEYS[value]) })),
 );
 
-const folderOptions = computed(() => props.folders.map((f) => ({ value: f.id, label: f.name })));
+const folderOptions = computed(() =>
+  props.folders.map((folder) => ({
+    value: folder.id,
+    label: folderDisplayName(folder),
+  })),
+);
 
 const localAction = computed({
   get: () => props.action,
@@ -73,7 +81,7 @@ watch(
     <div class="flex flex-col gap-3 md:flex-row md:items-start">
       <div class="flex flex-1 flex-col gap-3 md:flex-row">
         <Select v-model="localAction.action_type" :disabled="isSaving">
-          <SelectTrigger class="md:w-48" aria-label="Tipe aksi">
+          <SelectTrigger class="md:w-48" :aria-label="t('rulesets.actionRow.typeAria')">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -85,8 +93,11 @@ watch(
         <div class="flex-1">
           <template v-if="localAction.action_type === 'move_to_folder'">
             <Select v-model="localAction.action_value" :disabled="isSaving">
-              <SelectTrigger aria-label="Folder tujuan aksi" :aria-invalid="Boolean(error)">
-                <SelectValue placeholder="Pilih folder tujuan" />
+              <SelectTrigger
+                :aria-label="t('rulesets.actionRow.folderAria')"
+                :aria-invalid="Boolean(error)"
+              >
+                <SelectValue :placeholder="t('rulesets.actionRow.folderPlaceholder')" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem v-for="opt in folderOptions" :key="opt.value" :value="opt.value">
@@ -102,7 +113,7 @@ watch(
       </div>
       <div class="flex items-center gap-1">
         <Button
-          aria-label="Pindah aksi ke atas"
+          :aria-label="t('rulesets.actionRow.moveUpAria')"
           variant="ghost"
           size="icon"
           :disabled="isSaving || !canMoveUp"
@@ -111,7 +122,7 @@ watch(
           <Icon icon="lucide:chevron-up" />
         </Button>
         <Button
-          aria-label="Pindah aksi ke bawah"
+          :aria-label="t('rulesets.actionRow.moveDownAria')"
           variant="ghost"
           size="icon"
           :disabled="isSaving || !canMoveDown"
@@ -120,7 +131,7 @@ watch(
           <Icon icon="lucide:chevron-down" />
         </Button>
         <Button
-          aria-label="Hapus aksi"
+          :aria-label="t('rulesets.actionRow.removeAria')"
           variant="ghost"
           size="icon"
           :disabled="isSaving || !canRemove"

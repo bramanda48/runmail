@@ -32,7 +32,7 @@ export async function runRetentionCleanup(
     .where(
       and(
         eq(folders.folder_type, "system"),
-        sql`lower(${folders.name}) IN ('trash','spam')`,
+        sql`lower(${folders.name}) IN ('system.trash','system.spam')`,
         isNotNull(messages.folder_entered_at),
         lt(messages.folder_entered_at, cutoff),
       ),

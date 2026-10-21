@@ -54,6 +54,7 @@ const USED_ICONS = [
   "image-off",
   "inbox",
   "info",
+  "languages",
   "layout-grid",
   "lightbulb",
   "link",

@@ -45,11 +45,12 @@ export {
   FOLDER_NAME_MAX_LENGTH,
   FOLDER_NAME_MIN_LENGTH,
   RESERVED_FOLDER_NAMES,
-  SYSTEM_FOLDER_NAMES,
+  SYSTEM_FOLDER_KEYS,
   folderNameSchema,
   isReservedFolderName,
-  isSystemFolder,
+  isSystemFolderKey,
 } from "./validation/folder-name";
+export type { SystemFolderKey } from "./validation/folder-name";
 export {
   LOCAL_PART_MAX_LENGTH,
   LOCAL_PART_MIN_LENGTH,

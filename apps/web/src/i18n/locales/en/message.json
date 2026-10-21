@@ -1,0 +1,61 @@
+{
+  "screenTitle": "Email detail",
+  "noSubject": "(No subject)",
+  "notFound": "This email could not be found on this device.",
+  "empty": "This email has no content.",
+  "parseError": "This email could not be displayed. You can try reloading.",
+  "reply": "Reply",
+  "forward": "Forward",
+  "quote": {
+    "htmlOnly": "(The original email is in HTML format.)"
+  },
+  "subjectPrefix": {
+    "reply": "Re:",
+    "forward": "Fwd:"
+  },
+  "position": "{position} of {total}",
+  "actions": {
+    "markRead": "Mark as read",
+    "markUnread": "Mark as unread",
+    "older": "Older email",
+    "newer": "Newer email"
+  },
+  "attachments": {
+    "title": "Attachments",
+    "untitled": "attachment"
+  },
+  "remoteImages": {
+    "blocked": "External images are blocked for your security.",
+    "show": "Show images"
+  },
+  "headerInfo": {
+    "toMe": "to me",
+    "emptyValue": "—",
+    "from": "from:",
+    "to": "to:",
+    "date": "date:",
+    "subject": "subject:",
+    "mailedBy": "mailed-by:",
+    "signedBy": "signed-by:"
+  },
+  "move": {
+    "label": "Move to folder"
+  },
+  "compose": {
+    "dialogLabel": "New message",
+    "title": "New message",
+    "minimize": "Minimize",
+    "restore": "Restore",
+    "maximize": "Maximize",
+    "to": "To",
+    "subject": "Subject",
+    "body": "Message body",
+    "send": "Send",
+    "formatting": "Text formatting",
+    "attach": "Attach file",
+    "insertLink": "Insert link",
+    "insertEmoji": "Insert emoji",
+    "discardDraft": "Discard draft",
+    "comingSoon": "Coming soon"
+  }
+}

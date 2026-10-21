@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { useMailboxStore, type MailboxSyncStatus } from "@/stores/mailbox";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 
 defineProps<{
   showCompose?: boolean;
@@ -13,21 +14,42 @@ defineEmits<{
   compose: [];
 }>();
 
+const { t } = useI18n();
 const mailboxStore = useMailboxStore();
 
 const syncState = computed(() => {
   const status: MailboxSyncStatus = mailboxStore.syncStatus;
   switch (status) {
     case "syncing":
-      return { icon: "lucide:loader-circle", spin: true, text: "Sinkronisasi..." };
+      return {
+        icon: "lucide:loader-circle",
+        spin: true,
+        text: t("shell.mailboxSidebar.status.syncing"),
+      };
     case "offline":
-      return { icon: "lucide:cloud-off", spin: false, text: "Offline" };
+      return {
+        icon: "lucide:cloud-off",
+        spin: false,
+        text: t("shell.mailboxSidebar.status.offline"),
+      };
     case "error":
-      return { icon: "lucide:circle-alert", spin: false, text: "Gagal sinkron" };
+      return {
+        icon: "lucide:circle-alert",
+        spin: false,
+        text: t("shell.mailboxSidebar.status.error"),
+      };
     case "full_resync":
-      return { icon: "lucide:refresh-cw", spin: true, text: "Sinkronisasi ulang" };
+      return {
+        icon: "lucide:refresh-cw",
+        spin: true,
+        text: t("shell.mailboxSidebar.status.fullResync"),
+      };
     default:
-      return { icon: "lucide:refresh-cw", spin: false, text: "Tersinkron" };
+      return {
+        icon: "lucide:refresh-cw",
+        spin: false,
+        text: t("shell.mailboxSidebar.status.synced"),
+      };
   }
 });
 
@@ -48,7 +70,7 @@ function sync() {
         @click="$emit('compose')"
       >
         <Icon icon="lucide:pencil" />
-        <span>Tulis</span>
+        <span>{{ t("shell.mailboxSidebar.compose") }}</span>
       </Button>
     </div>
 
@@ -61,7 +83,7 @@ function sync() {
         variant="ghost"
         class="h-auto w-full justify-start gap-2 px-3 py-2"
         :disabled="isSyncing"
-        title="Sinkronkan sekarang"
+        :title="t('shell.mailboxSidebar.syncNow')"
         @click="sync"
       >
         <Icon
@@ -72,7 +94,7 @@ function sync() {
           syncState.text
         }}</span>
         <Badge v-if="pendingCount" variant="outline" class="text-xs">
-          {{ pendingCount }} tertunda
+          {{ t("shell.mailboxSidebar.pending", { count: pendingCount }) }}
         </Badge>
       </Button>
     </div>

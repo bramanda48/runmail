@@ -1,3 +1,4 @@
+import VueI18nPlugin from "@intlify/unplugin-vue-i18n/vite";
 import tailwindcss from "@tailwindcss/vite";
 import vue from "@vitejs/plugin-vue";
 import path from "node:path";
@@ -9,7 +10,16 @@ export default defineConfig(({ mode }) => {
   const worker = env.WORKER_URL ? env.WORKER_URL : "runmail.localhost";
 
   return {
-    plugins: [vue(), tailwindcss()],
+    plugins: [
+      vue(),
+      VueI18nPlugin({
+        // Only precompile JSON locale files; the TS aggregators under
+        // locales/{en,id}/index.ts re-export the precompiled messages and
+        // must NOT be parsed by vue-i18n (no `export default` object).
+        include: path.resolve(import.meta.dirname, "./src/i18n/locales/**/*.json"),
+      }),
+      tailwindcss(),
+    ],
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "./src"),

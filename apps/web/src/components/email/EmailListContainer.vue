@@ -15,7 +15,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { LocalFolder, LocalMessage } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
+import { useI18n } from "vue-i18n";
 import { computed, ref, watch } from "vue";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   messages: LocalMessage[];
@@ -104,21 +107,23 @@ function selectBy(kind: "all" | "none" | "read" | "unread") {
   }
 }
 
-const isTrashFolder = computed(() => props.activeFolder?.name.toLowerCase() === "trash");
+const activeSystemKey = computed(() =>
+  props.activeFolder?.folder_type === "system" ? props.activeFolder.name : "",
+);
+
+const isTrashFolder = computed(() => activeSystemKey.value === "system.trash");
 
 function emptyIcon() {
-  const name = props.activeFolder?.name.toLowerCase() || "inbox";
-  if (name === "trash") return "lucide:trash";
-  if (name === "spam") return "lucide:shield-alert";
+  if (activeSystemKey.value === "system.trash") return "lucide:trash";
+  if (activeSystemKey.value === "system.spam") return "lucide:shield-alert";
   return "lucide:inbox";
 }
 
-function emptyTitle() {
-  const name = props.activeFolder?.name.toLowerCase() || "inbox";
-  if (name === "trash") return "Trash kosong";
-  if (name === "spam") return "Spam kosong";
-  return "Belum ada email";
-}
+const emptyTitle = computed(() => {
+  if (activeSystemKey.value === "system.trash") return t("inbox.empty.trashTitle");
+  if (activeSystemKey.value === "system.spam") return t("inbox.empty.spamTitle");
+  return t("inbox.empty.defaultTitle");
+});
 
 const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * props.perPage);
 </script>
@@ -129,13 +134,13 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
       <div
         class="flex items-center divide-x divide-border rounded-md border border-input"
         role="group"
-        aria-label="Pilihan pesan"
+        :aria-label="t('inbox.list.selectGroupLabel')"
       >
         <Button
           variant="ghost"
           size="icon"
           class="rounded-r-none"
-          aria-label="Pilih semua"
+          :aria-label="t('inbox.list.selectAll')"
           :aria-checked="allSelected ? 'true' : someSelected ? 'mixed' : 'false'"
           @click="toggleSelectAll"
         >
@@ -154,20 +159,27 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button variant="ghost" size="icon" class="rounded-l-none" aria-label="Opsi pilihan">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="rounded-l-none"
+              :aria-label="t('inbox.list.selectOptions')"
+            >
               <Icon icon="lucide:chevron-down" class="size-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem :disabled="props.messages.length === 0" @select="selectBy('all')">
-              All
+              {{ t("inbox.list.selectAllItems") }}
             </DropdownMenuItem>
-            <DropdownMenuItem @select="selectBy('none')">None</DropdownMenuItem>
+            <DropdownMenuItem @select="selectBy('none')">
+              {{ t("inbox.list.selectNone") }}
+            </DropdownMenuItem>
             <DropdownMenuItem :disabled="props.messages.length === 0" @select="selectBy('read')">
-              Read
+              {{ t("inbox.list.selectRead") }}
             </DropdownMenuItem>
             <DropdownMenuItem :disabled="props.messages.length === 0" @select="selectBy('unread')">
-              Unread
+              {{ t("inbox.list.selectUnread") }}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -176,8 +188,8 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Sinkronkan"
-          title="Sinkronkan"
+          :aria-label="t('inbox.list.sync')"
+          :title="t('inbox.list.sync')"
           :disabled="syncing"
           @click="emits('refresh')"
         >
@@ -188,7 +200,7 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Tandai sudah dibaca"
+          :aria-label="t('inbox.list.markRead')"
           @click="emitBulkIds('bulk-mark-read')"
         >
           <Icon icon="lucide:mail-open" class="size-4" />
@@ -197,7 +209,7 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
           v-if="!isTrashFolder"
           variant="ghost"
           size="icon"
-          aria-label="Hapus yang dipilih"
+          :aria-label="t('inbox.list.deleteSelected')"
           @click="emitBulkIds('bulk-trash')"
         >
           <Icon icon="lucide:trash" class="size-4 text-destructive" />
@@ -205,7 +217,7 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
         <MoveFolderMenu
           :folders="props.folders"
           :current-folder-id="props.activeFolder?.id"
-          label="Pindahkan yang dipilih"
+          :label="t('inbox.list.moveSelected')"
           @click.stop
           @move-to-folder="emitBulkMove"
         />
@@ -228,26 +240,26 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
 
     <div v-else-if="error" class="flex flex-col gap-4">
       <Alert variant="destructive">{{ error }}</Alert>
-      <Button variant="ghost" @click="emits('load-more')">Coba Lagi</Button>
+      <Button variant="ghost" @click="emits('load-more')">{{ t("common.actions.retry") }}</Button>
     </div>
 
     <EmptyState
       v-else-if="messages.length === 0 && searchQuery"
       icon="lucide:search"
-      heading="Tidak ada hasil"
-      :description="`Pencarian untuk '${searchQuery}' tidak menemukan email.`"
+      :heading="t('inbox.search.noResultsTitle')"
+      :description="t('inbox.search.noResultsDescription', { query: searchQuery })"
     />
 
     <EmptyState
       v-else-if="messages.length === 0"
       :icon="emptyIcon()"
-      :heading="emptyTitle()"
-      description="Email yang masuk akan tampil di sini."
+      :heading="emptyTitle"
+      :description="t('inbox.empty.description')"
     />
 
     <template v-else>
       <Alert v-if="isTrashFolder" class="rounded-none">
-        Pesan di folder Trash akan dihapus otomatis dalam 30 hari.
+        {{ t("inbox.list.trashNotice") }}
       </Alert>
 
       <EmailRow
@@ -267,7 +279,7 @@ const paginationTotal = computed(() => Math.ceil(props.total / props.perPage) * 
       />
 
       <p v-if="searchQuery && messages.length >= 50" class="text-sm text-muted-foreground">
-        Menampilkan 50 hasil pertama.
+        {{ t("inbox.search.limitedResults", { count: 50 }) }}
       </p>
     </template>
   </div>

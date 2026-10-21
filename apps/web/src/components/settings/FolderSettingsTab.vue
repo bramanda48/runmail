@@ -13,17 +13,21 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
+import { folderDisplayName } from "@/i18n/folders";
 import { Icon } from "@/icons";
 import { ApiError, createFolder, deleteFolder, listFolders, renameFolder } from "@/lib/api";
 import { useMailboxStore } from "@/stores/mailbox";
 import type { Folder } from "@runmail/shared";
-import { folderNameSchema, isReservedFolderName } from "@runmail/shared";
+import { SYSTEM_FOLDER_KEYS, folderNameSchema, isReservedFolderName } from "@runmail/shared";
 import { computed, onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
   mailboxId: string;
 }>();
 
+const { t, te } = useI18n();
 const mailboxStore = useMailboxStore();
 
 const folders = ref<Folder[]>([]);
@@ -47,10 +51,18 @@ const editNameError = ref("");
 const editInlineError = ref("");
 const editSubmitting = ref(false);
 
+const systemFolderOrder = new Map<string, number>(
+  SYSTEM_FOLDER_KEYS.map((key, index): [string, number] => [key, index]),
+);
+
 const systemFolders = computed(() =>
   folders.value
     .filter((f) => f.folder_type === "system")
-    .sort((a, b) => a.name.localeCompare(b.name)),
+    .sort(
+      (a, b) =>
+        (systemFolderOrder.get(a.name) ?? SYSTEM_FOLDER_KEYS.length) -
+        (systemFolderOrder.get(b.name) ?? SYSTEM_FOLDER_KEYS.length),
+    ),
 );
 const customFolders = computed(() =>
   folders.value
@@ -58,6 +70,10 @@ const customFolders = computed(() =>
     .sort((a, b) => a.name.localeCompare(b.name)),
 );
 const hasCustomFolders = computed(() => customFolders.value.length > 0);
+const deletePrefix = computed(() => `${t("folders.delete.messagePrefix")} `);
+const deleteSuffix = computed(() =>
+  t("folders.delete.messageSuffix", { inbox: t("system.inbox") }),
+);
 
 async function load() {
   if (!props.mailboxId) return;
@@ -67,11 +83,7 @@ async function load() {
     const { folders: list } = await listFolders(props.mailboxId);
     folders.value = list;
   } catch (err) {
-    if (err instanceof ApiError) {
-      error.value = err.message || "Gagal memuat folder. Coba lagi.";
-    } else {
-      error.value = "Gagal memuat folder. Coba lagi.";
-    }
+    error.value = err instanceof ApiError ? translateApiError(err) : t("folders.errors.load");
   } finally {
     isLoading.value = false;
   }
@@ -88,46 +100,48 @@ function openCreate() {
   createOpen.value = true;
 }
 
+function nameErrorFromMessage(message?: string): string {
+  if (!message) return t("folders.errors.invalidName");
+  return te(message) ? t(message) : message;
+}
+
+function nameErrorFromApi(err: ApiError): string | null {
+  if (err.code === "FOLDER_NAME_CONFLICT" || err.code === "FOLDER_IS_SYSTEM") {
+    return translateApiError(err);
+  }
+  if (err.code === "VALIDATION_ERROR") {
+    const details = translateFieldErrors(err.details);
+    return details.name?.[0] ?? null;
+  }
+  return null;
+}
+
 function validateName(): boolean {
   nameError.value = "";
   const trimmed = newFolderName.value.trim();
   if (!trimmed) {
-    nameError.value = "Nama folder wajib diisi";
+    nameError.value = t("validation.folderName.required");
     return false;
   }
   const parsed = folderNameSchema.safeParse(trimmed);
   if (!parsed.success) {
-    const issue = parsed.error.issues[0];
-    nameError.value =
-      issue?.message === "Folder name is required"
-        ? "Nama folder wajib diisi"
-        : (issue?.message ?? "Nama folder tidak valid");
+    nameError.value = nameErrorFromMessage(parsed.error.issues[0]?.message);
     return false;
   }
   if (isReservedFolderName(trimmed)) {
-    nameError.value = "Nama ini sudah digunakan untuk folder sistem";
+    nameError.value = t("folders.errors.reserved");
     return false;
   }
   return true;
 }
 
 function mapCreateError(err: ApiError) {
-  if (err.code === "FOLDER_NAME_CONFLICT") {
-    nameError.value = "Nama folder sudah digunakan.";
+  const fieldError = nameErrorFromApi(err);
+  if (fieldError) {
+    nameError.value = fieldError;
     return;
   }
-  if (err.code === "FOLDER_IS_SYSTEM") {
-    nameError.value = "Nama ini sudah digunakan untuk folder sistem";
-    return;
-  }
-  if (err.code === "VALIDATION_ERROR" && err.details && typeof err.details === "object") {
-    const details = err.details as Record<string, string[]>;
-    if (details.name?.length) {
-      nameError.value = details.name[0];
-      return;
-    }
-  }
-  createInlineError.value = err.message || "Gagal membuat folder. Coba lagi.";
+  createInlineError.value = translateApiError(err);
 }
 
 async function submitCreate() {
@@ -144,7 +158,7 @@ async function submitCreate() {
     if (err instanceof ApiError) {
       mapCreateError(err);
     } else {
-      createInlineError.value = "Tidak dapat terhubung ke server. Coba lagi.";
+      createInlineError.value = t("folders.errors.connection");
     }
   } finally {
     createSubmitting.value = false;
@@ -165,11 +179,7 @@ async function confirmDelete() {
     await load();
     void mailboxStore.runSync();
   } catch (err) {
-    if (err instanceof ApiError) {
-      error.value = err.message || "Gagal menghapus folder. Coba lagi.";
-    } else {
-      error.value = "Gagal menghapus folder. Coba lagi.";
-    }
+    error.value = err instanceof ApiError ? translateApiError(err) : t("folders.errors.delete");
   } finally {
     deleteSubmitting.value = false;
   }
@@ -192,42 +202,28 @@ function validateEditName(): boolean {
   editNameError.value = "";
   const trimmed = editFolderName.value.trim();
   if (!trimmed) {
-    editNameError.value = "Nama folder wajib diisi";
+    editNameError.value = t("validation.folderName.required");
     return false;
   }
   const parsed = folderNameSchema.safeParse(trimmed);
   if (!parsed.success) {
-    const issue = parsed.error.issues[0];
-    editNameError.value =
-      issue?.message === "Folder name is required"
-        ? "Nama folder wajib diisi"
-        : (issue?.message ?? "Nama folder tidak valid");
+    editNameError.value = nameErrorFromMessage(parsed.error.issues[0]?.message);
     return false;
   }
   if (isReservedFolderName(trimmed)) {
-    editNameError.value = "Nama ini sudah digunakan untuk folder sistem";
+    editNameError.value = t("folders.errors.reserved");
     return false;
   }
   return true;
 }
 
 function mapEditError(err: ApiError) {
-  if (err.code === "FOLDER_NAME_CONFLICT") {
-    editNameError.value = "Nama folder sudah digunakan.";
+  const fieldError = nameErrorFromApi(err);
+  if (fieldError) {
+    editNameError.value = fieldError;
     return;
   }
-  if (err.code === "FOLDER_IS_SYSTEM") {
-    editNameError.value = "Nama ini sudah digunakan untuk folder sistem";
-    return;
-  }
-  if (err.code === "VALIDATION_ERROR" && err.details && typeof err.details === "object") {
-    const details = err.details as Record<string, string[]>;
-    if (details.name?.length) {
-      editNameError.value = details.name[0];
-      return;
-    }
-  }
-  editInlineError.value = err.message || "Gagal mengubah nama folder. Coba lagi.";
+  editInlineError.value = translateApiError(err);
 }
 
 async function submitEdit() {
@@ -245,7 +241,7 @@ async function submitEdit() {
     if (err instanceof ApiError) {
       mapEditError(err);
     } else {
-      editInlineError.value = "Tidak dapat terhubung ke server. Coba lagi.";
+      editInlineError.value = t("folders.errors.connection");
     }
   } finally {
     editSubmitting.value = false;
@@ -263,12 +259,12 @@ watch(
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 class="text-lg font-semibold text-foreground">Folder</h2>
-        <p class="text-sm text-muted-foreground">Buat dan hapus folder kustom pada mailbox ini.</p>
+        <h2 class="text-lg font-semibold text-foreground">{{ t("folders.title") }}</h2>
+        <p class="text-sm text-muted-foreground">{{ t("folders.description") }}</p>
       </div>
       <Button @click="openCreate">
         <Icon icon="lucide:folder-plus" />
-        <span>Buat Folder</span>
+        <span>{{ t("folders.actions.create") }}</span>
       </Button>
     </div>
 
@@ -278,14 +274,16 @@ watch(
 
     <div v-else-if="error" class="flex flex-col gap-4">
       <Alert variant="destructive">{{ error }}</Alert>
-      <Button variant="ghost" @click="load">Coba Lagi</Button>
+      <Button variant="ghost" @click="load">{{ t("common.actions.retry") }}</Button>
     </div>
 
     <div v-else class="flex flex-col gap-4">
       <!-- System folders -->
       <Collapsible class="rounded-lg border bg-card p-4">
         <CollapsibleTrigger class="mb-3">
-          <h3 class="text-sm font-semibold text-muted-foreground">Folder Sistem</h3>
+          <h3 class="text-sm font-semibold text-muted-foreground">
+            {{ t("folders.system.title") }}
+          </h3>
           <span class="flex items-center gap-2">
             <Badge variant="outline">{{ systemFolders.length }}</Badge>
             <Icon
@@ -303,8 +301,8 @@ watch(
             >
               <div class="flex items-center gap-3 min-w-0">
                 <Icon icon="lucide:folder" class="size-5 shrink-0 text-muted-foreground" />
-                <span class="truncate text-foreground">{{ folder.name }}</span>
-                <Badge variant="outline">Sistem</Badge>
+                <span class="truncate text-foreground">{{ folderDisplayName(folder) }}</span>
+                <Badge variant="outline">{{ t("folders.system.badge") }}</Badge>
               </div>
               <Icon icon="lucide:lock" class="size-4 shrink-0 text-muted-foreground" />
             </li>
@@ -315,7 +313,9 @@ watch(
       <!-- Custom folders -->
       <Collapsible default-open class="rounded-lg border bg-card p-4">
         <CollapsibleTrigger class="mb-3">
-          <h3 class="text-sm font-semibold text-muted-foreground">Folder Kustom</h3>
+          <h3 class="text-sm font-semibold text-muted-foreground">
+            {{ t("folders.custom.title") }}
+          </h3>
           <span class="flex items-center gap-2">
             <Badge variant="outline">{{ customFolders.length }}</Badge>
             <Icon
@@ -328,8 +328,8 @@ watch(
           <EmptyState
             v-if="!hasCustomFolders"
             icon="lucide:folder-open"
-            heading="Belum ada folder kustom"
-            description="Folder kustom yang Anda buat akan tampil di sini."
+            :heading="t('folders.empty.title')"
+            :description="t('folders.empty.description')"
             class="bg-transparent"
           />
 
@@ -345,7 +345,7 @@ watch(
               </div>
               <div class="flex items-center gap-1">
                 <Button
-                  :aria-label="`Ubah nama folder ${folder.name}`"
+                  :aria-label="t('folders.aria.renameFolder', { name: folder.name })"
                   variant="ghost"
                   size="icon"
                   @click="openEdit(folder)"
@@ -353,7 +353,7 @@ watch(
                   <Icon icon="lucide:pencil" class="size-4 shrink-0 text-muted-foreground" />
                 </Button>
                 <Button
-                  :aria-label="`Hapus folder ${folder.name}`"
+                  :aria-label="t('folders.aria.deleteFolder', { name: folder.name })"
                   variant="ghost"
                   size="icon"
                   @click="openDelete(folder)"
@@ -371,17 +371,17 @@ watch(
     <DialogRoot v-model:open="createOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Buat Folder</DialogTitle>
+          <DialogTitle>{{ t("folders.create.title") }}</DialogTitle>
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
           <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
 
           <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">Nama Folder</span>
+            <span class="text-sm font-medium text-foreground">{{ t("folders.fields.name") }}</span>
             <Input
               v-model="newFolderName"
-              placeholder="Contoh: Proyek A"
+              :placeholder="t('folders.fields.namePlaceholder')"
               :disabled="createSubmitting"
               :aria-invalid="nameError ? 'true' : undefined"
               maxlength="64"
@@ -392,11 +392,11 @@ watch(
 
         <DialogFooter>
           <Button variant="ghost" :disabled="createSubmitting" @click="createOpen = false">
-            Batal
+            {{ t("common.actions.cancel") }}
           </Button>
           <Button :disabled="createSubmitting" @click="submitCreate">
             <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>Buat</span>
+            <span>{{ t("folders.create.submit") }}</span>
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -406,17 +406,17 @@ watch(
     <DialogRoot v-model:open="editOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Ubah Nama Folder</DialogTitle>
+          <DialogTitle>{{ t("folders.edit.title") }}</DialogTitle>
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
           <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
 
           <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">Nama Folder</span>
+            <span class="text-sm font-medium text-foreground">{{ t("folders.fields.name") }}</span>
             <Input
               v-model="editFolderName"
-              placeholder="Contoh: Proyek A"
+              :placeholder="t('folders.fields.namePlaceholder')"
               :disabled="editSubmitting"
               :aria-invalid="editNameError ? 'true' : undefined"
               maxlength="64"
@@ -427,11 +427,11 @@ watch(
 
         <DialogFooter>
           <Button variant="ghost" :disabled="editSubmitting" @click="editOpen = false">
-            Batal
+            {{ t("common.actions.cancel") }}
           </Button>
           <Button :disabled="editSubmitting" @click="submitEdit">
             <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>Simpan</span>
+            <span>{{ t("folders.edit.submit") }}</span>
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -441,19 +441,18 @@ watch(
     <DialogRoot v-model:open="deleteOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Hapus Folder</DialogTitle>
+          <DialogTitle>{{ t("folders.delete.title") }}</DialogTitle>
         </DialogHeader>
         <p class="text-sm text-foreground">
-          Hapus folder <strong>{{ folderToDelete?.name }}</strong
-          >? Seluruh email di dalamnya akan dipindahkan ke Inbox.
+          {{ deletePrefix }}<strong>{{ folderToDelete?.name }}</strong>{{ deleteSuffix }}
         </p>
         <DialogFooter>
           <Button variant="ghost" :disabled="deleteSubmitting" @click="deleteOpen = false">
-            Batal
+            {{ t("common.actions.cancel") }}
           </Button>
           <Button variant="destructive" :disabled="deleteSubmitting" @click="confirmDelete">
             <Icon v-if="deleteSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>Hapus</span>
+            <span>{{ t("common.actions.delete") }}</span>
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -3,7 +3,7 @@ import { z } from "zod";
 export const MUTATION_TYPES = ["read", "star", "move"] as const;
 export type MutationType = (typeof MUTATION_TYPES)[number];
 
-const messageIdSchema = z.string().min(1, "message_id is required");
+const messageIdSchema = z.string().min(1, "validation.syncMutation.messageIdRequired");
 
 const readMutationSchema = z.object({
   mutation_type: z.literal("read"),
@@ -20,7 +20,7 @@ const starMutationSchema = z.object({
 const moveMutationSchema = z.object({
   mutation_type: z.literal("move"),
   message_id: messageIdSchema,
-  mutation_value: z.string().min(1, "move requires a folder id"),
+  mutation_value: z.string().min(1, "validation.syncMutation.moveFolderIdRequired"),
 });
 
 /**
@@ -36,7 +36,7 @@ export const syncMutationItemSchema = z.discriminatedUnion("mutation_type", [
 export type SyncMutationItem = z.infer<typeof syncMutationItemSchema>;
 
 export const syncMutationSchema = z.object({
-  items: z.array(syncMutationItemSchema).min(1, "At least one mutation is required"),
+  items: z.array(syncMutationItemSchema).min(1, "validation.syncMutation.itemsMin"),
 });
 
 export type SyncMutationInput = z.infer<typeof syncMutationSchema>;

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { Input } from "@/components/ui/input";
 import { Icon } from "@/icons";
+import { useI18n } from "vue-i18n";
 import { ref, watch } from "vue";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   modelValue: string;
@@ -50,7 +53,7 @@ function onEnter() {
     <Icon icon="lucide:search" class="mr-3 size-4 shrink-0 text-muted-foreground" />
     <Input
       :model-value="searchQuery"
-      :placeholder="placeholder || 'Search...'"
+      :placeholder="placeholder || t('inbox.search.placeholder')"
       class="h-full flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
       @update:model-value="onInput"
       @keydown.enter="onEnter"

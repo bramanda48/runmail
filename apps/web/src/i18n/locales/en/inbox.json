@@ -1,0 +1,51 @@
+{
+  "search": {
+    "placeholder": "Search mail",
+    "noResultsTitle": "No results",
+    "noResultsDescription": "No emails match “{query}”.",
+    "limitedResults": "Showing the first {count} results."
+  },
+  "list": {
+    "selectGroupLabel": "Message selection",
+    "selectAll": "Select all",
+    "selectOptions": "Selection options",
+    "selectAllItems": "All",
+    "selectNone": "None",
+    "selectRead": "Read",
+    "selectUnread": "Unread",
+    "sync": "Sync mail",
+    "markRead": "Mark as read",
+    "deleteSelected": "Delete selected",
+    "moveSelected": "Move selected",
+    "trashNotice": "Messages in Trash are deleted automatically after 30 days."
+  },
+  "empty": {
+    "trashTitle": "Trash is empty",
+    "spamTitle": "Spam is empty",
+    "defaultTitle": "No emails yet",
+    "description": "Incoming email will appear here."
+  },
+  "row": {
+    "select": "Select message",
+    "star": "Star message",
+    "unstar": "Remove star",
+    "markRead": "Mark as read",
+    "markUnread": "Mark as unread",
+    "moveToTrash": "Move to Trash"
+  },
+  "pagination": {
+    "label": "Pagination",
+    "previous": "Previous page",
+    "next": "Next page",
+    "range": "{start}–{end} of {total}"
+  },
+  "folders": {
+    "label": "Folders",
+    "heading": "Folders",
+    "empty": "No folders yet"
+  },
+  "errors": {
+    "loadMailbox": "Could not load the mailbox. Try again.",
+    "loadMessages": "Failed to load the email list."
+  }
+}

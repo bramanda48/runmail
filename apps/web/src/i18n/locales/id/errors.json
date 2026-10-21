@@ -1,0 +1,39 @@
+{
+  "status": {
+    "badRequest": "Permintaan tidak valid",
+    "unauthorized": "Anda belum masuk",
+    "forbidden": "Anda tidak memiliki akses ke sumber daya ini",
+    "notFound": "Tidak ditemukan",
+    "conflict": "Data ini bertentangan dengan data yang sudah ada",
+    "rateLimited": "Terlalu banyak permintaan, coba lagi nanti",
+    "internal": "Terjadi kesalahan di sisi kami",
+    "unknown": "Terjadi kesalahan"
+  },
+  "codes": {
+    "VALIDATION_ERROR": "Beberapa kolom tidak valid",
+    "UNAUTHORIZED": "Anda belum masuk",
+    "INVALID_CREDENTIALS": "Nama pengguna atau kata sandi salah",
+    "TOKEN_EXPIRED": "Sesi Anda telah berakhir, silakan masuk kembali",
+    "TOKEN_REUSED": "Sesi Anda tidak lagi valid, silakan masuk kembali",
+    "FORBIDDEN": "Anda tidak memiliki akses ke sumber daya ini",
+    "NOT_FOUND": "Tidak ditemukan",
+    "USERNAME_ALREADY_EXISTS": "Nama pengguna tersebut sudah dipakai",
+    "USERNAME_EXISTS": "Nama pengguna tersebut sudah dipakai",
+    "MAILBOX_ADDRESS_ALREADY_EXISTS": "Alamat mailbox tersebut sudah digunakan",
+    "DOMAIN_NOT_ACTIVE": "Domain tersebut tidak aktif",
+    "DOMAIN_EXISTS": "Domain tersebut sudah terdaftar",
+    "DOMAIN_NOT_AVAILABLE": "Domain tersebut tidak tersedia",
+    "FOLDER_NAME_CONFLICT": "Folder dengan nama tersebut sudah ada",
+    "FOLDER_IS_SYSTEM": "Folder sistem tidak dapat diubah",
+    "RULESET_INVALID_REGEX": "Salah satu kondisi aturan memiliki ekspresi reguler yang tidak valid",
+    "RULESET_INVALID_DEPENDENCY": "Aturan tersebut saling bergantung sehingga tidak dapat dijalankan",
+    "OAUTH_NOT_CONFIGURED": "Single sign-on belum dikonfigurasi",
+    "CURSOR_INVALID": "Cursor sinkronisasi tidak valid",
+    "FULL_RESYNC_REQUIRED": "Sinkronisasi penuh diperlukan",
+    "RATE_LIMITED": "Terlalu banyak permintaan, coba lagi nanti",
+    "INTERNAL_ERROR": "Terjadi kesalahan di sisi kami",
+    "NOT_IN_TRASH": "Pesan tersebut tidak ada di Trash",
+    "INVALID_FOLDER": "Folder tersebut tidak valid",
+    "ALREADY_LINKED": "Item tersebut sudah terhubung"
+  }
+}

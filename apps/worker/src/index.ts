@@ -1,3 +1,4 @@
+import { API_ERROR_CODES, type ApiErrorCode } from "@runmail/shared";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { Bindings } from "./lib/db";
@@ -18,6 +19,19 @@ import { syncRoutes } from "./modules/sync";
 import { userRoutes } from "./modules/users";
 
 const app = new Hono<AppEnv>();
+
+const HTTP_STATUS_ERROR_CODES: Partial<Record<number, ApiErrorCode>> = {
+  400: API_ERROR_CODES.VALIDATION_ERROR,
+  401: API_ERROR_CODES.UNAUTHORIZED,
+  403: API_ERROR_CODES.FORBIDDEN,
+  404: API_ERROR_CODES.NOT_FOUND,
+  429: API_ERROR_CODES.RATE_LIMITED,
+};
+
+function errorCodeForStatus(status: number): ApiErrorCode {
+  if (status >= 500) return API_ERROR_CODES.INTERNAL_ERROR;
+  return HTTP_STATUS_ERROR_CODES[status] ?? API_ERROR_CODES.VALIDATION_ERROR;
+}
 
 app.use("*", requestLogger);
 
@@ -41,7 +55,10 @@ app.onError((err, c) => {
       status: err.status,
       message: err.message,
     });
-    return c.json({ error: { message: err.message } }, err.status);
+    return c.json(
+      { error: { code: errorCodeForStatus(err.status), message: err.message } },
+      err.status,
+    );
   }
 
   logger.error("Unhandled error", err, {
@@ -51,7 +68,7 @@ app.onError((err, c) => {
   return c.json(
     {
       error: {
-        code: "INTERNAL_ERROR",
+        code: API_ERROR_CODES.INTERNAL_ERROR,
         message: "An unexpected error occurred",
       },
     },

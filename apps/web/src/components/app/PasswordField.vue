@@ -5,6 +5,7 @@ import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
 import type { HTMLAttributes } from "vue";
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 
 interface Props {
   modelValue?: string;
@@ -17,9 +18,13 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<(e: "update:modelValue", value: string) => void>();
 
+const { t } = useI18n();
+
 const show = ref(false);
 const type = computed(() => (show.value ? "text" : "password"));
-const label = computed(() => (show.value ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"));
+const label = computed(() =>
+  show.value ? t("profile.passwordField.hide") : t("profile.passwordField.show"),
+);
 
 function onInput(value: string) {
   emit("update:modelValue", value);

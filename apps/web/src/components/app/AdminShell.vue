@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import AccountMenu from "@/components/app/AccountMenu.vue";
 import AdminSidebar from "@/components/app/AdminSidebar.vue";
+import LocaleSwitcher from "@/components/app/LocaleSwitcher.vue";
 import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
 import Wordmark from "@/components/app/Wordmark.vue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { shallowRef } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const drawerOpen = shallowRef(false);
 const sidebarCollapsed = shallowRef(false);
@@ -34,14 +38,14 @@ function toggleSidebar() {
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Buka atau tutup menu"
+          :aria-label="t('shell.topbar.toggleMenu')"
           @click="toggleSidebar"
         >
           <Icon icon="lucide:menu" />
         </Button>
         <div class="flex items-center gap-2">
           <Wordmark size="lg" />
-          <Badge variant="secondary">Admin</Badge>
+          <Badge variant="secondary">{{ t("shell.adminBadge") }}</Badge>
         </div>
       </div>
 
@@ -49,6 +53,7 @@ function toggleSidebar() {
       <div class="hidden max-w-2xl flex-1 px-4 lg:block" aria-hidden="true" />
 
       <div class="flex shrink-0 items-center gap-4 lg:w-64 lg:justify-end">
+        <LocaleSwitcher />
         <AccountMenu />
       </div>
     </header>

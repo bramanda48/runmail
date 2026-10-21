@@ -1,0 +1,60 @@
+{
+  "app": {
+    "openMenu": "Buka menu"
+  },
+  "topbar": {
+    "toggleMenu": "Buka atau tutup menu"
+  },
+  "adminBadge": "Admin",
+  "drawer": {
+    "closeMenu": "Tutup menu",
+    "title": "Navigasi",
+    "description": "Menu navigasi aplikasi"
+  },
+  "adminSidebar": {
+    "navLabel": "Navigasi admin",
+    "domains": "Domain",
+    "mailboxes": "Kotak surat",
+    "users": "Pengguna",
+    "backToMailboxes": "Kembali ke Mailbox"
+  },
+  "memberSidebar": {
+    "navLabel": "Navigasi akun",
+    "mailboxes": "Kotak surat",
+    "profile": "Profil"
+  },
+  "mailboxSidebar": {
+    "compose": "Tulis",
+    "syncNow": "Sinkronkan sekarang",
+    "pending": "{count} tertunda",
+    "status": {
+      "syncing": "Sinkronisasi…",
+      "offline": "Offline",
+      "error": "Gagal sinkron",
+      "fullResync": "Sinkronisasi ulang",
+      "synced": "Tersinkron"
+    }
+  },
+  "mailboxWorkspace": {
+    "searchPlaceholder": "Cari di email",
+    "settings": "Pengaturan"
+  },
+  "accountMenu": {
+    "trigger": "Menu akun",
+    "fallbackName": "Pengguna",
+    "profile": "Profil",
+    "switchMailbox": "Ganti kotak surat",
+    "adminMenu": "Menu admin",
+    "logout": "Keluar",
+    "logoutConfirm": "Apakah Anda yakin ingin keluar?"
+  },
+  "accessoryRail": {
+    "label": "Aplikasi tambahan",
+    "addApp": "Tambah aplikasi",
+    "comingSoon": "Segera hadir",
+    "calendar": "Kalender",
+    "keep": "Keep",
+    "tasks": "Tugas",
+    "contacts": "Kontak"
+  }
+}

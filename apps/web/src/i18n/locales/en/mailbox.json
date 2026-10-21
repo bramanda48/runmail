@@ -1,0 +1,18 @@
+{
+  "title": "Mailboxes",
+  "subtitle": "Choose the mailbox you want to open.",
+  "inactive": "Inactive mailbox",
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "empty": {
+    "title": "No mailboxes yet",
+    "description": "You are not connected to any mailbox.",
+    "adminHint": "Admins can create mailboxes for this workspace.",
+    "adminLink": "Open Mailbox Management"
+  },
+  "errors": {
+    "load": "Cannot load mailboxes. Please try again."
+  }
+}

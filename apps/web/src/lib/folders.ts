@@ -1,14 +1,19 @@
 import type { LocalFolder } from "@/db/mailbox-db";
+import { SYSTEM_FOLDER_KEYS } from "@runmail/shared";
 
-const SYSTEM_ORDER = ["inbox", "draft", "sent", "archive", "spam", "trash"];
+const SYSTEM_ORDER: readonly string[] = SYSTEM_FOLDER_KEYS;
+
+function systemKey(folder: LocalFolder): string {
+  return folder.name.trim().toLowerCase();
+}
 
 /** Sidebar order: system folders in fixed order, then custom folders alphabetically. */
 export function sortFolders(folders: LocalFolder[]): LocalFolder[] {
   const system = folders
     .filter((f) => f.folder_type === "system")
     .sort((a, b) => {
-      const ai = SYSTEM_ORDER.indexOf(a.name.toLowerCase());
-      const bi = SYSTEM_ORDER.indexOf(b.name.toLowerCase());
+      const ai = SYSTEM_ORDER.indexOf(systemKey(a));
+      const bi = SYSTEM_ORDER.indexOf(systemKey(b));
       if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
       if (ai === -1) return 1;
       if (bi === -1) return -1;
@@ -20,21 +25,21 @@ export function sortFolders(folders: LocalFolder[]): LocalFolder[] {
   return [...system, ...custom];
 }
 
-/** Iconify name for a folder: system folders by name, custom folders generic. */
+/** Iconify name for a folder: system folders by their system key, custom folders generic. */
 export function folderIcon(folder: LocalFolder): string {
   if (folder.folder_type !== "system") return "lucide:folder";
-  switch (folder.name.toLowerCase()) {
-    case "inbox":
+  switch (systemKey(folder)) {
+    case "system.inbox":
       return "lucide:inbox";
-    case "draft":
+    case "system.draft":
       return "lucide:file";
-    case "sent":
+    case "system.sent":
       return "lucide:send-horizontal";
-    case "archive":
+    case "system.archive":
       return "lucide:archive";
-    case "spam":
+    case "system.spam":
       return "lucide:shield-alert";
-    case "trash":
+    case "system.trash":
       return "lucide:trash";
     default:
       return "lucide:folder";

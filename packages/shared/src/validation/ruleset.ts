@@ -27,11 +27,8 @@ export const rulesetConditionSchema = z.object({
   match_type: z.enum(MATCH_TYPES),
   condition_value: z
     .string()
-    .min(1, "Condition value is required")
-    .max(
-      CONDITION_VALUE_MAX_LENGTH,
-      `Condition value must be at most ${CONDITION_VALUE_MAX_LENGTH} characters`,
-    ),
+    .min(1, "validation.ruleset.conditionValueRequired")
+    .max(CONDITION_VALUE_MAX_LENGTH, "validation.ruleset.conditionValueMax"),
 });
 
 export const rulesetActionSchema = z.object({
@@ -43,19 +40,19 @@ export const rulesetSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "Ruleset name is required")
-    .max(100, "Ruleset name must be at most 100 characters"),
-  priority: z.number().int().nonnegative("Priority must be a non-negative integer"),
+    .min(1, "validation.ruleset.nameRequired")
+    .max(100, "validation.ruleset.nameMax"),
+  priority: z.number().int().nonnegative("validation.ruleset.priorityNegative"),
   logic_operator: z.enum(LOGIC_OPERATORS),
   is_enabled: z.boolean(),
   conditions: z
     .array(rulesetConditionSchema)
-    .min(1, "At least one condition is required")
-    .max(50, "At most 50 conditions are allowed"),
+    .min(1, "validation.ruleset.conditionsMin")
+    .max(50, "validation.ruleset.conditionsMax"),
   actions: z
     .array(rulesetActionSchema)
-    .min(1, "At least one action is required")
-    .max(50, "At most 50 actions are allowed"),
+    .min(1, "validation.ruleset.actionsMin")
+    .max(50, "validation.ruleset.actionsMax"),
 });
 
 /**

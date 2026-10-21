@@ -5,12 +5,15 @@ import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
 import type { HTMLAttributes } from "vue";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 
 interface Props {
   class?: HTMLAttributes["class"];
 }
 
 const props = defineProps<Props>();
+
+const { t } = useI18n();
 
 const open = ref(false);
 </script>
@@ -30,7 +33,7 @@ const open = ref(false);
     <div class="flex min-h-screen flex-1 flex-col lg:ml-64">
       <header class="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-card px-4 lg:px-8">
         <Button
-          aria-label="Buka menu"
+          :aria-label="t('shell.app.openMenu')"
           variant="ghost"
           size="icon"
           class="lg:hidden"

@@ -1,0 +1,61 @@
+{
+  "screenTitle": "Detail email",
+  "noSubject": "(Tanpa subjek)",
+  "notFound": "Email tidak ditemukan di perangkat ini.",
+  "empty": "Email ini tidak memiliki konten.",
+  "parseError": "Email tidak dapat ditampilkan. Anda dapat mencoba memuat ulang.",
+  "reply": "Balas",
+  "forward": "Teruskan",
+  "quote": {
+    "htmlOnly": "(Isi email asli dalam format HTML.)"
+  },
+  "subjectPrefix": {
+    "reply": "Re:",
+    "forward": "Fwd:"
+  },
+  "position": "{position} dari {total}",
+  "actions": {
+    "markRead": "Tandai sudah dibaca",
+    "markUnread": "Tandai belum dibaca",
+    "older": "Email lebih lama",
+    "newer": "Email lebih baru"
+  },
+  "attachments": {
+    "title": "Lampiran",
+    "untitled": "lampiran"
+  },
+  "remoteImages": {
+    "blocked": "Gambar eksternal diblokir untuk keamanan.",
+    "show": "Tampilkan gambar"
+  },
+  "headerInfo": {
+    "toMe": "kepada saya",
+    "emptyValue": "—",
+    "from": "dari:",
+    "to": "kepada:",
+    "date": "tanggal:",
+    "subject": "subjek:",
+    "mailedBy": "dikirim oleh:",
+    "signedBy": "ditandatangani oleh:"
+  },
+  "move": {
+    "label": "Pindahkan ke folder"
+  },
+  "compose": {
+    "dialogLabel": "Tulis pesan baru",
+    "title": "Pesan Baru",
+    "minimize": "Minimalkan",
+    "restore": "Pulihkan",
+    "maximize": "Perbesar",
+    "to": "Kepada",
+    "subject": "Subjek",
+    "body": "Isi pesan",
+    "send": "Kirim",
+    "formatting": "Format teks",
+    "attach": "Lampirkan file",
+    "insertLink": "Sisipkan tautan",
+    "insertEmoji": "Sisipkan emoji",
+    "discardDraft": "Buang draf",
+    "comingSoon": "Segera hadir"
+  }
+}

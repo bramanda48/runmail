@@ -1,0 +1,39 @@
+{
+  "status": {
+    "badRequest": "Invalid request",
+    "unauthorized": "You are not signed in",
+    "forbidden": "You do not have access to this resource",
+    "notFound": "Not found",
+    "conflict": "This conflicts with existing data",
+    "rateLimited": "Too many requests, please try again later",
+    "internal": "Something went wrong on our side",
+    "unknown": "Something went wrong"
+  },
+  "codes": {
+    "VALIDATION_ERROR": "Some fields are invalid",
+    "UNAUTHORIZED": "You are not signed in",
+    "INVALID_CREDENTIALS": "Incorrect username or password",
+    "TOKEN_EXPIRED": "Your session has expired, please sign in again",
+    "TOKEN_REUSED": "Your session is no longer valid, please sign in again",
+    "FORBIDDEN": "You do not have access to this resource",
+    "NOT_FOUND": "Not found",
+    "USERNAME_ALREADY_EXISTS": "That username is already taken",
+    "USERNAME_EXISTS": "That username is already taken",
+    "MAILBOX_ADDRESS_ALREADY_EXISTS": "That mailbox address is already in use",
+    "DOMAIN_NOT_ACTIVE": "That domain is not active",
+    "DOMAIN_EXISTS": "That domain is already registered",
+    "DOMAIN_NOT_AVAILABLE": "That domain is not available",
+    "FOLDER_NAME_CONFLICT": "A folder with that name already exists",
+    "FOLDER_IS_SYSTEM": "System folders cannot be modified",
+    "RULESET_INVALID_REGEX": "A rule condition has an invalid regular expression",
+    "RULESET_INVALID_DEPENDENCY": "These rules depend on each other and cannot run",
+    "OAUTH_NOT_CONFIGURED": "Single sign-on is not configured",
+    "CURSOR_INVALID": "The sync cursor is invalid",
+    "FULL_RESYNC_REQUIRED": "A full resync is required",
+    "RATE_LIMITED": "Too many requests, please try again later",
+    "INTERNAL_ERROR": "Something went wrong on our side",
+    "NOT_IN_TRASH": "That message is not in the trash",
+    "INVALID_FOLDER": "That folder is not valid",
+    "ALREADY_LINKED": "This item is already linked"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "title": "Mailbox",
+  "subtitle": "Pilih mailbox yang ingin Anda akses.",
+  "inactive": "Mailbox nonaktif",
+  "status": {
+    "active": "Aktif",
+    "inactive": "Nonaktif"
+  },
+  "empty": {
+    "title": "Belum ada mailbox",
+    "description": "Anda belum terhubung ke mailbox mana pun.",
+    "adminHint": "Admin dapat membuat mailbox untuk ruang kerja ini.",
+    "adminLink": "Buka Manajemen Mailbox"
+  },
+  "errors": {
+    "load": "Tidak dapat memuat mailbox. Coba lagi."
+  }
+}

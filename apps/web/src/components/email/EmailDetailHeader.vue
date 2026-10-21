@@ -2,8 +2,10 @@
 import EmailHeaderInfo from "@/components/email/EmailHeaderInfo.vue";
 import { Button } from "@/components/ui/button";
 import type { LocalMessage } from "@/db/mailbox-db";
+import { formatDateTime } from "@/i18n/format";
 import { Icon } from "@/icons";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
   message: LocalMessage;
@@ -14,26 +16,18 @@ const emits = defineEmits<{
   reply: [];
 }>();
 
+const { t } = useI18n();
+
 const initials = computed(() => {
   const name = props.message.from_name?.trim() || props.message.from_address;
   return (name.charAt(0) || "?").toUpperCase();
 });
-
-function formatDate(ts: number) {
-  return new Date(ts).toLocaleString("id-ID", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 </script>
 
 <template>
   <div class="px-4 pb-4 pt-8 sm:px-8">
     <h1 class="mb-8 text-2xl font-bold tracking-tight text-foreground">
-      {{ message.subject || "(Tanpa subjek)" }}
+      {{ message.subject || t("message.noSubject") }}
     </h1>
 
     <div class="flex items-start justify-between gap-3">
@@ -59,9 +53,14 @@ function formatDate(ts: number) {
 
       <div class="flex shrink-0 items-center gap-2">
         <span class="mr-2 hidden text-sm text-muted-foreground sm:inline-block">
-          {{ formatDate(message.email_date) }}
+          {{ formatDateTime(message.email_date) }}
         </span>
-        <Button variant="ghost" size="icon" aria-label="Balas" @click="emits('reply')">
+        <Button
+          variant="ghost"
+          size="icon"
+          :aria-label="t('message.reply')"
+          @click="emits('reply')"
+        >
           <Icon icon="lucide:reply" class="size-4" />
         </Button>
       </div>

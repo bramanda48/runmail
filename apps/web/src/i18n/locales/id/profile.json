@@ -1,0 +1,32 @@
+{
+  "title": "Profile",
+  "subtitle": "Kelola informasi akun dan keamanan Anda.",
+  "account": {
+    "title": "Profil",
+    "description": "Informasi akun Anda saat ini.",
+    "username": "Username",
+    "role": {
+      "admin": "Admin",
+      "member": "Member"
+    }
+  },
+  "password": {
+    "title": "Ubah Kata Sandi",
+    "description": "Setelah berhasil, Anda akan dikeluarkan karena semua sesi diakhiri.",
+    "currentLabel": "Kata Sandi Saat Ini",
+    "currentPlaceholder": "Masukkan kata sandi saat ini",
+    "newLabel": "Kata Sandi Baru",
+    "newPlaceholder": "Minimal {min} karakter",
+    "newHint": "Kata sandi harus {min}–{max} karakter.",
+    "confirmLabel": "Konfirmasi Kata Sandi Baru",
+    "confirmPlaceholder": "Ulangi kata sandi baru",
+    "mismatch": "Konfirmasi kata sandi tidak cocok",
+    "submit": "Simpan Kata Sandi",
+    "success": "Kata sandi berhasil diubah. Anda akan diminta masuk kembali.",
+    "networkError": "Tidak dapat terhubung ke server. Coba lagi."
+  },
+  "passwordField": {
+    "show": "Tampilkan kata sandi",
+    "hide": "Sembunyikan kata sandi"
+  }
+}

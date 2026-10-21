@@ -1,6 +1,6 @@
 import { folders, messageRecipients, messages, syncEvents } from "@runmail/db";
 import type { Message, MessageCursorPayload, PageMeta, SyncMutationItem } from "@runmail/shared";
-import { buildMessageCursor, buildPageMeta, isSystemFolder } from "@runmail/shared";
+import { buildMessageCursor, buildPageMeta, isSystemFolderKey } from "@runmail/shared";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/allocate";
 import { type Db, getDb } from "../../lib/db";
@@ -248,8 +248,8 @@ export async function moveMessage(
   const folderName = folder.name.toLowerCase();
   const folderEnteredAt =
     folder.folder_type === "system" &&
-    isSystemFolder(folder.name) &&
-    (folderName === "trash" || folderName === "spam")
+    isSystemFolderKey(folder.name) &&
+    (folderName === "system.trash" || folderName === "system.spam")
       ? now
       : null;
   const versionSql = nextVersionSql(mailboxId);
@@ -300,8 +300,8 @@ export async function permanentDelete(
   if (!folder) return { error: "NOT_IN_TRASH" };
   if (
     folder.folder_type !== "system" ||
-    !isSystemFolder(folder.name) ||
-    folder.name.toLowerCase() !== "trash"
+    !isSystemFolderKey(folder.name) ||
+    folder.name.toLowerCase() !== "system.trash"
   ) {
     return { error: "NOT_IN_TRASH" };
   }

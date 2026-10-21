@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "folders": "Folders",
+      "rulesets": "Rulesets"
+    },
+    "loadError": "Unable to load the mailbox. Try again."
+  },
+  "title": "Folders",
+  "description": "Create and delete custom folders for this mailbox.",
+  "actions": {
+    "create": "New folder"
+  },
+  "system": {
+    "title": "System folders",
+    "badge": "System"
+  },
+  "custom": {
+    "title": "Custom folders"
+  },
+  "empty": {
+    "title": "No custom folders yet",
+    "description": "Custom folders you create will appear here."
+  },
+  "fields": {
+    "name": "Folder name",
+    "namePlaceholder": "e.g. Project A"
+  },
+  "create": {
+    "title": "Create folder",
+    "submit": "Create"
+  },
+  "edit": {
+    "title": "Rename folder",
+    "submit": "Save"
+  },
+  "delete": {
+    "title": "Delete folder",
+    "messagePrefix": "Delete folder",
+    "messageSuffix": "? All emails inside will be moved to {inbox}."
+  },
+  "aria": {
+    "renameFolder": "Rename folder {name}",
+    "deleteFolder": "Delete folder {name}"
+  },
+  "errors": {
+    "load": "Failed to load folders. Try again.",
+    "connection": "Could not reach the server. Try again.",
+    "delete": "Failed to delete folder. Try again.",
+    "invalidName": "Folder name is invalid",
+    "reserved": "This name is reserved for a system folder"
+  }
+}

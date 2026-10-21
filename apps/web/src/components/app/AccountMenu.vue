@@ -13,13 +13,15 @@ import {
   DropdownMenuTrigger,
 } from "reka-ui";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 const auth = useAuthStore();
 const mailboxAccess = useMailboxAccessStore();
+const { t } = useI18n();
 
-const username = computed(() => auth.user?.username ?? "Pengguna");
+const username = computed(() => auth.user?.username ?? t("shell.accountMenu.fallbackName"));
 const address = computed(() => mailboxAccess.current?.address ?? "");
 const isAdmin = computed(() => auth.user?.role === "admin");
 const initials = computed(() => {
@@ -36,7 +38,7 @@ function go(to: string) {
 }
 
 async function logout() {
-  if (window.confirm("Apakah Anda yakin ingin keluar?")) {
+  if (window.confirm(t("shell.accountMenu.logoutConfirm"))) {
     await auth.logout();
     await router.push("/login");
   }
@@ -46,7 +48,7 @@ async function logout() {
 <template>
   <DropdownMenuRoot>
     <DropdownMenuTrigger
-      aria-label="Menu akun"
+      :aria-label="t('shell.accountMenu.trigger')"
       class="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {{ initials }}
@@ -65,17 +67,17 @@ async function logout() {
 
         <DropdownMenuItem :class="itemClass" @select="go('/profile')">
           <Icon icon="lucide:settings" class="size-4 text-muted-foreground" />
-          Profile
+          {{ t("shell.accountMenu.profile") }}
         </DropdownMenuItem>
         <DropdownMenuItem :class="itemClass" @select="go('/mailboxes')">
           <Icon icon="lucide:layout-grid" class="size-4 text-muted-foreground" />
-          Ganti Mailbox
+          {{ t("shell.accountMenu.switchMailbox") }}
         </DropdownMenuItem>
         <template v-if="isAdmin">
           <DropdownMenuSeparator class="-mx-1 my-1 h-px bg-border" />
           <DropdownMenuItem :class="itemClass" @select="go('/admin/domains')">
             <Icon icon="lucide:shield" class="size-4 text-muted-foreground" />
-            Admin Menu
+            {{ t("shell.accountMenu.adminMenu") }}
           </DropdownMenuItem>
         </template>
         <DropdownMenuSeparator class="-mx-1 my-1 h-px bg-border" />
@@ -84,7 +86,7 @@ async function logout() {
           @select="logout"
         >
           <Icon icon="lucide:log-out" class="size-4" />
-          Keluar
+          {{ t("shell.accountMenu.logout") }}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenuPortal>

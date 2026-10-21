@@ -1,0 +1,51 @@
+{
+  "search": {
+    "placeholder": "Cari email",
+    "noResultsTitle": "Tidak ada hasil",
+    "noResultsDescription": "Tidak ada email yang cocok dengan “{query}”.",
+    "limitedResults": "Menampilkan {count} hasil pertama."
+  },
+  "list": {
+    "selectGroupLabel": "Pilihan pesan",
+    "selectAll": "Pilih semua",
+    "selectOptions": "Opsi pilihan",
+    "selectAllItems": "Semua",
+    "selectNone": "Tidak ada",
+    "selectRead": "Sudah dibaca",
+    "selectUnread": "Belum dibaca",
+    "sync": "Sinkronkan email",
+    "markRead": "Tandai sudah dibaca",
+    "deleteSelected": "Hapus yang dipilih",
+    "moveSelected": "Pindahkan yang dipilih",
+    "trashNotice": "Pesan di folder ini dihapus otomatis setelah 30 hari."
+  },
+  "empty": {
+    "trashTitle": "Trash kosong",
+    "spamTitle": "Spam kosong",
+    "defaultTitle": "Belum ada email",
+    "description": "Email yang masuk akan tampil di sini."
+  },
+  "row": {
+    "select": "Pilih pesan",
+    "star": "Tandai bintang",
+    "unstar": "Hapus bintang",
+    "markRead": "Tandai sudah dibaca",
+    "markUnread": "Tandai belum dibaca",
+    "moveToTrash": "Pindahkan ke Trash"
+  },
+  "pagination": {
+    "label": "Navigasi halaman",
+    "previous": "Halaman sebelumnya",
+    "next": "Halaman berikutnya",
+    "range": "{start}–{end} dari {total}"
+  },
+  "folders": {
+    "label": "Folder",
+    "heading": "Folder",
+    "empty": "Belum ada folder"
+  },
+  "errors": {
+    "loadMailbox": "Tidak dapat memuat mailbox. Coba lagi.",
+    "loadMessages": "Gagal memuat daftar email."
+  }
+}

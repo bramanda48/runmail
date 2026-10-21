@@ -34,6 +34,7 @@
 - **Design System:** shadcn-vue (reka-ui v2 primitives)
 - **Styling:** Tailwind CSS v4
 - **Icons:** Iconify (@iconify/vue) dengan Lucide sebagai icon set utama (lucide:*)
+- **i18n:** vue-i18n v11 + @intlify/unplugin-vue-i18n — locale `en` (default/fallback) dan `id`, pesan JSON di `apps/web/src/i18n/locales/`
 - **Local DB:** Dexie v4 (IndexedDB wrapper) — satu database per mailbox
 - **Local Cache:** Browser Cache API untuk raw .eml
 - **MIME Parsing:** postal-mime v3
@@ -150,6 +151,17 @@ bun run seed:admin [--username] [--password] [--remote --yes]
 - **Icon subset build:** bun run build:icons untuk generate subset yang dipakai; build production akan check subset.
 
 
+### i18n & Localization
+- **Wajib lewat `t()`:** seluruh string yang dilihat user (teks, placeholder, aria-label, dialog konfirmasi, empty/error state) diambil dari `apps/web/src/i18n/locales/{en,id}/<namespace>.json`. Dilarang hardcode copy di SFC.
+- **Locale aktif:** disimpan di `localStorage["runmail_locale"]`; saat pertama dibuka dideteksi sekali dari `navigator.languages` (`id*` → `id`, selain itu `en`), lalu dipersist. Fallback selalu `en`.
+- **Switcher:** `components/app/LocaleSwitcher.vue` ditempatkan tepat di kiri `AccountMenu` pada topbar (`MailboxWorkspace`, `MemberShell`, `AdminShell`) dan di halaman login.
+- **Format tanggal/angka:** gunakan helper `src/i18n/format.ts` (Intl, locale `en-US`/`id-ID`). Dilarang hardcode `"id-ID"`/`"en-US"` di komponen.
+- **Error API:** backend tetap language-agnostic. Klien menerjemahkan via `error.code` (`translateApiError`) dengan fallback pesan server; field error via `translateFieldErrors`.
+- **Pesan validasi shared:** Zod schema di `packages/shared` memakai key stabil `validation.*`; UI yang menerjemahkan. Jangan menulis pesan prosa di schema.
+- **System folder = key:** untuk `folder_type = "system"`, `folders.name` berisi i18n key (`system.inbox`, `system.draft`, `system.sent`, `system.archive`, `system.spam`, `system.trash`). Tampilkan via `folderDisplayName(folder)`; bandingkan dengan `SYSTEM_FOLDER_KEYS`/`isSystemFolderKey` dari `@runmail/shared`. Custom folder dilarang memakai prefix `system.` atau nama sistem lama.
+- **Namespace baru:** tambahkan file `en/<namespace>.json` + `id/<namespace>.json` dengan bentuk identik, lalu daftarkan di `src/i18n/locales/en/index.ts` dan `id/index.ts`.
+- **Locale baru:** tambah kode di `SUPPORTED_LOCALES`, tag di `LOCALE_TAGS`, dan folder pesan lengkap.
+
 ### Component Organization
 - **apps/web/src/components/ui/** — shadcn-vue generated/adapted components
 - **apps/web/src/components/app/** — Runmail-specific reusable components
@@ -177,6 +189,7 @@ bun run seed:admin [--username] [--password] [--remote --yes]
 - **IDs:** UUID v7 untuk primary keys server-side
 - **Timestamps:** Unix timestamp milliseconds UTC (INTEGER) di D1
 - **Naming:** snake_case untuk column/table names
+- **System folder names:** kolom `folders.name` untuk `folder_type = "system"` berisi i18n key (`system.inbox`, dst.), bukan teks tampilan; migrasi wajib bila key berubah.
 - **Migrations:** Drizzle Kit di packages/db/migrations/, wajib divalidasi via bun run test:integration sebelum commit
 - **No JSON columns:** ruleset conditions/actions disimpan sebagai tabel relasional, bukan JSON
 
@@ -252,12 +265,6 @@ Git hooks menjalankan lint-staged:
 
 **Instruksi Agent:** Saat implementasi logging/monitoring pertama kali, tanyakan preferensi service dan budget sebelum integrate third-party.
 
-### i18n/Localization
-- **Bahasa UI:** draft menggunakan Bahasa Indonesia, tapi keputusan final bahasa produk belum dikunci di PRD
-- **i18n framework:** belum dipilih (vue-i18n? Intl API langsung?)
-
-**Instruksi Agent:** Jika diminta implementasi multi-bahasa, tanyakan target bahasa dan preferensi library sebelum struktur file i18n dibuat.
-
 ### Admin UI Details
 - **User management search/filter:** belum menjadi requirement MVP
 - **Bulk operations:** (bulk user deactivate, bulk mailbox assignment) belum diputuskan
@@ -299,6 +306,6 @@ Tunggu approval sebelum menulis perubahan ke AGENTS.md.
 
 ---
 
-**Versi:** 1.1
-**Terakhir Update:** 8 Oktober 2026 (reset design system ke shadcn-vue default slate)
+**Versi:** 1.2
+**Terakhir Update:** 21 Oktober 2026 (tambah i18n en/id + system folder keys)
 **Maintainer:** Project team
