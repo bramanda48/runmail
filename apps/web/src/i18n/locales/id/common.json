@@ -17,5 +17,11 @@
     "label": "Bahasa",
     "en": "English",
     "id": "Bahasa Indonesia"
+  },
+  "theme": {
+    "label": "Tema",
+    "light": "Terang",
+    "dark": "Gelap",
+    "system": "Sistem"
   }
 }

@@ -2,6 +2,7 @@
 import AccountMenu from "@/components/app/AccountMenu.vue";
 import FolderNavigation from "@/components/app/FolderNavigation.vue";
 import LocaleSwitcher from "@/components/app/LocaleSwitcher.vue";
+import ThemeSwitcher from "@/components/app/ThemeSwitcher.vue";
 import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
 import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
 import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
@@ -88,6 +89,7 @@ function onSearch(value: string) {
         >
           <Icon icon="lucide:settings" />
         </Button>
+        <ThemeSwitcher />
         <LocaleSwitcher />
         <AccountMenu />
       </div>

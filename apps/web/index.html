@@ -10,6 +10,16 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Runmail</title>
+    <script>
+      (function () {
+        try {
+          var s = localStorage.getItem("runmail_theme");
+          var t = s === "light" || s === "dark" || s === "system" ? s : "system";
+          var d = t === "dark" || (t === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+          if (d) document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

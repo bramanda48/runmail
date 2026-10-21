@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AccountMenu from "@/components/app/AccountMenu.vue";
 import LocaleSwitcher from "@/components/app/LocaleSwitcher.vue";
+import ThemeSwitcher from "@/components/app/ThemeSwitcher.vue";
 import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
 import MemberSidebar from "@/components/app/MemberSidebar.vue";
 import Wordmark from "@/components/app/Wordmark.vue";
@@ -49,6 +50,7 @@ function toggleSidebar() {
       <div class="hidden max-w-2xl flex-1 px-4 lg:block" aria-hidden="true" />
 
       <div class="flex shrink-0 items-center gap-4 lg:w-64 lg:justify-end">
+        <ThemeSwitcher />
         <LocaleSwitcher />
         <AccountMenu />
       </div>
