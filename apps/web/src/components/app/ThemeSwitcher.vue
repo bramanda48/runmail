@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Icon } from "@/icons";
-import { currentResolved, currentTheme, setTheme, type Theme } from "@/themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,8 +7,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Icon } from "@/icons";
+import { useThemeStore, type Theme } from "@/stores/theme";
+import { storeToRefs } from "pinia";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+
+const themeStore = useThemeStore();
+const { theme: currentTheme, resolved: currentResolved } = storeToRefs(themeStore);
 
 const { t } = useI18n();
 
@@ -18,13 +22,11 @@ const triggerIcon = computed(() =>
   currentResolved.value === "dark" ? "lucide:moon" : "lucide:sun",
 );
 
-const options = computed(() =>
-  [
-    { value: "light" as const, icon: "lucide:sun", label: t("common.theme.light") },
-    { value: "dark" as const, icon: "lucide:moon", label: t("common.theme.dark") },
-    { value: "system" as const, icon: "lucide:monitor", label: t("common.theme.system") },
-  ],
-);
+const options = computed(() => [
+  { value: "light" as const, icon: "lucide:sun", label: t("common.theme.light") },
+  { value: "dark" as const, icon: "lucide:moon", label: t("common.theme.dark") },
+  { value: "system" as const, icon: "lucide:monitor", label: t("common.theme.system") },
+]);
 </script>
 
 <template>
@@ -43,7 +45,7 @@ const options = computed(() =>
       <DropdownMenuItem
         v-for="option in options"
         :key="option.value"
-        @select="setTheme(option.value as Theme)"
+        @select="themeStore.setTheme(option.value as Theme)"
       >
         <Icon
           v-if="option.value === currentTheme"

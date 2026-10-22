@@ -165,7 +165,7 @@ bun run seed:admin [--username] [--password] [--remote --yes]
 ### Theming
 - **Tema:** `light`, `dark`, `system` (default `system` — ikuti OS pada kunjungan pertama, lalu persist). Disimpan di `localStorage["runmail_theme"]`.
 - **Switcher:** `components/app/ThemeSwitcher.vue` ditempatkan di kiri `LocaleSwitcher` pada topbar (`MailboxWorkspace`, `MemberShell`, `AdminShell`) dan halaman login.
-- **Apply:** `class="dark"` di `<html>` via `src/themes/index.ts` (`setTheme`, `initTheme`); FOUC dicegah via inline script di `index.html` `<head>`.
+- **Apply:** `class="dark"` di `<html>` via `src/stores/theme.ts` (`useThemeStore` — `setTheme`, `init`); FOUC dicegah via inline script di `index.html` `<head>`.
 - **CSS:** `:root` = light, `.dark` = dark. `@custom-variant dark (&:is(.dark *))` aktif di `globals.css`. `color-scheme: light/dark` untuk native form controls.
 - **Dilarang:** `dark:` utility manual di app components — wajib semantic tokens (`bg-background`, `text-foreground`, dst) yang auto-switch. Stock shadcn-vue `dark:` di `components/ui/` tidak dihapus.
 

@@ -1,3 +1,5 @@
+import { defineStore } from "pinia";
+import type { Ref } from "vue";
 import { ref } from "vue";
 
 export const THEMES = ["light", "dark", "system"] as const;
@@ -6,9 +8,6 @@ export type ResolvedTheme = "light" | "dark";
 
 const STORAGE_KEY = "runmail_theme";
 const DARK_MEDIA = "(prefers-color-scheme: dark)";
-
-const currentTheme = ref<Theme>("system");
-const currentResolved = ref<ResolvedTheme>("light");
 
 let mediaQuery: MediaQueryList | null = null;
 let mediaListener: ((e: MediaQueryListEvent) => void) | null = null;
@@ -52,40 +51,50 @@ function detachMediaListener(): void {
   mediaListener = null;
 }
 
-function attachMediaListener(): void {
+function attachMediaListener(theme: Ref<Theme>, resolved: Ref<ResolvedTheme>): void {
   if (typeof window === "undefined") return;
   mediaQuery = window.matchMedia(DARK_MEDIA);
   mediaListener = (e: MediaQueryListEvent) => {
-    if (currentTheme.value !== "system") return;
-    const resolved: ResolvedTheme = e.matches ? "dark" : "light";
-    currentResolved.value = resolved;
-    applyTheme(resolved);
+    if (theme.value !== "system") return;
+    const nextResolved: ResolvedTheme = e.matches ? "dark" : "light";
+    resolved.value = nextResolved;
+    applyTheme(nextResolved);
   };
   mediaQuery.addEventListener("change", mediaListener);
 }
 
-export function setTheme(theme: Theme): void {
-  if (!isTheme(theme) || theme === currentTheme.value) return;
-  currentTheme.value = theme;
-  const resolved = resolveTheme(theme);
-  currentResolved.value = resolved;
-  applyTheme(resolved);
-  persistTheme(theme);
-  if (theme === "system") {
-    attachMediaListener();
-  } else {
-    detachMediaListener();
+/**
+ * Theme store: the user's choice (`light` | `dark` | `system`), the resolved
+ * concrete theme, and the side effects that keep the DOM, localStorage, and
+ * the OS colour-scheme listener in sync.
+ */
+export const useThemeStore = defineStore("theme", () => {
+  const theme = ref<Theme>("system");
+  const resolved = ref<ResolvedTheme>("light");
+
+  function setTheme(next: Theme): void {
+    if (!isTheme(next) || next === theme.value) return;
+    theme.value = next;
+    const nextResolved = resolveTheme(next);
+    resolved.value = nextResolved;
+    applyTheme(nextResolved);
+    persistTheme(next);
+    if (next === "system") {
+      attachMediaListener(theme, resolved);
+    } else {
+      detachMediaListener();
+    }
   }
-}
 
-export function initTheme(): void {
-  const stored = readStoredTheme();
-  const theme = stored ?? "system";
-  currentTheme.value = theme;
-  const resolved = resolveTheme(theme);
-  currentResolved.value = resolved;
-  applyTheme(resolved);
-  if (theme === "system") attachMediaListener();
-}
+  function init(): void {
+    const stored = readStoredTheme();
+    const next = stored ?? "system";
+    theme.value = next;
+    const nextResolved = resolveTheme(next);
+    resolved.value = nextResolved;
+    applyTheme(nextResolved);
+    if (next === "system") attachMediaListener(theme, resolved);
+  }
 
-export { currentResolved, currentTheme };
+  return { theme, resolved, setTheme, init };
+});
