@@ -52,7 +52,7 @@
 ## 3. Prinsip Arsitektur
 
 ### Modular Monolith
-Backend menggunakan modular monolith agar autentikasi, user, domain, mailbox, email ingest, inbox, folder, ruleset, sinkronisasi, raw email, dan retention memiliki boundary kode yang jelas tetapi sederhana untuk dikembangkan dan dideploy.
+Backend menggunakan modular monolith agar autentikasi, user, domain, mailbox, inbound email, message, folder, ruleset, sinkronisasi, raw email, dan retention memiliki boundary kode yang jelas tetapi sederhana untuk dikembangkan dan dideploy.
 
 ### Mailbox-Scoped Everything
 - Semua route mailbox-scoped membawa mailbox_id eksplisit di URL: /mailboxes/:mailbox_id/inbox
@@ -181,9 +181,9 @@ bun run seed:admin [--username] [--password] [--remote --yes]
 - **apps/web/src/composables/** — Reusable composition functions
 
 ### Backend Modules
-- **apps/worker/src/modules/** — modular domain logic (auth, users, domains, mailboxes, mail, inbox, folders, rulesets, sync, retention)
+- **apps/worker/src/modules/** — modular domain logic (auth, users, domains, mailboxes, messages, folders, rulesets, sync, oauth, retention, settings)
+- **apps/worker/src/handler/** — Worker entrypoint handlers, satu folder per arah (`inbound/`, `outbound/` menyusul). `inbound/index.ts` = `handleInboundEmail` (validasi → ruleset → R2 → D1), `inbound/helpers.ts` = parsing alamat/header/snippet.
 - **apps/worker/src/middleware/** — Hono middleware (auth, mailbox authorization, validation)
-- **apps/worker/src/email/** — Inbound email handler
 - **apps/worker/src/lib/** — Shared utilities
 
 ### API Conventions

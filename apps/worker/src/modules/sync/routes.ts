@@ -5,7 +5,7 @@ import type { AppEnv } from "../../lib/env";
 import { badRequest } from "../../lib/http-error";
 import { jwtAuth } from "../../middleware/auth";
 import { requireMailboxAccess } from "../../middleware/mailbox";
-import * as inboxService from "../inbox";
+import * as messageService from "../messages";
 
 export const syncRoutes = new Hono<AppEnv>();
 
@@ -19,7 +19,7 @@ syncRoutes.get("/:mailbox_id/sync", jwtAuth, requireMailboxAccess, async (c) => 
   if (!parsed.success) {
     return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
   }
-  const delta = await inboxService.getSyncDelta(c, c.get("mailbox").mailbox_id, {
+  const delta = await messageService.getSyncDelta(c, c.get("mailbox").mailbox_id, {
     last_sync_version: parsed.data.last_sync_version,
     last_sync_timestamp: parsed.data.last_sync_timestamp,
   });
@@ -58,7 +58,7 @@ syncRoutes.post("/:mailbox_id/sync/mutations", jwtAuth, requireMailboxAccess, as
   if (!parsed.success) {
     return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
   }
-  const { results } = await inboxService.processMutations(
+  const { results } = await messageService.processMutations(
     c,
     c.get("mailbox").mailbox_id,
     parsed.data.mutations,
