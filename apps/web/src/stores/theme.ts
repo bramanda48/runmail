@@ -53,6 +53,7 @@ function detachMediaListener(): void {
 
 function attachMediaListener(theme: Ref<Theme>, resolved: Ref<ResolvedTheme>): void {
   if (typeof window === "undefined") return;
+  detachMediaListener();
   mediaQuery = window.matchMedia(DARK_MEDIA);
   mediaListener = (e: MediaQueryListEvent) => {
     if (theme.value !== "system") return;
