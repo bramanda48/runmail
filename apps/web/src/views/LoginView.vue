@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import LocaleSwitcher from "@/components/app/LocaleSwitcher.vue";
-import ThemeSwitcher from "@/components/app/ThemeSwitcher.vue";
 import PasswordField from "@/components/app/PasswordField.vue";
+import ThemeSwitcher from "@/components/app/ThemeSwitcher.vue";
 import Wordmark from "@/components/app/Wordmark.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -91,7 +91,7 @@ async function handleSubmit() {
 
 <template>
   <main class="relative flex min-h-screen flex-col items-center justify-center bg-background p-6">
-    <div class="absolute top-4 right-4">
+    <div class="flex absolute top-6 right-6 gap-3">
       <ThemeSwitcher />
       <LocaleSwitcher />
     </div>
