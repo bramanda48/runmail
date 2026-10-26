@@ -2,7 +2,6 @@ import { API_ERROR_CODES, type ApiErrorCode } from "@runmail/shared";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { handleInboundEmail } from "./handler/inbound";
-import type { Bindings } from "./lib/db";
 import type { AppEnv } from "./lib/env";
 import { validateEnv } from "./lib/env";
 import { createExecutionLogger, createLogger } from "./lib/logger";
@@ -81,15 +80,15 @@ app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
 export { app };
 
 export default {
-  fetch: (req: Request, env: Bindings, ctx: ExecutionContext) => {
+  fetch: (req: Request, env: CloudflareBindings, ctx: ExecutionContext) => {
     validateEnv(env);
     return app.fetch(req, env, ctx);
   },
-  email: (message: ForwardableEmailMessage, env: Bindings, ctx: ExecutionContext) => {
+  email: (message: ForwardableEmailMessage, env: CloudflareBindings, ctx: ExecutionContext) => {
     validateEnv(env);
     return handleInboundEmail(message, env, ctx);
   },
-  scheduled: (_controller: ScheduledController, env: Bindings, ctx: ExecutionContext) => {
+  scheduled: (_controller: ScheduledController, env: CloudflareBindings, ctx: ExecutionContext) => {
     validateEnv(env);
     const execution_id = crypto.randomUUID();
     const logger = createExecutionLogger(execution_id, { event: "retention_run" });

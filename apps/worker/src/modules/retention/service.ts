@@ -1,7 +1,6 @@
 import { folders, messageRecipients, messages, syncEvents } from "@runmail/db";
 import { and, eq, isNotNull, lt, sql } from "drizzle-orm";
 import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/allocate";
-import type { Bindings } from "../../lib/db";
 import { getDb } from "../../lib/db";
 import { deleteRawEmail } from "../../lib/r2";
 
@@ -12,7 +11,7 @@ export function retentionDaysFromEnv(raw: string | undefined): number {
 }
 
 export async function runRetentionCleanup(
-  env: Bindings,
+  env: CloudflareBindings,
   opts?: { execution_id?: string },
 ): Promise<{ expired_messages: number; pruned_events: number }> {
   const days = retentionDaysFromEnv(env.TRASH_SPAM_RETENTION_DAYS);
