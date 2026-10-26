@@ -1,5 +1,5 @@
+import { clearLastMailboxId } from "@/lib/last-mailbox";
 import { clearAllRawCaches } from "@/lib/raw-cache";
-import { clearLastMailboxId } from "@/stores/mailbox-access";
 import Dexie from "dexie";
 import {
   clearKnownMailboxDbNames,

@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { Icon } from "@/icons";
-import { useAuthStore } from "@/stores/auth";
-import { useMailboxAccessStore } from "@/stores/mailbox-access";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,18 +7,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Icon } from "@/icons";
+import { useAuthStore } from "@/stores/auth";
+import { useMailboxStore } from "@/stores/mailbox";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-const auth = useAuthStore();
-const mailboxAccess = useMailboxAccessStore();
+const authStore = useAuthStore();
+const mailboxStore = useMailboxStore();
 const { t } = useI18n();
 
-const username = computed(() => auth.user?.username ?? t("shell.accountMenu.fallbackName"));
-const address = computed(() => mailboxAccess.current?.address ?? "");
-const isAdmin = computed(() => auth.user?.role === "admin");
+const username = computed(() => authStore.user?.username ?? t("shell.accountMenu.fallbackName"));
+const address = computed(() => mailboxStore.current?.address ?? "");
+const isAdmin = computed(() => authStore.user?.role === "admin");
 const initials = computed(() => {
   const source = address.value || username.value;
   if (!source) return "RM";
@@ -34,7 +34,7 @@ function go(to: string) {
 
 async function logout() {
   if (window.confirm(t("shell.accountMenu.logoutConfirm"))) {
-    await auth.logout();
+    await authStore.logout();
     await router.push("/login");
   }
 }

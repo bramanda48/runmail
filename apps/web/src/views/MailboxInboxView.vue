@@ -3,15 +3,16 @@ import MailboxWorkspace from "@/components/app/MailboxWorkspace.vue";
 import ComposeModal from "@/components/email/ComposeModal.vue";
 import EmailListContainer from "@/components/email/EmailListContainer.vue";
 import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
-import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
-import { ApiError } from "@/lib/api";
-import { parseSearchQuery } from "@/lib/search";
-import { computeUnreadCounts } from "@/lib/unread-counts";
+import { getMailboxDb, type LocalMessage } from "@/db/mailbox-db";
 import { translateApiError } from "@/i18n/api-errors";
 import { folderDisplayName } from "@/i18n/folders";
+import { ApiError } from "@/lib/api";
+import { parseSearchQuery } from "@/lib/search";
+import { useMailboxFoldersStore } from "@/stores/mailbox-folders";
 import Dexie from "dexie";
-import { useI18n } from "vue-i18n";
+import { storeToRefs } from "pinia";
 import { computed, onMounted, ref, shallowRef, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 
@@ -25,8 +26,8 @@ const folderIdParam = computed(() => route.params.folder_id as string | undefine
 
 const perPage = 10;
 
-const folders = ref<LocalFolder[]>([]);
-const unreadCounts = ref<Record<string, number>>({});
+const foldersStore = useMailboxFoldersStore();
+const { folders, unreadCounts } = storeToRefs(foldersStore);
 const activeFolderId = ref<string | null>(null);
 
 const messages = ref<LocalMessage[]>([]);
@@ -69,12 +70,9 @@ function onSearch(value: string) {
   router.replace({ query: value ? { q: value } : {} });
 }
 
-async function loadFolders() {
-  const db = getMailboxDb(mailboxId.value);
-  const list = await db.folders.toArray();
-  folders.value = list;
-
-  unreadCounts.value = await computeUnreadCounts(db);
+async function loadFolders(force = false) {
+  await (force ? foldersStore.refresh(mailboxId.value) : foldersStore.load(mailboxId.value));
+  const list = foldersStore.folders;
 
   if (!activeFolderId.value || !list.some((f) => f.id === activeFolderId.value)) {
     const fromUrl =
@@ -198,6 +196,7 @@ async function enqueueAndRefresh(mutation: {
   mutation_value: boolean | string;
 }) {
   await mailboxStore.enqueue(mutation);
+  foldersStore.invalidate();
   refresh();
 }
 
@@ -320,7 +319,7 @@ watch(
   () => mailboxStore.syncStatus,
   async (status) => {
     if (status === "synced") {
-      await loadFolders();
+      await loadFolders(true);
       refresh();
     }
   },
@@ -336,7 +335,9 @@ watch(
     @search="onSearch"
     @compose="composeOpen = true"
   >
-    <h1 class="sr-only">{{ activeFolder ? folderDisplayName(activeFolder) : t("system.inbox") }}</h1>
+    <h1 class="sr-only">
+      {{ activeFolder ? folderDisplayName(activeFolder) : t("system.inbox") }}
+    </h1>
     <EmailListContainer
       :messages="messages"
       :loading="isLoading"
