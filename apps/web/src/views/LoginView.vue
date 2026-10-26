@@ -16,7 +16,7 @@ import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 
 const { t } = useI18n();
-const auth = useAuthStore();
+const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
@@ -48,7 +48,7 @@ async function handleSubmit() {
   isSubmitting.value = true;
 
   try {
-    await auth.login(username.value.trim(), password.value);
+    await authStore.login(username.value.trim(), password.value);
 
     const redirect = route.query.redirect;
     if (

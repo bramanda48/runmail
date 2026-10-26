@@ -17,7 +17,7 @@ import { useI18n } from "vue-i18n";
 import { RouterLink, useRouter } from "vue-router";
 
 const { t } = useI18n();
-const auth = useAuthStore();
+const authStore = useAuthStore();
 const router = useRouter();
 
 const perPage = 10;
@@ -124,7 +124,7 @@ function rowClasses(isActive: boolean) {
         :heading="t('mailbox.empty.title')"
         :description="t('mailbox.empty.description')"
       >
-        <template v-if="auth.isAdmin" #action>
+        <template v-if="authStore.isAdmin" #action>
           <div class="flex flex-col items-center gap-2">
             <p class="text-sm text-muted-foreground">{{ t("mailbox.empty.adminHint") }}</p>
             <RouterLink

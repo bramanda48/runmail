@@ -16,7 +16,7 @@ import { useRouter } from "vue-router";
 
 const { t } = useI18n();
 
-const auth = useAuthStore();
+const authStore = useAuthStore();
 const router = useRouter();
 
 const currentPassword = ref("");
@@ -87,7 +87,7 @@ async function handleChangePassword() {
     setTimeout(async () => {
       // All refresh tokens were revoked server-side; wipe local session data
       // without a pointless logout request.
-      await auth.endSessionLocally();
+      await authStore.endSessionLocally();
       await router.push("/login");
     }, 1500);
   } catch (err) {
@@ -120,10 +120,14 @@ async function handleChangePassword() {
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm text-muted-foreground">{{ t("profile.account.username") }}</p>
-              <p class="font-medium text-foreground">{{ auth.user?.username }}</p>
+              <p class="font-medium text-foreground">{{ authStore.user?.username }}</p>
             </div>
-            <Badge :variant="auth.isAdmin ? 'secondary' : 'outline'">
-              {{ auth.isAdmin ? t("profile.account.role.admin") : t("profile.account.role.member") }}
+            <Badge :variant="authStore.isAdmin ? 'secondary' : 'outline'">
+              {{
+                authStore.isAdmin
+                  ? t("profile.account.role.admin")
+                  : t("profile.account.role.member")
+              }}
             </Badge>
           </div>
         </CardContent>
