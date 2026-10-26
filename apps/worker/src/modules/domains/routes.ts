@@ -102,7 +102,7 @@ domainRoutes.post("/", async (c) => {
       return c.json(
         {
           error: {
-            code: API_ERROR_CODES.VALIDATION_ERROR,
+            code: API_ERROR_CODES.DOMAIN_ALREADY_EXISTS,
             message: "Domain sudah terdaftar",
             details: { field: "domain_name" },
           },
@@ -114,7 +114,7 @@ domainRoutes.post("/", async (c) => {
       return c.json(
         {
           error: {
-            code: API_ERROR_CODES.VALIDATION_ERROR,
+            code: API_ERROR_CODES.DOMAIN_NOT_AVAILABLE,
             message: "Domain tidak tersedia pada akun Cloudflare",
             details: { field: "domain_name" },
           },
@@ -125,7 +125,7 @@ domainRoutes.post("/", async (c) => {
     return c.json(
       {
         error: {
-          code: API_ERROR_CODES.NOT_FOUND,
+          code: API_ERROR_CODES.DOMAIN_NOT_FOUND,
           message: "Domain tidak ditemukan",
         },
       },
@@ -155,7 +155,7 @@ domainRoutes.post("/:domain_id/verify", async (c) => {
       return c.json(
         {
           error: {
-            code: API_ERROR_CODES.NOT_FOUND,
+            code: API_ERROR_CODES.DOMAIN_NOT_FOUND,
             message: "Domain tidak ditemukan",
           },
         },

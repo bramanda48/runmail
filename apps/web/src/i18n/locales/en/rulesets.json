@@ -1,0 +1,104 @@
+{
+  "title": "Rulesets",
+  "description": "Email processing rules. Lower priority numbers run first.",
+  "actions": {
+    "create": "Create Ruleset"
+  },
+  "errors": {
+    "load": "Failed to load rulesets. Please try again.",
+    "delete": "Failed to delete the ruleset. Please try again.",
+    "toggle": "Failed to change the ruleset status. Please try again.",
+    "invalidRegex": "Invalid regular expression",
+    "folderRequired": "Select a target folder",
+    "folderNotFound": "The target folder was not found in this mailbox"
+  },
+  "empty": {
+    "heading": "No rulesets yet",
+    "description": "Create your first ruleset to control how email is processed."
+  },
+  "list": {
+    "name": "Name",
+    "priority": "Priority",
+    "logic": "Logic",
+    "active": "Active",
+    "actions": "Actions",
+    "conditionCount": "no conditions | one condition | {count} conditions",
+    "actionCount": "no actions | one action | {count} actions",
+    "toggleAria": "Active status of ruleset {name}",
+    "editAria": "Edit ruleset {name}",
+    "deleteAria": "Delete ruleset {name}"
+  },
+  "deleteDialog": {
+    "title": "Delete Ruleset",
+    "confirmPrefix": "Delete ruleset",
+    "confirmSuffix": "? This action cannot be undone."
+  },
+  "editor": {
+    "titleCreate": "New Ruleset",
+    "titleEdit": "Edit Ruleset",
+    "description": "Configure conditions and actions for email processing.",
+    "notFound": "Ruleset not found.",
+    "backToList": "Back to ruleset list",
+    "cardTitle": "Ruleset Details",
+    "name": "Ruleset Name",
+    "namePlaceholder": "e.g. Newsletter filter",
+    "priority": "Priority",
+    "priorityHint": "Lower numbers run first.",
+    "logic": "Condition Logic",
+    "logicPlaceholder": "Select logic",
+    "enabled": "Enable Ruleset",
+    "enabledHint": "Disabled rulesets will not run.",
+    "enabledAria": "Enable ruleset",
+    "conditions": "Conditions",
+    "addCondition": "Add Condition",
+    "actions": "Actions",
+    "addAction": "Add Action",
+    "moveHint": "With several move actions, the last move determines the final folder.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "errors": {
+      "load": "Failed to load the ruleset. Please try again.",
+      "connection": "Cannot reach the server. Please try again.",
+      "save": "Failed to save the ruleset. Please try again."
+    }
+  },
+  "logic": {
+    "AND": "All conditions (AND)",
+    "OR": "Any condition (OR)"
+  },
+  "field": {
+    "from": "From",
+    "subject": "Subject",
+    "header": "Header"
+  },
+  "match": {
+    "contains": "Contains",
+    "notContains": "Does not contain",
+    "equal": "Equals",
+    "notEqual": "Does not equal",
+    "startWith": "Starts with",
+    "endWith": "Ends with",
+    "matchRegex": "Matches regex"
+  },
+  "action": {
+    "moveToFolder": "Move to folder",
+    "markAsStar": "Star",
+    "markAsRead": "Mark as read"
+  },
+  "condition": {
+    "fieldAria": "Condition field",
+    "matchAria": "Match type",
+    "valuePlaceholder": "Value to match",
+    "moveUpAria": "Move condition up",
+    "moveDownAria": "Move condition down",
+    "removeAria": "Remove condition"
+  },
+  "actionRow": {
+    "typeAria": "Action type",
+    "folderAria": "Action target folder",
+    "folderPlaceholder": "Select target folder",
+    "moveUpAria": "Move action up",
+    "moveDownAria": "Move action down",
+    "removeAria": "Remove action"
+  }
+}

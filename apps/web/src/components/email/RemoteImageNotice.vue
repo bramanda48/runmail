@@ -3,6 +3,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 type State = "blocked" | "loading" | "loaded";
 
@@ -25,7 +28,7 @@ defineExpose({ markLoaded });
 <template>
   <Alert v-if="state !== 'loaded'" class="items-center">
     <Icon icon="lucide:image-off" class="size-4" />
-    <AlertDescription class="flex-1"> Gambar eksternal diblokir untuk keamanan. </AlertDescription>
+    <AlertDescription class="flex-1">{{ t("message.remoteImages.blocked") }}</AlertDescription>
     <Button
       variant="ghost"
       size="sm"
@@ -34,7 +37,7 @@ defineExpose({ markLoaded });
       @click="load"
     >
       <Icon v-if="state === 'loading'" icon="lucide:loader-circle" class="animate-spin" />
-      <span>Tampilkan gambar</span>
+      <span>{{ t("message.remoteImages.show") }}</span>
     </Button>
   </Alert>
 </template>

@@ -1,0 +1,178 @@
+{
+  "status": {
+    "active": "Aktif",
+    "inactive": "Nonaktif"
+  },
+  "role": {
+    "admin": "Admin",
+    "member": "Member"
+  },
+  "domainStatus": {
+    "active": "Aktif",
+    "pendingVerification": "Pending Verifikasi"
+  },
+  "connectionError": "Tidak dapat terhubung ke server. Coba lagi.",
+  "users": {
+    "title": "User",
+    "description": "Buat dan kelola pengguna Runmail.",
+    "create": "Buat User",
+    "table": {
+      "username": "Username",
+      "role": "Peran",
+      "status": "Status",
+      "actions": "Aksi"
+    },
+    "empty": {
+      "title": "Belum ada user",
+      "description": "Belum ada pengguna yang terdaftar."
+    },
+    "editAria": "Edit {username}",
+    "activeSwitchAria": "Status aktif user",
+    "loadError": "Tidak dapat memuat user. Coba lagi.",
+    "createError": "Gagal membuat user. Coba lagi.",
+    "updateError": "Gagal memperbarui user. Coba lagi.",
+    "createDialog": {
+      "title": "Buat User",
+      "description": "Isi detail pengguna baru.",
+      "usernameLabel": "Username",
+      "usernamePlaceholder": "nama.pengguna",
+      "passwordLabel": "Kata Sandi Awal",
+      "passwordPlaceholder": "Masukkan kata sandi",
+      "roleLabel": "Peran",
+      "rolePlaceholder": "Pilih peran"
+    },
+    "editDialog": {
+      "title": "Edit User",
+      "description": "Ubah peran, status, atau kata sandi pengguna.",
+      "roleLabel": "Peran",
+      "rolePlaceholder": "Pilih peran",
+      "activeLabel": "Status Aktif",
+      "activeHint": "Nonaktifkan untuk mengakhiri sesi pengguna.",
+      "passwordLabel": "Kata Sandi Baru (opsional)",
+      "passwordPlaceholder": "Kosongkan jika tidak diubah",
+      "submit": "Simpan Perubahan"
+    },
+    "deactivateDialog": {
+      "title": "Nonaktifkan User",
+      "description": "Nonaktifkan user? Sesi user akan diakhiri.",
+      "submit": "Nonaktifkan"
+    },
+    "validation": {
+      "usernameRequired": "Username wajib diisi",
+      "passwordRequired": "Kata sandi wajib diisi"
+    }
+  },
+  "domains": {
+    "title": "Domain",
+    "description": "Tambahkan domain Cloudflare dan pantau status verifikasinya.",
+    "add": "Tambah Domain",
+    "table": {
+      "domain": "Domain",
+      "status": "Status",
+      "actions": "Aksi"
+    },
+    "empty": {
+      "title": "Belum ada domain",
+      "description": "Tambahkan domain Cloudflare yang tersedia."
+    },
+    "verifyAria": "Verifikasi ulang {domain}",
+    "closeNoticeAria": "Tutup notifikasi",
+    "loadError": "Tidak dapat memuat domain. Coba lagi.",
+    "verifyError": "Tidak dapat memverifikasi domain. Coba lagi.",
+    "availableError": "Tidak dapat memuat domain yang tersedia.",
+    "addError": "Tidak dapat menambahkan domain. Coba lagi.",
+    "cloudflare": {
+      "checking": "Memeriksa koneksi Cloudflare...",
+      "checkAgain": "Periksa lagi",
+      "connectTitle": "Hubungkan akun Cloudflare",
+      "reconnectTitle": "Hubungkan ulang Cloudflare",
+      "connectDescription": "Hubungkan Cloudflare untuk menambahkan dan memverifikasi domain.",
+      "redirectNotice": "Anda akan diarahkan ke Cloudflare untuk memberi izin akses.",
+      "connect": "Hubungkan Cloudflare",
+      "connecting": "Menghubungkan...",
+      "redirecting": "Membuka Cloudflare...",
+      "redirectHint": "Selesaikan pemberian izin di Cloudflare untuk kembali ke Manajemen Domain."
+    },
+    "addDialog": {
+      "title": "Tambah Domain",
+      "description": "Pilih domain Cloudflare yang tersedia.",
+      "loading": "Memuat domain yang tersedia...",
+      "none": "Tidak ada domain Cloudflare yang tersedia.",
+      "domainLabel": "Domain",
+      "domainPlaceholder": "Pilih domain",
+      "submit": "Tambah"
+    },
+    "validation": {
+      "domainRequired": "Pilih domain terlebih dahulu"
+    }
+  },
+  "mailboxes": {
+    "title": "Mailbox",
+    "description": "Buat dan kelola mailbox serta akses user.",
+    "create": "Buat Mailbox",
+    "table": {
+      "address": "Alamat",
+      "status": "Status",
+      "actions": "Aksi"
+    },
+    "empty": {
+      "title": "Belum ada mailbox",
+      "description": "Belum ada mailbox yang dibuat."
+    },
+    "editAria": "Edit {address}",
+    "manageAria": "Kelola user {address}",
+    "activeSwitchAria": "Status aktif mailbox",
+    "loadError": "Tidak dapat memuat mailbox. Coba lagi.",
+    "domainLoadError": "Tidak dapat memuat domain.",
+    "createError": "Gagal membuat mailbox. Coba lagi.",
+    "updateError": "Gagal memperbarui mailbox.",
+    "createDialog": {
+      "title": "Buat Mailbox",
+      "description": "Pilih domain aktif dan isi bagian lokal alamat.",
+      "noActiveDomains": "Aktifkan domain terlebih dahulu sebelum membuat mailbox.",
+      "domainLabel": "Domain",
+      "domainPlaceholder": "Pilih domain",
+      "addressLabel": "Alamat Email",
+      "localPartPlaceholder": "nama",
+      "domainFallback": "domain",
+      "submit": "Buat"
+    },
+    "editDialog": {
+      "title": "Edit Mailbox",
+      "description": "Ubah status aktif mailbox.",
+      "addressLabel": "Alamat",
+      "activeLabel": "Status Aktif",
+      "activeHint": "Mailbox nonaktif tidak menerima email."
+    },
+    "deactivateDialog": {
+      "title": "Nonaktifkan Mailbox",
+      "description": "Mailbox tidak menerima email saat nonaktif. Lanjutkan?",
+      "submit": "Nonaktifkan"
+    },
+    "manageDialog": {
+      "title": "Kelola User Mailbox",
+      "description": "Tambahkan atau hapus akses user ke {address}.",
+      "loading": "Memuat daftar user...",
+      "userLabel": "Pilih User",
+      "userPlaceholder": "Pilih user",
+      "add": "Tambahkan",
+      "linkedUsers": "User terhubung ({count})",
+      "empty": "Belum ada user yang terhubung ke mailbox ini.",
+      "loadUsersError": "Tidak dapat memuat daftar user.",
+      "loadLinkedError": "Gagal memuat user terhubung.",
+      "linkError": "Gagal menambahkan user.",
+      "unlinkError": "Gagal menghapus kaitan user."
+    },
+    "validation": {
+      "domainRequired": "Pilih domain aktif terlebih dahulu",
+      "localPartRequired": "Bagian lokal alamat wajib diisi"
+    }
+  },
+  "integration": {
+    "connecting": "Menghubungkan Cloudflare...",
+    "errorTitle": "Gagal menghubungkan Cloudflare",
+    "invalidCallback": "URL callback tidak valid",
+    "callbackError": "Tidak dapat menyelesaikan koneksi Cloudflare.",
+    "back": "Kembali ke Domain Management"
+  }
+}

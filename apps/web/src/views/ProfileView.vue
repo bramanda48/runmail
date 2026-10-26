@@ -5,12 +5,16 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-
+import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
 import { Icon } from "@/icons";
 import { ApiError, changePassword } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@runmail/shared";
 import { ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
+
+const { t } = useI18n();
 
 const auth = useAuthStore();
 const router = useRouter();
@@ -26,9 +30,6 @@ const inlineError = ref("");
 const successMessage = ref("");
 const isSubmitting = ref(false);
 
-const PASSWORD_MIN = 8;
-const PASSWORD_MAX = 128;
-
 function clearErrors() {
   currentPasswordError.value = "";
   newPasswordError.value = "";
@@ -38,11 +39,11 @@ function clearErrors() {
 
 function applyApiError(err: ApiError) {
   if (err.code === "INVALID_CREDENTIALS") {
-    currentPasswordError.value = err.message;
+    currentPasswordError.value = translateApiError(err);
     return;
   }
-  if (err.code === "VALIDATION_ERROR" && err.details && typeof err.details === "object") {
-    const details = err.details as Record<string, string[]>;
+  if (err.code === "VALIDATION_ERROR") {
+    const details = translateFieldErrors(err.details);
     if (details.current_password?.length) {
       currentPasswordError.value = details.current_password[0];
     }
@@ -51,7 +52,7 @@ function applyApiError(err: ApiError) {
     }
     return;
   }
-  inlineError.value = err.message || "Terjadi kesalahan. Coba lagi.";
+  inlineError.value = translateApiError(err);
 }
 
 async function handleChangePassword() {
@@ -60,15 +61,21 @@ async function handleChangePassword() {
 
   let hasError = false;
   if (!currentPassword.value) {
-    currentPasswordError.value = "Kata sandi saat ini wajib diisi";
+    currentPasswordError.value = t("validation.login.passwordRequired");
     hasError = true;
   }
-  if (newPassword.value.length < PASSWORD_MIN || newPassword.value.length > PASSWORD_MAX) {
-    newPasswordError.value = `Kata sandi baru harus ${PASSWORD_MIN}–${PASSWORD_MAX} karakter`;
+  if (
+    newPassword.value.length < PASSWORD_MIN_LENGTH ||
+    newPassword.value.length > PASSWORD_MAX_LENGTH
+  ) {
+    newPasswordError.value =
+      newPassword.value.length > PASSWORD_MAX_LENGTH
+        ? t("validation.password.max")
+        : t("validation.password.min");
     hasError = true;
   }
   if (newPassword.value !== confirmPassword.value) {
-    confirmPasswordError.value = "Konfirmasi kata sandi tidak cocok";
+    confirmPasswordError.value = t("profile.password.mismatch");
     hasError = true;
   }
   if (hasError) return;
@@ -76,7 +83,7 @@ async function handleChangePassword() {
   isSubmitting.value = true;
   try {
     await changePassword(currentPassword.value, newPassword.value);
-    successMessage.value = "Kata sandi berhasil diganti. Anda akan diminta masuk kembali.";
+    successMessage.value = t("profile.password.success");
     setTimeout(async () => {
       // All refresh tokens were revoked server-side; wipe local session data
       // without a pointless logout request.
@@ -88,7 +95,7 @@ async function handleChangePassword() {
     if (err instanceof ApiError) {
       applyApiError(err);
     } else {
-      inlineError.value = "Tidak dapat terhubung ke server. Coba lagi.";
+      inlineError.value = t("profile.password.networkError");
     }
   }
 }
@@ -98,23 +105,25 @@ async function handleChangePassword() {
   <MemberShell>
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <div class="flex flex-col gap-1">
-        <h1 class="scroll-m-20 text-3xl font-extrabold tracking-tight text-foreground">Profile</h1>
-        <p class="text-sm text-muted-foreground">Kelola informasi akun dan keamanan Anda.</p>
+        <h1 class="scroll-m-20 text-3xl font-extrabold tracking-tight text-foreground">
+          {{ t("profile.title") }}
+        </h1>
+        <p class="text-sm text-muted-foreground">{{ t("profile.subtitle") }}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Profil</CardTitle>
-          <CardDescription>Informasi akun Anda saat ini.</CardDescription>
+          <CardTitle>{{ t("profile.account.title") }}</CardTitle>
+          <CardDescription>{{ t("profile.account.description") }}</CardDescription>
         </CardHeader>
         <CardContent class="flex flex-col gap-4">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm text-muted-foreground">Username</p>
+              <p class="text-sm text-muted-foreground">{{ t("profile.account.username") }}</p>
               <p class="font-medium text-foreground">{{ auth.user?.username }}</p>
             </div>
             <Badge :variant="auth.isAdmin ? 'secondary' : 'outline'">
-              {{ auth.isAdmin ? "Admin" : "Member" }}
+              {{ auth.isAdmin ? t("profile.account.role.admin") : t("profile.account.role.member") }}
             </Badge>
           </div>
         </CardContent>
@@ -122,10 +131,8 @@ async function handleChangePassword() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Ubah Kata Sandi</CardTitle>
-          <CardDescription>
-            Setelah berhasil, Anda harus masuk kembali karena semua sesi akan diakhiri.
-          </CardDescription>
+          <CardTitle>{{ t("profile.password.title") }}</CardTitle>
+          <CardDescription>{{ t("profile.password.description") }}</CardDescription>
         </CardHeader>
         <CardContent class="flex flex-col gap-4">
           <Alert v-if="inlineError" variant="destructive">{{ inlineError }}</Alert>
@@ -133,10 +140,12 @@ async function handleChangePassword() {
 
           <form class="flex flex-col gap-4" @submit.prevent="handleChangePassword">
             <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">Kata Sandi Saat Ini</span>
+              <span class="text-sm font-medium text-foreground">
+                {{ t("profile.password.currentLabel") }}
+              </span>
               <PasswordField
                 v-model="currentPassword"
-                placeholder="Masukkan kata sandi saat ini"
+                :placeholder="t('profile.password.currentPlaceholder')"
                 :disabled="isSubmitting"
               />
               <p v-if="currentPasswordError" class="text-sm text-destructive">
@@ -145,23 +154,34 @@ async function handleChangePassword() {
             </label>
 
             <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">Kata Sandi Baru</span>
+              <span class="text-sm font-medium text-foreground">
+                {{ t("profile.password.newLabel") }}
+              </span>
               <PasswordField
                 v-model="newPassword"
-                placeholder="Minimal 8 karakter"
+                :placeholder="t('profile.password.newPlaceholder', { min: PASSWORD_MIN_LENGTH })"
                 :disabled="isSubmitting"
               />
-              <p class="text-xs text-muted-foreground">Kata sandi harus 8–128 karakter.</p>
+              <p class="text-xs text-muted-foreground">
+                {{
+                  t("profile.password.newHint", {
+                    min: PASSWORD_MIN_LENGTH,
+                    max: PASSWORD_MAX_LENGTH,
+                  })
+                }}
+              </p>
               <p v-if="newPasswordError" class="text-sm text-destructive">
                 {{ newPasswordError }}
               </p>
             </label>
 
             <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">Konfirmasi Kata Sandi Baru</span>
+              <span class="text-sm font-medium text-foreground">
+                {{ t("profile.password.confirmLabel") }}
+              </span>
               <PasswordField
                 v-model="confirmPassword"
-                placeholder="Ulangi kata sandi baru"
+                :placeholder="t('profile.password.confirmPlaceholder')"
                 :disabled="isSubmitting"
               />
               <p v-if="confirmPasswordError" class="text-sm text-destructive">
@@ -171,7 +191,7 @@ async function handleChangePassword() {
 
             <Button type="submit" class="w-full" :disabled="isSubmitting">
               <Icon v-if="isSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-              <span>Simpan Kata Sandi</span>
+              <span>{{ t("profile.password.submit") }}</span>
             </Button>
           </form>
         </CardContent>

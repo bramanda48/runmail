@@ -3,7 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
 import type { HTMLAttributes } from "vue";
+import { useI18n } from "vue-i18n";
 import { computed } from "vue";
+
+const { t } = useI18n();
 
 interface Props {
   page: number;
@@ -41,9 +44,9 @@ function next() {
 </script>
 
 <template>
-  <nav :class="cn('flex items-center gap-3', props.class)" aria-label="Navigasi halaman">
+  <nav :class="cn('flex items-center gap-3', props.class)" :aria-label="t('inbox.pagination.label')">
     <Button
-      aria-label="Halaman sebelumnya"
+      :aria-label="t('inbox.pagination.previous')"
       variant="ghost"
       size="icon"
       :disabled="disabled || isFirst"
@@ -54,12 +57,12 @@ function next() {
 
     <span class="text-sm text-foreground">
       <slot name="range" :start="start" :end="end" :total="total">
-        {{ start }}–{{ end }} dari {{ total }}
+        {{ t("inbox.pagination.range", { start, end, total }) }}
       </slot>
     </span>
 
     <Button
-      aria-label="Halaman berikutnya"
+      :aria-label="t('inbox.pagination.next')"
       variant="ghost"
       size="icon"
       :disabled="disabled || isLast"

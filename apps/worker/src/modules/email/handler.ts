@@ -174,7 +174,7 @@ export async function handleInboundEmail(
         and(
           eq(folders.mailbox_id, mailboxId),
           eq(folders.folder_type, "system"),
-          eq(folders.name, "inbox"),
+          eq(folders.name, "system.inbox"),
         ),
       )
       .limit(1);
@@ -191,7 +191,8 @@ export async function handleInboundEmail(
   const now = Date.now();
   const folderName = finalFolder.name.toLowerCase();
   const folderEnteredAt =
-    finalFolder.folder_type === "system" && (folderName === "trash" || folderName === "spam")
+    finalFolder.folder_type === "system" &&
+    (folderName === "system.trash" || folderName === "system.spam")
       ? now
       : null;
 

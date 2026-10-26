@@ -1,22 +1,29 @@
 <script setup lang="ts">
 import { Icon } from "@/icons";
+import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 
-const actions = [
-  { icon: "lucide:calendar-check", label: "Kalender" },
-  { icon: "lucide:lightbulb", label: "Keep" },
-  { icon: "lucide:check-circle-2", label: "Tasks" },
-  { icon: "lucide:circle-user-round", label: "Kontak" },
-];
+const { t } = useI18n();
+
+const actions = computed(() => [
+  { icon: "lucide:calendar-check", label: t("shell.accessoryRail.calendar") },
+  { icon: "lucide:lightbulb", label: t("shell.accessoryRail.keep") },
+  { icon: "lucide:check-circle-2", label: t("shell.accessoryRail.tasks") },
+  { icon: "lucide:circle-user-round", label: t("shell.accessoryRail.contacts") },
+]);
 </script>
 
 <template>
-  <aside aria-label="Aplikasi tambahan" class="flex w-[56px] flex-col items-center gap-6 py-4">
+  <aside
+    :aria-label="t('shell.accessoryRail.label')"
+    class="flex w-[56px] flex-col items-center gap-6 py-4"
+  >
     <button
       v-for="action in actions"
       :key="action.icon"
       type="button"
       disabled
-      title="Segera hadir"
+      :title="t('shell.accessoryRail.comingSoon')"
       :aria-label="action.label"
       class="flex size-10 items-center justify-center rounded-full text-muted-foreground"
     >
@@ -26,8 +33,8 @@ const actions = [
     <button
       type="button"
       disabled
-      title="Segera hadir"
-      aria-label="Tambah aplikasi"
+      :title="t('shell.accessoryRail.comingSoon')"
+      :aria-label="t('shell.accessoryRail.addApp')"
       class="flex size-10 items-center justify-center rounded-full text-muted-foreground"
     >
       <Icon icon="lucide:plus" class="size-5" />

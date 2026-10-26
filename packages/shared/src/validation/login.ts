@@ -7,7 +7,7 @@ import { usernameSchema } from "./username";
  */
 export const loginSchema = z.object({
   username: usernameSchema,
-  password: z.string().min(1, "Password is required"),
+  password: z.string().min(1, "validation.login.passwordRequired"),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

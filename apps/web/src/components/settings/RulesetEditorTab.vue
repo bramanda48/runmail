@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import RulesetActionRow, { type ActionRow } from "@/components/app/RulesetActionRow.vue";
+import RulesetActionRow, {
+  type ActionRow,
+  type FolderOption,
+} from "@/components/app/RulesetActionRow.vue";
 import RulesetConditionRow, { type ConditionRow } from "@/components/app/RulesetConditionRow.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -15,10 +18,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Icon } from "@/icons";
+import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
 import { ApiError, createRuleset, getRuleset, listFolders, updateRuleset } from "@/lib/api";
 import type { LogicOperator, RulesetDetail } from "@runmail/shared";
 import { LOGIC_OPERATORS, rulesetSchema, validateRegexSafe } from "@runmail/shared";
 import { computed, onMounted, reactive, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 
 interface FormErrors {
@@ -35,6 +40,7 @@ const props = defineProps<{
 
 const route = useRoute();
 const router = useRouter();
+const { t, te } = useI18n();
 
 const rulesetId = computed(() => route.params.ruleset_id as string | undefined);
 const isCreate = computed(() => route.name === "settings-ruleset-new");
@@ -43,7 +49,7 @@ const isLoading = ref(false);
 const isSaving = ref(false);
 const notFound = ref(false);
 
-const folders = ref<{ id: string; name: string }[]>([]);
+const folders = ref<FolderOption[]>([]);
 
 const form = reactive({
   name: "",
@@ -59,7 +65,22 @@ const errors = reactive<FormErrors>({
   actions: [],
 });
 
-const logicOperatorOptions = computed(() => LOGIC_OPERATORS.map((v) => ({ value: v, label: v })));
+const LOGIC_OPERATOR_LABEL_KEYS: Record<LogicOperator, string> = {
+  AND: "rulesets.logic.AND",
+  OR: "rulesets.logic.OR",
+};
+
+const logicOperatorOptions = computed(() =>
+  LOGIC_OPERATORS.map((value) => ({
+    value,
+    label: t(LOGIC_OPERATOR_LABEL_KEYS[value]),
+  })),
+);
+
+function translateMessage(message?: string): string | undefined {
+  if (!message) return undefined;
+  return te(message) ? t(message) : message;
+}
 
 async function init() {
   await loadFolders();
@@ -70,7 +91,7 @@ async function loadFolders() {
   if (!props.mailboxId) return;
   try {
     const { folders: list } = await listFolders(props.mailboxId);
-    folders.value = list.map((f) => ({ id: f.id, name: f.name }));
+    folders.value = list.map((f) => ({ id: f.id, name: f.name, folder_type: f.folder_type }));
   } catch {
     folders.value = [];
   }
@@ -151,9 +172,9 @@ async function loadRuleset() {
     if (err instanceof ApiError && err.status === 404) {
       notFound.value = true;
     } else if (err instanceof ApiError) {
-      errors.inline = err.message || "Gagal memuat ruleset. Coba lagi.";
+      errors.inline = translateApiError(err);
     } else {
-      errors.inline = "Gagal memuat ruleset. Coba lagi.";
+      errors.inline = t("rulesets.editor.errors.load");
     }
   } finally {
     isLoading.value = false;
@@ -210,11 +231,11 @@ function validateForm(): boolean {
 
   const priorityNum = Number(form.priority);
   if (!form.name.trim()) {
-    errors.name = "Nama ruleset wajib diisi";
+    errors.name = t("validation.ruleset.nameRequired");
     valid = false;
   }
   if (form.priority.trim() === "" || !Number.isInteger(priorityNum) || priorityNum < 0) {
-    errors.priority = "Prioritas harus berupa bilangan bulat 0 atau lebih";
+    errors.priority = t("validation.ruleset.priorityNegative");
     valid = false;
   }
 
@@ -236,31 +257,35 @@ function validateForm(): boolean {
 
   if (!parsed.success) {
     const flat = parsed.error.flatten();
-    if (flat.fieldErrors.name?.length) errors.name = flat.fieldErrors.name[0];
-    if (flat.fieldErrors.priority?.length) errors.priority = flat.fieldErrors.priority[0];
+    if (flat.fieldErrors.name?.length) {
+      errors.name = translateMessage(flat.fieldErrors.name[0]);
+    }
+    if (flat.fieldErrors.priority?.length) {
+      errors.priority = translateMessage(flat.fieldErrors.priority[0]);
+    }
     if (flat.fieldErrors.conditions?.length) {
-      errors.inline = flat.fieldErrors.conditions[0];
+      errors.inline = translateMessage(flat.fieldErrors.conditions[0]);
       valid = false;
     }
     if (flat.fieldErrors.actions?.length) {
-      errors.inline = flat.fieldErrors.actions[0];
+      errors.inline = translateMessage(flat.fieldErrors.actions[0]);
       valid = false;
     }
   }
 
   form.conditions.forEach((c, i) => {
     if (!c.condition_value.trim()) {
-      errors.conditions[i] = "Nilai kondisi wajib diisi";
+      errors.conditions[i] = t("validation.ruleset.conditionValueRequired");
       valid = false;
     } else if (c.match_type === "match regex" && !validateRegexSafe(c.condition_value)) {
-      errors.conditions[i] = "Regex tidak valid";
+      errors.conditions[i] = t("rulesets.errors.invalidRegex");
       valid = false;
     }
   });
 
   form.actions.forEach((a, i) => {
     if (a.action_type === "move_to_folder" && !a.action_value) {
-      errors.actions[i] = "Pilih folder tujuan";
+      errors.actions[i] = t("rulesets.errors.folderRequired");
       valid = false;
     }
   });
@@ -372,30 +397,30 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
     </div>
 
     <div v-else-if="notFound" class="flex flex-col gap-4">
-      <Alert variant="destructive">Ruleset tidak ditemukan.</Alert>
-      <Button variant="ghost" @click="goBack">Kembali ke daftar ruleset</Button>
+      <Alert variant="destructive">{{ t("rulesets.editor.notFound") }}</Alert>
+      <Button variant="ghost" @click="goBack">{{ t("rulesets.editor.backToList") }}</Button>
     </div>
 
     <Card v-else>
       <CardHeader>
-        <CardTitle>Detail Ruleset</CardTitle>
+        <CardTitle>{{ t("rulesets.editor.cardTitle") }}</CardTitle>
       </CardHeader>
       <CardContent class="flex flex-col gap-6">
         <Alert v-if="errors.inline" variant="destructive">{{ errors.inline }}</Alert>
 
         <div class="grid gap-4 md:grid-cols-2">
           <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">Nama Ruleset</span>
+            <span class="text-sm font-medium text-foreground">{{ t("rulesets.editor.name") }}</span>
             <Input
               v-model="form.name"
-              placeholder="Contoh: Filter newsletter"
+              :placeholder="t('rulesets.editor.namePlaceholder')"
               :disabled="isSaving"
               :aria-invalid="Boolean(errors.name)"
             />
             <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
           </label>
           <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">Prioritas</span>
+            <span class="text-sm font-medium text-foreground">{{ t("rulesets.editor.priority") }}</span>
             <Input
               v-model="form.priority"
               type="number"
@@ -406,7 +431,7 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
               :aria-invalid="Boolean(errors.priority)"
             />
             <p class="text-xs text-muted-foreground">
-              Angka lebih kecil dieksekusi lebih dahulu.
+              {{ t("rulesets.editor.priorityHint") }}
             </p>
             <p v-if="errors.priority" class="text-sm text-destructive">{{ errors.priority }}</p>
           </label>
@@ -414,10 +439,10 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
 
         <div class="grid gap-4 md:grid-cols-2">
           <div class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">Logika Kondisi</span>
+            <span class="text-sm font-medium text-foreground">{{ t("rulesets.editor.logic") }}</span>
             <Select v-model="form.logic_operator" :disabled="isSaving">
               <SelectTrigger id="select-logic-operator">
-                <SelectValue placeholder="Pilih logika" />
+                <SelectValue :placeholder="t('rulesets.editor.logicPlaceholder')" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem
@@ -433,12 +458,13 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
 
           <div class="flex items-center justify-between rounded-lg border p-3">
             <div>
-              <p class="text-sm font-medium text-foreground">Aktifkan Ruleset</p>
-              <p class="text-xs text-muted-foreground">Ruleset nonaktif tidak akan dieksekusi.</p>
+              <p class="text-sm font-medium text-foreground">{{ t("rulesets.editor.enabled") }}</p>
+              <p class="text-xs text-muted-foreground">{{ t("rulesets.editor.enabledHint") }}</p>
+
             </div>
             <Switch
               :model-value="form.is_enabled"
-              ariaLabel="Aktifkan ruleset"
+              :ariaLabel="t('rulesets.editor.enabledAria')"
               :disabled="isSaving"
               @update:model-value="form.is_enabled = $event"
             />
@@ -447,7 +473,7 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
 
         <!-- Conditions -->
         <div class="flex flex-col gap-3">
-          <h3 class="text-sm font-semibold text-foreground">Kondisi</h3>
+          <h3 class="text-sm font-semibold text-foreground">{{ t("rulesets.editor.conditions") }}</h3>
           <div v-for="(condition, index) in form.conditions" :key="condition.id">
             <RulesetConditionRow
               v-model:condition="form.conditions[index]"
@@ -470,13 +496,13 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
             @click="addCondition"
           >
             <Icon icon="lucide:plus" />
-            <span>Tambah Condition</span>
+            <span>{{ t("rulesets.editor.addCondition") }}</span>
           </Button>
         </div>
 
         <!-- Actions -->
         <div class="flex flex-col gap-3">
-          <h3 class="text-sm font-semibold text-foreground">Aksi</h3>
+          <h3 class="text-sm font-semibold text-foreground">{{ t("rulesets.editor.actions") }}</h3>
           <div v-for="(action, index) in form.actions" :key="action.id">
             <RulesetActionRow
               v-model:action="form.actions[index]"
@@ -493,25 +519,26 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
             />
           </div>
           <p class="text-xs text-muted-foreground">
-            Jika ada beberapa aksi move, move terakhir menentukan folder akhir.
+            {{ t("rulesets.editor.moveHint") }}
           </p>
           <Button
             type="button"
             variant="outline"
             size="sm"
-                        :disabled="isSaving"
+            :disabled="isSaving"
             @click="addAction"
           >
+
             <Icon icon="lucide:plus" />
-            <span>Tambah Action</span>
+            <span>{{ t("rulesets.editor.addAction") }}</span>
           </Button>
         </div>
 
         <div class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
-          <Button variant="ghost" :disabled="isSaving" @click="goBack"> Batal </Button>
+          <Button variant="ghost" :disabled="isSaving" @click="goBack"> {{ t("rulesets.editor.cancel") }} </Button>
           <Button :disabled="isSaving" @click="submit">
             <Icon v-if="isSaving" icon="lucide:loader-circle" class="animate-spin" />
-            <span>Simpan</span>
+            <span>{{ t("rulesets.editor.save") }}</span>
           </Button>
         </div>
       </CardContent>

@@ -1,0 +1,42 @@
+{
+  "username": {
+    "pattern": "Username must be 6-20 characters using letters, digits, hyphen, underscore, or dot"
+  },
+  "login": {
+    "passwordRequired": "Password is required"
+  },
+  "password": {
+    "min": "Password must be at least 8 characters",
+    "max": "Password must be at most 72 characters"
+  },
+  "domainName": {
+    "invalid": "Enter a valid domain name"
+  },
+  "localPart": {
+    "invalidChars": "The email address contains invalid characters",
+    "leadingDot": "The email address must not start with a dot",
+    "trailingDot": "The email address must not end with a dot",
+    "consecutiveDots": "The email address must not contain consecutive dots"
+  },
+  "folderName": {
+    "noOuterWhitespace": "Folder name must not start or end with spaces",
+    "required": "Folder name is required",
+    "max": "Folder name must be at most 64 characters"
+  },
+  "ruleset": {
+    "conditionValueRequired": "Condition value is required",
+    "conditionValueMax": "Condition value must be at most 500 characters",
+    "nameRequired": "Ruleset name is required",
+    "nameMax": "Ruleset name must be at most 100 characters",
+    "priorityNegative": "Priority must be a non-negative integer",
+    "conditionsMin": "Add at least one condition",
+    "conditionsMax": "At most 50 conditions are allowed",
+    "actionsMin": "Add at least one action",
+    "actionsMax": "At most 50 actions are allowed"
+  },
+  "syncMutation": {
+    "messageIdRequired": "A message id is required",
+    "moveFolderIdRequired": "A target folder is required to move a message",
+    "itemsMin": "At least one change is required"
+  }
+}

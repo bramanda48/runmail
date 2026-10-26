@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { LocalMessage } from "@/db/mailbox-db";
+import { formatDateTime } from "@/i18n/format";
 import { Icon } from "@/icons";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const props = defineProps<{
   message: LocalMessage;
@@ -37,30 +41,29 @@ const signedBy = computed(() => {
   return match ? match[1].trim() : null;
 });
 
-function formatFullDate(ts: number) {
-  return new Date(ts).toLocaleString("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 const rows = computed(() => {
   const fromName = props.message.from_name?.trim();
   const list: { label: string; bold?: string; rest?: string }[] = [
     {
-      label: "from:",
+      label: t("message.headerInfo.from"),
       bold: fromName || undefined,
       rest: `<${props.message.from_address}>`,
     },
-    { label: "to:", rest: props.message.to_addresses.join(", ") || "—" },
-    { label: "date:", rest: formatFullDate(props.message.email_date) },
-    { label: "subject:", rest: props.message.subject || "(Tanpa subjek)" },
+    {
+      label: t("message.headerInfo.to"),
+      rest: props.message.to_addresses.join(", ") || t("message.headerInfo.emptyValue"),
+    },
+    {
+      label: t("message.headerInfo.date"),
+      rest: formatDateTime(props.message.email_date),
+    },
+    {
+      label: t("message.headerInfo.subject"),
+      rest: props.message.subject || t("message.noSubject"),
+    },
   ];
-  if (mailedBy.value) list.push({ label: "mailed-by:", rest: mailedBy.value });
-  if (signedBy.value) list.push({ label: "signed-by:", rest: signedBy.value });
+  if (mailedBy.value) list.push({ label: t("message.headerInfo.mailedBy"), rest: mailedBy.value });
+  if (signedBy.value) list.push({ label: t("message.headerInfo.signedBy"), rest: signedBy.value });
   return list;
 });
 </script>
@@ -70,7 +73,7 @@ const rows = computed(() => {
     <PopoverTrigger
       class="mt-0.5 inline-flex w-max cursor-pointer items-center gap-1 bg-transparent p-0 text-xs text-muted-foreground hover:text-foreground"
     >
-      <span>kepada saya</span>
+      <span>{{ t("message.headerInfo.toMe") }}</span>
       <Icon icon="lucide:chevron-down" class="size-4" />
     </PopoverTrigger>
     <PopoverContent align="start" class="w-[min(28rem,calc(100vw-2rem))]">

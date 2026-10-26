@@ -9,14 +9,20 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
+import { translateApiError } from "@/i18n/api-errors";
 import { ApiError, fetchRawEmail } from "@/lib/api";
 import { getCachedRaw, putCachedRaw } from "@/lib/raw-cache";
 import { sanitizeEmailHtml } from "@/lib/sanitize";
 import { computeUnreadCounts } from "@/lib/unread-counts";
 import PostalMime from "postal-mime";
 import { computed, onMounted, ref, shallowRef, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
 const { route, router, mailboxStore, mailboxId, resolveMailbox } = useMailboxWorkspace();
+const { t } = useI18n();
+
+/** System folder key for the inbox; system folders persist i18n keys in `name`. */
+const INBOX_FOLDER_KEY = "system.inbox";
 
 const messageId = computed(() => route.params.message_id as string);
 
@@ -30,7 +36,16 @@ const rawHtml = ref("");
 const bodyText = ref("");
 const headers = ref<{ key: string; value: string }[]>([]);
 const attachments = ref<{ filename?: string; mimeType?: string; size?: number }[]>([]);
-const fetchError = ref("");
+
+type LoadFailure = { kind: "not-found" } | { kind: "api"; error: ApiError };
+
+const loadFailure = ref<LoadFailure | null>(null);
+const fetchError = computed(() => {
+  const failure = loadFailure.value;
+  if (!failure) return "";
+  return failure.kind === "not-found" ? t("message.notFound") : translateApiError(failure.error);
+});
+
 const remoteImagesBlocked = ref(false);
 const imagesAllowed = ref(false);
 
@@ -87,7 +102,7 @@ async function loadMessage(autoRead = false) {
   const row = await db.messages.get(messageId.value);
   if (!row) {
     bodyState.value = "error";
-    fetchError.value = "Email tidak ditemukan di perangkat ini.";
+    loadFailure.value = { kind: "not-found" };
     return;
   }
   message.value = row;
@@ -105,7 +120,7 @@ async function loadMessage(autoRead = false) {
 
 async function loadBody() {
   bodyState.value = "loading";
-  fetchError.value = "";
+  loadFailure.value = null;
   try {
     const cached = await getCachedRaw(mailboxId.value, messageId.value);
     let blob: Blob;
@@ -147,7 +162,7 @@ async function loadBody() {
   } catch (err) {
     if (err instanceof ApiError) {
       bodyState.value = "error";
-      fetchError.value = err.message;
+      loadFailure.value = { kind: "api", error: err };
     } else {
       bodyState.value = "parse-error";
     }
@@ -190,33 +205,35 @@ async function moveSingle(folderId: string) {
 function quoteBody(): string {
   return bodyText.value
     ? `\n\n---\n${bodyText.value}`
-    : "\n\n---\n(Isi email asli dalam format HTML.)";
+    : `\n\n---\n${t("message.quote.htmlOnly")}`;
 }
 
 function openReply() {
   if (!message.value) return;
-  const subject = message.value.subject.startsWith("Re:")
+  const prefix = t("message.subjectPrefix.reply");
+  const subject = message.value.subject.startsWith(prefix)
     ? message.value.subject
-    : `Re: ${message.value.subject}`;
+    : `${prefix} ${message.value.subject}`;
   composeDraft.value = {
     to: message.value.from_address,
     subject,
     body: quoteBody(),
-    title: "Balas",
+    title: t("message.reply"),
   };
   composeOpen.value = true;
 }
 
 function openForward() {
   if (!message.value) return;
-  const subject = message.value.subject.startsWith("Fwd:")
+  const prefix = t("message.subjectPrefix.forward");
+  const subject = message.value.subject.startsWith(prefix)
     ? message.value.subject
-    : `Fwd: ${message.value.subject}`;
+    : `${prefix} ${message.value.subject}`;
   composeDraft.value = {
     to: "",
     subject,
     body: quoteBody(),
-    title: "Teruskan",
+    title: t("message.forward"),
   };
   composeOpen.value = true;
 }
@@ -231,7 +248,7 @@ function onSearch(value: string) {
     ? folders.value.find((f) => f.id === message.value?.folder_id)
     : undefined;
   const base =
-    folder?.folder_type === "system" && folder.name.toLowerCase() === "inbox"
+    folder?.folder_type === "system" && folder.name.toLowerCase() === INBOX_FOLDER_KEY
       ? `/mailboxes/${mailboxId.value}/inbox`
       : folder
         ? `/mailboxes/${mailboxId.value}/folders/${folder.id}`
@@ -279,7 +296,9 @@ watch(mailboxId, () => init());
     @search="onSearch"
     @compose="openCompose"
   >
-    <h1 class="sr-only">{{ message?.subject || "Detail email" }}</h1>
+    <h1 class="sr-only">
+      {{ message?.subject || (message ? t("message.noSubject") : t("message.screenTitle")) }}
+    </h1>
 
     <EmailDetailToolbar
       v-if="message"
@@ -314,7 +333,7 @@ watch(mailboxId, () => init());
         <Alert v-else variant="destructive">
           {{ fetchError }}
           <Button variant="ghost" size="sm" class="ml-2" @click="loadMessage(false)">
-            Coba Lagi
+            {{ t("common.actions.retry") }}
           </Button>
         </Alert>
       </div>

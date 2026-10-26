@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { LocalFolder } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { computed } from "vue";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
   folders: LocalFolder[];
@@ -23,8 +24,12 @@ const emits = defineEmits<{
   newer: [];
 }>();
 
+const { t } = useI18n();
+
 const positionLabel = computed(() =>
-  props.position !== null && props.total > 0 ? `${props.position} dari ${props.total}` : "",
+  props.position !== null && props.total > 0
+    ? t("message.position", { position: props.position, total: props.total })
+    : "",
 );
 </script>
 
@@ -33,7 +38,7 @@ const positionLabel = computed(() =>
     <Button
       variant="ghost"
       size="icon"
-      aria-label="Kembali"
+      :aria-label="t('common.actions.back')"
       class="shadow-none"
       @click="emits('back')"
     >
@@ -46,7 +51,7 @@ const positionLabel = computed(() =>
       <Button
         variant="ghost"
         size="icon"
-        :aria-label="isRead ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
+        :aria-label="isRead ? t('message.actions.markUnread') : t('message.actions.markRead')"
         @click="emits('toggle-read')"
       >
         <Icon :icon="isRead ? 'lucide:mail-open' : 'lucide:mail'" class="size-4" />
@@ -54,7 +59,6 @@ const positionLabel = computed(() =>
       <MoveFolderMenu
         :folders="folders"
         :current-folder-id="currentFolderId"
-        label="Pindahkan ke folder"
         @move-to-folder="(folderId: string) => emits('move-to', folderId)"
       />
     </div>
@@ -71,7 +75,7 @@ const positionLabel = computed(() =>
       <Button
         variant="ghost"
         size="icon"
-        aria-label="Email lebih lama"
+        :aria-label="t('message.actions.older')"
         :disabled="!hasOlder"
         @click="emits('older')"
       >
@@ -80,7 +84,7 @@ const positionLabel = computed(() =>
       <Button
         variant="ghost"
         size="icon"
-        aria-label="Email lebih baru"
+        :aria-label="t('message.actions.newer')"
         :disabled="!hasNewer"
         @click="emits('newer')"
       >

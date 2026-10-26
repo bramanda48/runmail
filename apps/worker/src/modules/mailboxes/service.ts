@@ -1,6 +1,6 @@
 import { domains, folders, mailboxes, mailboxUsers, users } from "@runmail/db";
 import type { Mailbox, MailboxLinkedUser, PageMeta } from "@runmail/shared";
-import { buildIdCursor, buildPageMeta, SYSTEM_FOLDER_NAMES } from "@runmail/shared";
+import { buildIdCursor, buildPageMeta, SYSTEM_FOLDER_KEYS } from "@runmail/shared";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { getDb } from "../../lib/db";
 import type { AppContext } from "../../lib/env";
@@ -124,7 +124,7 @@ export async function createMailbox(
         created_at: now,
         updated_at: now,
       }),
-      ...SYSTEM_FOLDER_NAMES.map((name) =>
+      ...SYSTEM_FOLDER_KEYS.map((name) =>
         db.insert(folders).values({
           id: uuidv7(),
           mailbox_id: id,

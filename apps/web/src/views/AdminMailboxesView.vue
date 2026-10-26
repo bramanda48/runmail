@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
 import { Icon } from "@/icons";
 import {
   ApiError,
@@ -42,8 +43,11 @@ import {
   unlinkMailboxUser,
   updateMailbox,
 } from "@/lib/api";
-import type { ApiMeta, Domain, Mailbox, MailboxLinkedUser, User } from "@runmail/shared";
+import type { ApiMeta, Domain, Mailbox, MailboxLinkedUser, Role, User } from "@runmail/shared";
 import { computed, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
 
 const perPage = 10;
 
@@ -78,9 +82,9 @@ async function load(cursor?: string) {
     }
   } catch (err) {
     if (err instanceof ApiError) {
-      error.value = err.message;
+      error.value = translateApiError(err);
     } else {
-      error.value = "Tidak dapat memuat mailbox. Coba lagi.";
+      error.value = t("admin.mailboxes.loadError");
     }
   } finally {
     isLoading.value = false;
@@ -151,9 +155,9 @@ async function openCreateDialog() {
     domains.value = await fetchAllDomains();
   } catch (err) {
     if (err instanceof ApiError) {
-      createInlineError.value = err.message;
+      createInlineError.value = translateApiError(err);
     } else {
-      createInlineError.value = "Tidak dapat memuat domain.";
+      createInlineError.value = t("admin.mailboxes.domainLoadError");
     }
   } finally {
     loadingDomains.value = false;
@@ -162,21 +166,21 @@ async function openCreateDialog() {
 
 function applyCreateError(err: ApiError) {
   if (err.code === "MAILBOX_ADDRESS_ALREADY_EXISTS") {
-    localPartError.value = "Alamat email ini sudah digunakan.";
+    localPartError.value = translateApiError(err);
     return;
   }
   if (err.code === "DOMAIN_NOT_ACTIVE") {
-    createInlineError.value = "Domain tidak aktif. Pilih domain aktif.";
+    createInlineError.value = translateApiError(err);
     return;
   }
-  if (err.code === "VALIDATION_ERROR" && err.details && typeof err.details === "object") {
-    const details = err.details as Record<string, string[]>;
+  if (err.code === "VALIDATION_ERROR") {
+    const details = translateFieldErrors(err.details);
     if (details.local_part?.length) {
       localPartError.value = details.local_part[0];
     }
     return;
   }
-  createInlineError.value = err.message || "Gagal membuat mailbox. Coba lagi.";
+  createInlineError.value = translateApiError(err);
 }
 
 async function submitCreate() {
@@ -184,11 +188,11 @@ async function submitCreate() {
   createInlineError.value = "";
 
   if (!selectedDomainId.value) {
-    createInlineError.value = "Pilih domain aktif terlebih dahulu";
+    createInlineError.value = t("admin.mailboxes.validation.domainRequired");
     return;
   }
   if (!localPart.value.trim()) {
-    localPartError.value = "Bagian lokal alamat wajib diisi";
+    localPartError.value = t("admin.mailboxes.validation.localPartRequired");
     return;
   }
 
@@ -204,7 +208,7 @@ async function submitCreate() {
     if (err instanceof ApiError) {
       applyCreateError(err);
     } else {
-      createInlineError.value = "Tidak dapat terhubung ke server. Coba lagi.";
+      createInlineError.value = t("admin.connectionError");
     }
   } finally {
     createSubmitting.value = false;
@@ -250,9 +254,9 @@ async function submitEdit() {
     await load(cursors.value[pageIndex.value]);
   } catch (err) {
     if (err instanceof ApiError) {
-      editInlineError.value = err.message || "Gagal memperbarui mailbox.";
+      editInlineError.value = err.message || t("admin.mailboxes.updateError");
     } else {
-      editInlineError.value = "Tidak dapat terhubung ke server. Coba lagi.";
+      editInlineError.value = t("admin.connectionError");
     }
   } finally {
     editSubmitting.value = false;
@@ -269,10 +273,15 @@ const manageLoading = ref(false);
 const manageSubmitting = ref(false);
 const manageInlineError = ref("");
 
+const roleLabels = computed<Record<Role, string>>(() => ({
+  admin: t("admin.role.admin"),
+  member: t("admin.role.member"),
+}));
+
 const userOptions = computed(() =>
   allUsers.value
     .filter((u) => !linkedUsers.value.some((linked) => linked.user_id === u.id))
-    .map((u) => ({ value: u.id, label: `${u.username} (${u.role})` })),
+    .map((u) => ({ value: u.id, label: `${u.username} (${roleLabels.value[u.role]})` })),
 );
 
 async function fetchAllUsers(): Promise<User[]> {
@@ -315,14 +324,14 @@ async function openManageUsers(mailbox: Mailbox) {
   } else if (usersResult.reason instanceof ApiError) {
     manageInlineError.value = usersResult.reason.message;
   } else {
-    manageInlineError.value = "Tidak dapat memuat daftar user.";
+    manageInlineError.value = t("admin.mailboxes.manageDialog.loadUsersError");
   }
   if (linkedResult.status === "rejected") {
     const err = linkedResult.reason;
     manageInlineError.value =
       err instanceof ApiError
-        ? err.message || "Gagal memuat user terhubung."
-        : "Tidak dapat terhubung ke server.";
+        ? err.message || t("admin.mailboxes.manageDialog.loadLinkedError")
+        : t("admin.connectionError");
   }
   manageLoading.value = false;
 }
@@ -333,9 +342,9 @@ async function refreshLinkedUsers(): Promise<void> {
     await loadLinkedUsers(managingMailbox.value.id);
   } catch (err) {
     if (err instanceof ApiError) {
-      manageInlineError.value = err.message || "Gagal memuat user terhubung.";
+      manageInlineError.value = err.message || t("admin.mailboxes.manageDialog.loadLinkedError");
     } else {
-      manageInlineError.value = "Tidak dapat terhubung ke server.";
+      manageInlineError.value = t("admin.connectionError");
     }
   }
 }
@@ -350,9 +359,9 @@ async function linkUser() {
     await refreshLinkedUsers();
   } catch (err) {
     if (err instanceof ApiError) {
-      manageInlineError.value = err.message || "Gagal menambahkan user.";
+      manageInlineError.value = err.message || t("admin.mailboxes.manageDialog.linkError");
     } else {
-      manageInlineError.value = "Tidak dapat terhubung ke server.";
+      manageInlineError.value = t("admin.connectionError");
     }
   } finally {
     manageSubmitting.value = false;
@@ -368,9 +377,9 @@ async function unlinkUser(user: MailboxLinkedUser) {
     await refreshLinkedUsers();
   } catch (err) {
     if (err instanceof ApiError) {
-      manageInlineError.value = err.message || "Gagal menghapus kaitan user.";
+      manageInlineError.value = err.message || t("admin.mailboxes.manageDialog.unlinkError");
     } else {
-      manageInlineError.value = "Tidak dapat terhubung ke server.";
+      manageInlineError.value = t("admin.connectionError");
     }
   } finally {
     manageSubmitting.value = false;
@@ -383,12 +392,14 @@ async function unlinkUser(user: MailboxLinkedUser) {
     <main class="p-4 lg:p-8">
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div class="flex flex-col gap-1">
-          <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">Mailbox</h1>
-          <p class="text-sm text-muted-foreground">Buat dan kelola mailbox serta akses user.</p>
+          <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">
+            {{ t("admin.mailboxes.title") }}
+          </h1>
+          <p class="text-sm text-muted-foreground">{{ t("admin.mailboxes.description") }}</p>
         </div>
         <Button @click="openCreateDialog">
           <Icon icon="lucide:plus" />
-          <span>Buat Mailbox</span>
+          <span>{{ t("admin.mailboxes.create") }}</span>
         </Button>
       </div>
 
@@ -398,19 +409,19 @@ async function unlinkUser(user: MailboxLinkedUser) {
 
       <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="destructive">{{ error }}</Alert>
-        <Button variant="ghost" @click="retry">Coba Lagi</Button>
+        <Button variant="ghost" @click="retry">{{ t("common.actions.retry") }}</Button>
       </div>
 
       <EmptyState
         v-else-if="mailboxes.length === 0"
         icon="lucide:mail"
-        heading="Belum ada mailbox"
-        description="Belum ada mailbox yang dibuat."
+        :heading="t('admin.mailboxes.empty.title')"
+        :description="t('admin.mailboxes.empty.description')"
       >
         <template #action>
           <Button class="mt-4" @click="openCreateDialog">
             <Icon icon="lucide:plus" />
-            <span>Buat Mailbox</span>
+            <span>{{ t("admin.mailboxes.create") }}</span>
           </Button>
         </template>
       </EmptyState>
@@ -420,9 +431,9 @@ async function unlinkUser(user: MailboxLinkedUser) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Alamat</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead class="w-28">Aksi</TableHead>
+                <TableHead>{{ t("admin.mailboxes.table.address") }}</TableHead>
+                <TableHead>{{ t("admin.mailboxes.table.status") }}</TableHead>
+                <TableHead class="w-28">{{ t("admin.mailboxes.table.actions") }}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -430,13 +441,13 @@ async function unlinkUser(user: MailboxLinkedUser) {
                 <TableCell class="font-medium">{{ mailbox.address }}</TableCell>
                 <TableCell>
                   <Badge :variant="mailbox.is_active ? 'secondary' : 'outline'">
-                    {{ mailbox.is_active ? "Aktif" : "Nonaktif" }}
+                    {{ mailbox.is_active ? t("admin.status.active") : t("admin.status.inactive") }}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   <div class="flex items-center gap-1">
                     <Button
-                      :aria-label="`Edit ${mailbox.address}`"
+                      :aria-label="t('admin.mailboxes.editAria', { address: mailbox.address })"
                       variant="ghost"
                       size="icon"
                       @click="openEdit(mailbox)"
@@ -444,7 +455,7 @@ async function unlinkUser(user: MailboxLinkedUser) {
                       <Icon icon="lucide:pencil" />
                     </Button>
                     <Button
-                      :aria-label="`Kelola user ${mailbox.address}`"
+                      :aria-label="t('admin.mailboxes.manageAria', { address: mailbox.address })"
                       variant="ghost"
                       size="icon"
                       @click="openManageUsers(mailbox)"
@@ -476,24 +487,24 @@ async function unlinkUser(user: MailboxLinkedUser) {
     <DialogRoot v-model:open="createOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Buat Mailbox</DialogTitle>
-          <DialogDescription>Pilih domain aktif dan isi bagian lokal alamat.</DialogDescription>
+          <DialogTitle>{{ t("admin.mailboxes.createDialog.title") }}</DialogTitle>
+          <DialogDescription>{{ t("admin.mailboxes.createDialog.description") }}</DialogDescription>
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
           <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
           <Alert v-if="!loadingDomains && activeDomains.length === 0">
-            Aktifkan domain terlebih dahulu sebelum membuat mailbox.
+            {{ t("admin.mailboxes.createDialog.noActiveDomains") }}
           </Alert>
 
           <div class="flex flex-col gap-1.5">
-            <label for="select-domain" class="text-sm font-medium text-foreground">Domain</label>
+            <label for="select-domain" class="text-sm font-medium text-foreground">{{ t("admin.mailboxes.createDialog.domainLabel") }}</label>
             <Select v-model="selectedDomainId">
               <SelectTrigger
                 id="select-domain"
                 :disabled="loadingDomains || createSubmitting || activeDomains.length === 0"
               >
-                <SelectValue placeholder="Pilih domain" />
+                <SelectValue :placeholder="t('admin.mailboxes.createDialog.domainPlaceholder')" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem
@@ -508,17 +519,17 @@ async function unlinkUser(user: MailboxLinkedUser) {
           </div>
 
           <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">Alamat Email</span>
+            <span class="text-sm font-medium text-foreground">{{ t("admin.mailboxes.createDialog.addressLabel") }}</span>
             <div class="flex items-center gap-2">
               <Input
                 v-model="localPart"
-                placeholder="nama"
+                :placeholder="t('admin.mailboxes.createDialog.localPartPlaceholder')"
                 class="flex-1"
                 :disabled="createSubmitting || activeDomains.length === 0"
                 :aria-invalid="Boolean(localPartError)"
               />
               <span class="whitespace-nowrap text-sm text-muted-foreground">
-                @{{ selectedDomain?.domain_name || "domain" }}
+                @{{ selectedDomain?.domain_name || t("admin.mailboxes.createDialog.domainFallback") }}
               </span>
             </div>
             <p v-if="localPartError" class="text-sm text-destructive">{{ localPartError }}</p>
@@ -527,11 +538,11 @@ async function unlinkUser(user: MailboxLinkedUser) {
 
         <DialogFooter>
           <Button variant="ghost" :disabled="createSubmitting" @click="createOpen = false">
-            Batal
+            {{ t("common.actions.cancel") }}
           </Button>
           <Button :disabled="createSubmitting || activeDomains.length === 0" @click="submitCreate">
             <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>Buat</span>
+            <span>{{ t("admin.mailboxes.createDialog.submit") }}</span>
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -541,26 +552,26 @@ async function unlinkUser(user: MailboxLinkedUser) {
     <DialogRoot v-model:open="editOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Mailbox</DialogTitle>
-          <DialogDescription>Ubah status aktif mailbox.</DialogDescription>
+          <DialogTitle>{{ t("admin.mailboxes.editDialog.title") }}</DialogTitle>
+          <DialogDescription>{{ t("admin.mailboxes.editDialog.description") }}</DialogDescription>
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
           <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
 
           <div>
-            <p class="text-sm text-muted-foreground">Alamat</p>
+            <p class="text-sm text-muted-foreground">{{ t("admin.mailboxes.editDialog.addressLabel") }}</p>
             <p class="font-medium text-foreground">{{ editingMailbox?.address }}</p>
           </div>
 
           <div class="flex items-center justify-between rounded-lg border p-3">
             <div>
-              <p class="text-sm font-medium text-foreground">Status Aktif</p>
-              <p class="text-xs text-muted-foreground">Mailbox nonaktif tidak menerima email.</p>
+              <p class="text-sm font-medium text-foreground">{{ t("admin.mailboxes.editDialog.activeLabel") }}</p>
+              <p class="text-xs text-muted-foreground">{{ t("admin.mailboxes.editDialog.activeHint") }}</p>
             </div>
             <Switch
               :model-value="editIsActive"
-              :ariaLabel="'Status aktif mailbox'"
+              :ariaLabel="t('admin.mailboxes.activeSwitchAria')"
               :disabled="editSubmitting"
               @update:model-value="onActiveToggle"
             />
@@ -569,11 +580,11 @@ async function unlinkUser(user: MailboxLinkedUser) {
 
         <DialogFooter>
           <Button variant="ghost" :disabled="editSubmitting" @click="editOpen = false">
-            Batal
+            {{ t("common.actions.cancel") }}
           </Button>
           <Button :disabled="editSubmitting" @click="submitEdit">
             <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>Simpan</span>
+            <span>{{ t("common.actions.save") }}</span>
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -583,16 +594,16 @@ async function unlinkUser(user: MailboxLinkedUser) {
     <DialogRoot v-model:open="deactivateOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nonaktifkan Mailbox</DialogTitle>
+          <DialogTitle>{{ t("admin.mailboxes.deactivateDialog.title") }}</DialogTitle>
           <DialogDescription>
-            Mailbox tidak menerima email saat nonaktif. Lanjutkan?
+            {{ t("admin.mailboxes.deactivateDialog.description") }}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="ghost" @click="deactivateOpen = false">Batal</Button>
+          <Button variant="ghost" @click="deactivateOpen = false">{{ t("common.actions.cancel") }}</Button>
           <Button variant="destructive" :disabled="editSubmitting" @click="confirmDeactivate">
             <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>Nonaktifkan</span>
+            <span>{{ t("admin.mailboxes.deactivateDialog.submit") }}</span>
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -602,9 +613,9 @@ async function unlinkUser(user: MailboxLinkedUser) {
     <DialogRoot v-model:open="manageOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Kelola User Mailbox</DialogTitle>
+          <DialogTitle>{{ t("admin.mailboxes.manageDialog.title") }}</DialogTitle>
           <DialogDescription>
-            Tambahkan atau hapus akses user ke {{ managingMailbox?.address }}.
+            {{ t("admin.mailboxes.manageDialog.description", { address: managingMailbox?.address }) }}
           </DialogDescription>
         </DialogHeader>
 
@@ -612,17 +623,17 @@ async function unlinkUser(user: MailboxLinkedUser) {
           <Alert v-if="manageInlineError" variant="destructive">{{ manageInlineError }}</Alert>
 
           <div v-if="manageLoading" class="text-sm text-muted-foreground">
-            Memuat daftar user...
+            {{ t("admin.mailboxes.manageDialog.loading") }}
           </div>
 
           <div v-else class="flex items-end gap-2">
             <div class="flex min-w-0 flex-1 flex-col gap-1.5">
-              <label for="select-user" class="text-sm font-medium text-foreground"
-                >Pilih User</label
-              >
+              <label for="select-user" class="text-sm font-medium text-foreground">{{
+                t("admin.mailboxes.manageDialog.userLabel")
+              }}</label>
               <Select v-model="selectedUserId">
                 <SelectTrigger id="select-user" :disabled="manageSubmitting">
-                  <SelectValue placeholder="Pilih user" />
+                  <SelectValue :placeholder="t('admin.mailboxes.manageDialog.userPlaceholder')" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem
@@ -637,12 +648,12 @@ async function unlinkUser(user: MailboxLinkedUser) {
             </div>
             <Button :disabled="!selectedUserId || manageSubmitting" @click="linkUser">
               <Icon v-if="manageSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-              <span>Tambahkan</span>
+              <span>{{ t("admin.mailboxes.manageDialog.add") }}</span>
             </Button>
           </div>
           <div v-if="linkedUsers.length > 0" class="flex flex-col gap-2">
             <p class="text-sm font-medium text-foreground">
-              User terhubung ({{ linkedUsers.length }})
+              {{ t("admin.mailboxes.manageDialog.linkedUsers", { count: linkedUsers.length }) }}
             </p>
             <div
               v-for="user in linkedUsers"
@@ -654,25 +665,25 @@ async function unlinkUser(user: MailboxLinkedUser) {
                 <p class="text-xs text-muted-foreground capitalize">{{ user.role }}</p>
               </div>
               <div class="flex items-center gap-2">
-                <Badge v-if="!user.is_active" variant="outline">Nonaktif</Badge>
+                <Badge v-if="!user.is_active" variant="outline">{{ t("admin.status.inactive") }}</Badge>
                 <Button
                   variant="ghost"
                   size="sm"
                   :disabled="manageSubmitting"
                   @click="unlinkUser(user)"
                 >
-                  Hapus
+                  {{ t("common.actions.delete") }}
                 </Button>
               </div>
             </div>
           </div>
           <p v-else-if="!manageLoading" class="text-sm text-muted-foreground">
-            Belum ada user yang terhubung ke mailbox ini.
+            {{ t("admin.mailboxes.manageDialog.empty") }}
           </p>
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" @click="manageOpen = false">Tutup</Button>
+          <Button variant="ghost" @click="manageOpen = false">{{ t("common.actions.close") }}</Button>
         </DialogFooter>
       </DialogContent>
     </DialogRoot>

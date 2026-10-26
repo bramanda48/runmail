@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import NavItem from "@/components/app/NavItem.vue";
 import type { LocalFolder } from "@/db/mailbox-db";
+import { folderDisplayName } from "@/i18n/folders";
 import { folderIcon, sortFolders } from "@/lib/folders";
+import { useI18n } from "vue-i18n";
 import { computed } from "vue";
 import { useRoute } from "vue-router";
 
@@ -13,6 +15,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const route = useRoute();
+const { t } = useI18n();
 
 // sortFolders already yields system-then-custom order; filtering preserves it.
 const sortedFolders = computed(() => sortFolders(props.folders));
@@ -20,7 +23,7 @@ const systemFolders = computed(() => sortedFolders.value.filter((f) => f.folder_
 const customFolders = computed(() => sortedFolders.value.filter((f) => f.folder_type === "custom"));
 
 function folderRoute(folder: LocalFolder) {
-  if (folder.folder_type === "system" && folder.name.toLowerCase() === "inbox") {
+  if (folder.folder_type === "system" && folder.name === "system.inbox") {
     return `/mailboxes/${props.mailboxId}/inbox`;
   }
   return `/mailboxes/${props.mailboxId}/folders/${folder.id}`;
@@ -34,11 +37,11 @@ function isFolderActive(folder: LocalFolder) {
 </script>
 
 <template>
-  <nav class="flex flex-col gap-1" aria-label="Folder">
+  <nav class="flex flex-col gap-1" :aria-label="t('inbox.folders.label')">
     <NavItem
       v-for="folder in systemFolders"
       :key="folder.id"
-      :label="folder.name"
+      :label="folderDisplayName(folder)"
       :icon="folderIcon(folder)"
       :to="folderRoute(folder)"
       :active="isFolderActive(folder)"
@@ -48,12 +51,14 @@ function isFolderActive(folder: LocalFolder) {
 
     <div class="my-3 border-t" />
 
-    <h2 class="mb-3 px-4 text-sm font-semibold text-muted-foreground">Folders</h2>
+    <h2 class="mb-3 px-4 text-sm font-semibold text-muted-foreground">
+      {{ t("inbox.folders.heading") }}
+    </h2>
 
     <NavItem
       v-for="folder in customFolders"
       :key="folder.id"
-      :label="folder.name"
+      :label="folderDisplayName(folder)"
       :icon="folderIcon(folder)"
       :to="folderRoute(folder)"
       :active="isFolderActive(folder)"
@@ -61,7 +66,7 @@ function isFolderActive(folder: LocalFolder) {
       active-class="bg-accent text-accent-foreground font-semibold"
     />
     <p v-if="customFolders.length === 0" class="px-4 text-xs text-muted-foreground">
-      Belum ada folder
+      {{ t("inbox.folders.empty") }}
     </p>
 
   </nav>

@@ -2,9 +2,13 @@
 import MoveFolderMenu from "@/components/email/MoveFolderMenu.vue";
 import { Button } from "@/components/ui/button";
 import type { LocalFolder, LocalMessage } from "@/db/mailbox-db";
+import { formatNumericDate, formatShortDate, formatTime } from "@/i18n/format";
 import { Icon } from "@/icons";
 import { cn } from "@/lib/utils";
+import { useI18n } from "vue-i18n";
 import { computed, ref } from "vue";
+
+const { t } = useI18n();
 
 interface Props {
   message: LocalMessage;
@@ -39,13 +43,9 @@ const displayDate = computed(() => {
     date.getDate() === now.getDate() &&
     date.getMonth() === now.getMonth() &&
     date.getFullYear() === now.getFullYear();
-  if (isToday) {
-    return date.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
-  }
-  if (date.getFullYear() === now.getFullYear()) {
-    return date.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
-  }
-  return date.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit", year: "2-digit" });
+  if (isToday) return formatTime(date);
+  if (date.getFullYear() === now.getFullYear()) return formatShortDate(date);
+  return formatNumericDate(date);
 });
 </script>
 
@@ -64,7 +64,7 @@ const displayDate = computed(() => {
     @keydown.space.prevent="emit('click')"
   >
     <Button
-      aria-label="Pilih pesan"
+      :aria-label="t('inbox.row.select')"
       :aria-pressed="selected"
       variant="ghost"
       size="icon"
@@ -77,7 +77,7 @@ const displayDate = computed(() => {
     </Button>
 
     <Button
-      :aria-label="message.is_starred ? 'Hapus bintang' : 'Tandai bintang'"
+      :aria-label="message.is_starred ? t('inbox.row.unstar') : t('inbox.row.star')"
       variant="ghost"
       size="icon"
       @click.stop="emit('toggle-star')"
@@ -135,7 +135,7 @@ const displayDate = computed(() => {
 
     <div :class="cn('items-center gap-1', menuOpen ? 'flex' : 'hidden lg:group-hover:flex')">
       <Button
-        :aria-label="message.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'"
+        :aria-label="message.is_read ? t('inbox.row.markUnread') : t('inbox.row.markRead')"
         variant="ghost"
         size="icon"
         @click.stop="emit('toggle-read')"
@@ -152,7 +152,12 @@ const displayDate = computed(() => {
         @move-to-folder="(id: string) => emit('move-to-folder', id)"
       />
 
-      <Button aria-label="Pindah ke Trash" variant="ghost" size="icon" @click.stop="emit('trash')">
+      <Button
+        :aria-label="t('inbox.row.moveToTrash')"
+        variant="ghost"
+        size="icon"
+        @click.stop="emit('trash')"
+      >
         <Icon icon="lucide:trash" class="size-4 text-destructive" />
       </Button>
     </div>

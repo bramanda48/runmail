@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from "@/icons";
 import { shallowRef, watch } from "vue";
+import { useI18n } from "vue-i18n";
 
 export interface ComposeDraft {
   to: string;
@@ -15,6 +16,8 @@ const props = defineProps<{
 }>();
 
 const open = defineModel<boolean>("open", { default: false });
+
+const { t } = useI18n();
 
 const to = shallowRef("");
 const subject = shallowRef("");
@@ -45,15 +48,17 @@ function close() {
   <div
     v-if="open"
     role="dialog"
-    aria-label="Tulis pesan baru"
+    :aria-label="t('message.compose.dialogLabel')"
     class="flex w-140 h-145 max-h-full max-w-full flex-col overflow-hidden rounded-t-xl shadow-xs border bg-background"
   >
     <div class="flex items-center gap-2 bg-secondary px-4 py-3">
-      <p class="truncate text-sm font-semibold">{{ draft?.title ?? "Pesan Baru" }}</p>
+      <p class="truncate text-sm font-semibold">
+        {{ draft?.title ?? t("message.compose.title") }}
+      </p>
       <div class="ml-auto flex items-center gap-1">
         <button
           type="button"
-          aria-label="Minimalkan"
+          :aria-label="minimized ? t('message.compose.restore') : t('message.compose.minimize')"
           class="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
           @click="toggleMinimized"
         >
@@ -61,16 +66,16 @@ function close() {
         </button>
         <button
           type="button"
-          aria-label="Perbesar"
+          :aria-label="t('message.compose.maximize')"
           disabled
-          title="Segera hadir"
+          :title="t('message.compose.comingSoon')"
           class="flex size-8 items-center justify-center rounded-full text-muted-foreground"
         >
           <Icon icon="lucide:maximize-2" class="size-4" />
         </button>
         <button
           type="button"
-          aria-label="Tutup"
+          :aria-label="t('common.actions.close')"
           class="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent"
           @click="close"
         >
@@ -81,7 +86,9 @@ function close() {
 
     <div v-if="!minimized" class="flex flex-1 flex-col overflow-hidden">
       <div class="flex items-center gap-3 border-b border-border px-4 py-2">
-        <label for="compose-to" class="shrink-0 text-sm text-muted-foreground">Kepada</label>
+        <label for="compose-to" class="shrink-0 text-sm text-muted-foreground">
+          {{ t("message.compose.to") }}
+        </label>
         <input
           id="compose-to"
           v-model="to"
@@ -93,14 +100,14 @@ function close() {
         <input
           v-model="subject"
           type="text"
-          aria-label="Subjek"
-          placeholder="Subjek"
+          :aria-label="t('message.compose.subject')"
+          :placeholder="t('message.compose.subject')"
           class="flex-1 truncate bg-transparent text-sm font-semibold outline-none placeholder:text-muted-foreground"
         />
       </div>
       <textarea
         v-model="body"
-        aria-label="Isi pesan"
+        :aria-label="t('message.compose.body')"
         class="flex-1 resize-none bg-transparent p-4 text-sm outline-none placeholder:text-muted-foreground"
       />
     </div>
@@ -109,52 +116,52 @@ function close() {
       <button
         type="button"
         disabled
-        title="Segera hadir"
+        :title="t('message.compose.comingSoon')"
         class="rounded-full bg-primary px-6 py-2 text-sm font-medium text-primary-foreground"
       >
-        Kirim
+        {{ t("message.compose.send") }}
       </button>
       <button
         type="button"
-        aria-label="Format teks"
+        :aria-label="t('message.compose.formatting')"
         disabled
-        title="Segera hadir"
+        :title="t('message.compose.comingSoon')"
         class="flex size-9 items-center justify-center rounded-full text-muted-foreground"
       >
         <Icon icon="lucide:type" class="size-4" />
       </button>
       <button
         type="button"
-        aria-label="Lampirkan file"
+        :aria-label="t('message.compose.attach')"
         disabled
-        title="Segera hadir"
+        :title="t('message.compose.comingSoon')"
         class="flex size-9 items-center justify-center rounded-full text-muted-foreground"
       >
         <Icon icon="lucide:paperclip" class="size-4" />
       </button>
       <button
         type="button"
-        aria-label="Sisipkan tautan"
+        :aria-label="t('message.compose.insertLink')"
         disabled
-        title="Segera hadir"
+        :title="t('message.compose.comingSoon')"
         class="flex size-9 items-center justify-center rounded-full text-muted-foreground"
       >
         <Icon icon="lucide:link" class="size-4" />
       </button>
       <button
         type="button"
-        aria-label="Sisipkan emoji"
+        :aria-label="t('message.compose.insertEmoji')"
         disabled
-        title="Segera hadir"
+        :title="t('message.compose.comingSoon')"
         class="flex size-9 items-center justify-center rounded-full text-muted-foreground"
       >
         <Icon icon="lucide:smile" class="size-4" />
       </button>
       <button
         type="button"
-        aria-label="Buang draf"
+        :aria-label="t('message.compose.discardDraft')"
         disabled
-        title="Segera hadir"
+        :title="t('message.compose.comingSoon')"
         class="ml-auto flex size-9 items-center justify-center rounded-full text-muted-foreground"
       >
         <Icon icon="lucide:trash-2" class="size-4" />

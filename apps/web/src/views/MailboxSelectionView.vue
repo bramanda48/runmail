@@ -6,14 +6,17 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { translateApiError } from "@/i18n/api-errors";
 import { Icon } from "@/icons";
 import { ApiError, listMailboxes } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import type { ApiMeta, Mailbox } from "@runmail/shared";
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
+import { RouterLink, useRouter } from "vue-router";
 
+const { t } = useI18n();
 const auth = useAuthStore();
 const router = useRouter();
 
@@ -53,10 +56,10 @@ async function load(cursor?: string) {
       cursors.value.push(meta.value.next_cursor);
     }
   } catch (err) {
-    if (err instanceof ApiError) {
-      error.value = err.message;
+    if (err instanceof ApiError && err.status !== 0) {
+      error.value = translateApiError(err);
     } else {
-      error.value = "Tidak dapat memuat mailbox. Coba lagi.";
+      error.value = t("mailbox.errors.load");
     }
   } finally {
     isLoading.value = false;
@@ -101,9 +104,9 @@ function rowClasses(isActive: boolean) {
     <main class="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <div class="flex flex-col gap-1">
         <h1 class="scroll-m-20 text-3xl font-extrabold tracking-tight text-foreground">
-          Mailboxes
+          {{ t("mailbox.title") }}
         </h1>
-        <p class="text-sm text-muted-foreground">Pilih mailbox yang ingin Anda akses.</p>
+        <p class="text-sm text-muted-foreground">{{ t("mailbox.subtitle") }}</p>
       </div>
 
       <div v-if="isLoading" class="flex flex-col gap-4">
@@ -112,19 +115,25 @@ function rowClasses(isActive: boolean) {
 
       <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="destructive">{{ error }}</Alert>
-        <Button variant="outline" @click="retry">Coba Lagi</Button>
+        <Button variant="outline" @click="retry">{{ t("common.actions.retry") }}</Button>
       </div>
 
       <EmptyState
         v-else-if="mailboxes.length === 0"
         icon="lucide:inbox"
-        heading="Belum ada mailbox"
-        description="Anda belum terhubung ke mailbox mana pun."
+        :heading="t('mailbox.empty.title')"
+        :description="t('mailbox.empty.description')"
       >
         <template v-if="auth.isAdmin" #action>
-          <p class="mt-2 text-sm text-muted-foreground">
-            Admin dapat membuat mailbox pada menu Mailbox Management.
-          </p>
+          <div class="flex flex-col items-center gap-2">
+            <p class="text-sm text-muted-foreground">{{ t("mailbox.empty.adminHint") }}</p>
+            <RouterLink
+              :to="{ name: 'admin-mailboxes' }"
+              class="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {{ t("mailbox.empty.adminLink") }}
+            </RouterLink>
+          </div>
         </template>
       </EmptyState>
 
@@ -148,11 +157,13 @@ function rowClasses(isActive: boolean) {
             <p :class="cn('truncate font-medium', !mailbox.is_active && 'text-muted-foreground')">
               {{ mailbox.address }}
             </p>
-            <p v-if="!mailbox.is_active" class="text-xs text-muted-foreground">Mailbox nonaktif</p>
+            <p v-if="!mailbox.is_active" class="text-xs text-muted-foreground">
+              {{ t("mailbox.inactive") }}
+            </p>
           </div>
 
           <Badge :variant="mailbox.is_active ? 'secondary' : 'outline'">
-            {{ mailbox.is_active ? "Aktif" : "Nonaktif" }}
+            {{ mailbox.is_active ? t("mailbox.status.active") : t("mailbox.status.inactive") }}
           </Badge>
         </button>
 
@@ -165,7 +176,7 @@ function rowClasses(isActive: boolean) {
           @prev="goPrev"
           @next="goNext"
         >
-          <template #range> {{ start }}–{{ end }} </template>
+          <template #range>{{ start }}–{{ end }}</template>
         </Pagination>
       </div>
     </main>

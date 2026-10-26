@@ -22,6 +22,20 @@
       "when": 1790225373888,
       "tag": "0002_lean_iceman",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792549578827,
+      "tag": "0003_remove_settings_metadata",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792549579827,
+      "tag": "0004_system_folder_keys",
+      "breakpoints": true
     }
   ]
 }

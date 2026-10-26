@@ -1,0 +1,54 @@
+{
+  "settings": {
+    "title": "Setelan",
+    "tabs": {
+      "folders": "Folder",
+      "rulesets": "Ruleset"
+    },
+    "loadError": "Tidak dapat memuat mailbox. Coba lagi."
+  },
+  "title": "Folder",
+  "description": "Buat dan hapus folder kustom untuk mailbox ini.",
+  "actions": {
+    "create": "Folder Baru"
+  },
+  "system": {
+    "title": "Folder Sistem",
+    "badge": "Sistem"
+  },
+  "custom": {
+    "title": "Folder Kustom"
+  },
+  "empty": {
+    "title": "Belum ada folder kustom",
+    "description": "Folder kustom yang Anda buat akan tampil di sini."
+  },
+  "fields": {
+    "name": "Nama Folder",
+    "namePlaceholder": "Contoh: Proyek A"
+  },
+  "create": {
+    "title": "Buat Folder",
+    "submit": "Buat"
+  },
+  "edit": {
+    "title": "Ubah Nama Folder",
+    "submit": "Simpan"
+  },
+  "delete": {
+    "title": "Hapus Folder",
+    "messagePrefix": "Hapus folder",
+    "messageSuffix": "? Seluruh email di dalamnya akan dipindahkan ke {inbox}."
+  },
+  "aria": {
+    "renameFolder": "Ubah nama folder {name}",
+    "deleteFolder": "Hapus folder {name}"
+  },
+  "errors": {
+    "load": "Gagal memuat folder. Coba lagi.",
+    "connection": "Tidak dapat terhubung ke server. Coba lagi.",
+    "delete": "Gagal menghapus folder. Coba lagi.",
+    "invalidName": "Nama folder tidak valid",
+    "reserved": "Nama ini sudah digunakan untuk folder sistem"
+  }
+}

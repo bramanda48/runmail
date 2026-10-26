@@ -1,0 +1,104 @@
+{
+  "title": "Ruleset",
+  "description": "Aturan pemrosesan email. Prioritas dengan angka lebih kecil dijalankan lebih dulu.",
+  "actions": {
+    "create": "Buat Ruleset"
+  },
+  "errors": {
+    "load": "Gagal memuat ruleset. Coba lagi.",
+    "delete": "Gagal menghapus ruleset. Coba lagi.",
+    "toggle": "Gagal mengubah status ruleset. Coba lagi.",
+    "invalidRegex": "Regex tidak valid",
+    "folderRequired": "Pilih folder tujuan",
+    "folderNotFound": "Folder tujuan tidak ditemukan pada mailbox ini"
+  },
+  "empty": {
+    "heading": "Belum ada ruleset",
+    "description": "Buat ruleset pertama untuk mengatur pemrosesan email."
+  },
+  "list": {
+    "name": "Nama",
+    "priority": "Prioritas",
+    "logic": "Logika",
+    "active": "Aktif",
+    "actions": "Aksi",
+    "conditionCount": "{count} kondisi",
+    "actionCount": "{count} aksi",
+    "toggleAria": "Status aktif ruleset {name}",
+    "editAria": "Edit ruleset {name}",
+    "deleteAria": "Hapus ruleset {name}"
+  },
+  "deleteDialog": {
+    "title": "Hapus Ruleset",
+    "confirmPrefix": "Hapus ruleset",
+    "confirmSuffix": "? Tindakan ini tidak dapat dibatalkan."
+  },
+  "editor": {
+    "titleCreate": "Ruleset Baru",
+    "titleEdit": "Ubah Ruleset",
+    "description": "Atur kondisi dan aksi pemrosesan email.",
+    "notFound": "Ruleset tidak ditemukan.",
+    "backToList": "Kembali ke daftar ruleset",
+    "cardTitle": "Detail Ruleset",
+    "name": "Nama Ruleset",
+    "namePlaceholder": "Contoh: Filter newsletter",
+    "priority": "Prioritas",
+    "priorityHint": "Angka lebih kecil dijalankan lebih dahulu.",
+    "logic": "Logika Kondisi",
+    "logicPlaceholder": "Pilih logika",
+    "enabled": "Aktifkan Ruleset",
+    "enabledHint": "Ruleset nonaktif tidak akan dijalankan.",
+    "enabledAria": "Aktifkan ruleset",
+    "conditions": "Kondisi",
+    "addCondition": "Tambah Kondisi",
+    "actions": "Aksi",
+    "addAction": "Tambah Aksi",
+    "moveHint": "Jika ada beberapa aksi pindah, aksi pindah terakhir menentukan folder akhir.",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "errors": {
+      "load": "Gagal memuat ruleset. Coba lagi.",
+      "connection": "Tidak dapat terhubung ke server. Coba lagi.",
+      "save": "Gagal menyimpan ruleset. Coba lagi."
+    }
+  },
+  "logic": {
+    "AND": "Semua kondisi (AND)",
+    "OR": "Salah satu kondisi (OR)"
+  },
+  "field": {
+    "from": "Dari",
+    "subject": "Subjek",
+    "header": "Header"
+  },
+  "match": {
+    "contains": "Mengandung",
+    "notContains": "Tidak mengandung",
+    "equal": "Sama dengan",
+    "notEqual": "Tidak sama dengan",
+    "startWith": "Diawali dengan",
+    "endWith": "Diakhiri dengan",
+    "matchRegex": "Cocok dengan regex"
+  },
+  "action": {
+    "moveToFolder": "Pindah ke folder",
+    "markAsStar": "Tandai bintang",
+    "markAsRead": "Tandai sudah dibaca"
+  },
+  "condition": {
+    "fieldAria": "Field kondisi",
+    "matchAria": "Jenis pencocokan",
+    "valuePlaceholder": "Nilai yang dicocokkan",
+    "moveUpAria": "Pindah kondisi ke atas",
+    "moveDownAria": "Pindah kondisi ke bawah",
+    "removeAria": "Hapus kondisi"
+  },
+  "actionRow": {
+    "typeAria": "Tipe aksi",
+    "folderAria": "Folder tujuan aksi",
+    "folderPlaceholder": "Pilih folder tujuan",
+    "moveUpAria": "Pindah aksi ke atas",
+    "moveDownAria": "Pindah aksi ke bawah",
+    "removeAria": "Hapus aksi"
+  }
+}

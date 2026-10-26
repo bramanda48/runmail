@@ -5,5 +5,5 @@ export const PASSWORD_MAX_LENGTH = 72;
 
 export const passwordSchema = z
   .string()
-  .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
-  .max(PASSWORD_MAX_LENGTH, `Password must be at most ${PASSWORD_MAX_LENGTH} characters`);
+  .min(PASSWORD_MIN_LENGTH, "validation.password.min")
+  .max(PASSWORD_MAX_LENGTH, "validation.password.max");

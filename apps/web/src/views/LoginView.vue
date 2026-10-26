@@ -1,16 +1,20 @@
 <script setup lang="ts">
+import LocaleSwitcher from "@/components/app/LocaleSwitcher.vue";
 import PasswordField from "@/components/app/PasswordField.vue";
 import Wordmark from "@/components/app/Wordmark.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
 import { Icon } from "@/icons";
 import { ApiError, listMailboxes } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
 import { computed, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRoute, useRouter } from "vue-router";
 
+const { t } = useI18n();
 const auth = useAuthStore();
 const router = useRouter();
 const route = useRoute();
@@ -31,11 +35,11 @@ async function handleSubmit() {
 
   let hasError = false;
   if (!username.value.trim()) {
-    usernameError.value = "Username wajib diisi";
+    usernameError.value = t("auth.errors.usernameRequired");
     hasError = true;
   }
   if (!password.value) {
-    passwordError.value = "Kata sandi wajib diisi";
+    passwordError.value = t("auth.errors.passwordRequired");
     hasError = true;
   }
   if (hasError) return;
@@ -69,37 +73,48 @@ async function handleSubmit() {
     await router.push("/mailboxes");
   } catch (err) {
     isSubmitting.value = false;
-    if (err instanceof ApiError) {
-      apiError.value =
-        err.status === 0 ? "Tidak dapat terhubung ke server. Coba lagi." : err.message;
-    } else {
-      apiError.value = "Tidak dapat terhubung ke server. Coba lagi.";
+    if (!(err instanceof ApiError) || err.status === 0) {
+      apiError.value = t("auth.errors.network");
+      return;
+    }
+
+    const fieldErrors = translateFieldErrors(err.details);
+    usernameError.value = fieldErrors.username?.[0] ?? "";
+    passwordError.value = fieldErrors.password?.[0] ?? "";
+    if (!usernameError.value && !passwordError.value) {
+      apiError.value = translateApiError(err);
     }
   }
 }
 </script>
 
 <template>
-  <main class="flex min-h-screen flex-col items-center justify-center bg-background p-6">
+  <main class="relative flex min-h-screen flex-col items-center justify-center bg-background p-6">
+    <div class="absolute top-4 right-4">
+      <LocaleSwitcher />
+    </div>
+
     <Wordmark size="lg" class="mb-8" />
 
     <Card class="w-full max-w-sm">
       <CardHeader>
-        <CardTitle>Masuk</CardTitle>
-        <CardDescription>Masuk untuk melanjutkan ke kotak surat Anda.</CardDescription>
+        <CardTitle>{{ t("auth.login.title") }}</CardTitle>
+        <CardDescription>{{ t("auth.login.subtitle") }}</CardDescription>
       </CardHeader>
 
       <CardContent class="flex flex-col gap-4">
-        <Alert v-if="showRedirectInfo"> Sesi Anda berakhir, silakan masuk kembali. </Alert>
+        <Alert v-if="showRedirectInfo">{{ t("auth.login.sessionExpired") }}</Alert>
 
         <Alert v-if="apiError" variant="destructive">{{ apiError }}</Alert>
 
         <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
           <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">Username</span>
+            <span class="text-sm font-medium text-foreground">
+              {{ t("auth.login.usernameLabel") }}
+            </span>
             <Input
               v-model="username"
-              placeholder="Masukkan username"
+              :placeholder="t('auth.login.usernamePlaceholder')"
               :disabled="isSubmitting"
               :aria-invalid="Boolean(usernameError)"
             />
@@ -107,10 +122,12 @@ async function handleSubmit() {
           </label>
 
           <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">Kata Sandi</span>
+            <span class="text-sm font-medium text-foreground">
+              {{ t("auth.login.passwordLabel") }}
+            </span>
             <PasswordField
               v-model="password"
-              placeholder="Masukkan kata sandi"
+              :placeholder="t('auth.login.passwordPlaceholder')"
               :disabled="isSubmitting"
             />
             <p v-if="passwordError" class="text-sm text-destructive">{{ passwordError }}</p>
@@ -118,7 +135,7 @@ async function handleSubmit() {
 
           <Button type="submit" class="w-full" :disabled="isSubmitting">
             <Icon v-if="isSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>Masuk</span>
+            <span>{{ t("auth.login.submit") }}</span>
           </Button>
         </form>
       </CardContent>

@@ -1,0 +1,32 @@
+{
+  "title": "Profile",
+  "subtitle": "Manage your account information and security.",
+  "account": {
+    "title": "Profile",
+    "description": "Your current account information.",
+    "username": "Username",
+    "role": {
+      "admin": "Admin",
+      "member": "Member"
+    }
+  },
+  "password": {
+    "title": "Change Password",
+    "description": "Once it succeeds, you will be signed out because all sessions are ended.",
+    "currentLabel": "Current Password",
+    "currentPlaceholder": "Enter your current password",
+    "newLabel": "New Password",
+    "newPlaceholder": "At least {min} characters",
+    "newHint": "Password must be {min}–{max} characters.",
+    "confirmLabel": "Confirm New Password",
+    "confirmPlaceholder": "Repeat your new password",
+    "mismatch": "Password confirmation does not match",
+    "submit": "Save Password",
+    "success": "Password changed successfully. You will be asked to sign in again.",
+    "networkError": "Unable to reach the server. Please try again."
+  },
+  "passwordField": {
+    "show": "Show password",
+    "hide": "Hide password"
+  }
+}

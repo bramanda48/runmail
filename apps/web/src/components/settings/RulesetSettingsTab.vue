@@ -22,14 +22,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Icon } from "@/icons";
+import { translateApiError } from "@/i18n/api-errors";
 import { ApiError, deleteRuleset, getRuleset, listRulesets, updateRuleset } from "@/lib/api";
-import type { ApiMeta, RulesetDetail } from "@runmail/shared";
+import type { ApiMeta, LogicOperator, RulesetDetail } from "@runmail/shared";
 import { computed, onMounted, ref, toRef, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
 const props = defineProps<{ mailboxId: string }>();
 const mailboxId = toRef(props, "mailboxId");
 const router = useRouter();
+const { t } = useI18n();
 
 const perPage = 10;
 
@@ -53,6 +56,11 @@ const paginationTotal = computed(() =>
   meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
 );
 
+const logicLabels = computed<Record<LogicOperator, string>>(() => ({
+  AND: t("rulesets.logic.AND"),
+  OR: t("rulesets.logic.OR"),
+}));
+
 async function load(cursor?: string) {
   isLoading.value = true;
   error.value = "";
@@ -75,11 +83,7 @@ async function load(cursor?: string) {
       cursors.value.push(meta.value.next_cursor);
     }
   } catch (err) {
-    if (err instanceof ApiError) {
-      error.value = err.message || "Gagal memuat ruleset. Coba lagi.";
-    } else {
-      error.value = "Gagal memuat ruleset. Coba lagi.";
-    }
+    error.value = err instanceof ApiError ? translateApiError(err) : t("rulesets.errors.load");
   } finally {
     isLoading.value = false;
   }
@@ -122,11 +126,7 @@ async function confirmDelete() {
     deleteOpen.value = false;
     await load(cursors.value[pageIndex.value]);
   } catch (err) {
-    if (err instanceof ApiError) {
-      error.value = err.message || "Gagal menghapus ruleset. Coba lagi.";
-    } else {
-      error.value = "Gagal menghapus ruleset. Coba lagi.";
-    }
+    error.value = err instanceof ApiError ? translateApiError(err) : t("rulesets.errors.delete");
   } finally {
     deleteSubmitting.value = false;
   }
@@ -160,11 +160,7 @@ async function toggleEnabled(ruleset: RulesetDetail, value: boolean) {
   } catch (err) {
     // Rollback
     ruleset.is_enabled = original;
-    if (err instanceof ApiError) {
-      error.value = err.message || "Gagal mengubah status ruleset. Coba lagi.";
-    } else {
-      error.value = "Gagal mengubah status ruleset. Coba lagi.";
-    }
+    error.value = err instanceof ApiError ? translateApiError(err) : t("rulesets.errors.toggle");
   } finally {
     toggleLoadingId.value = null;
   }
@@ -182,14 +178,12 @@ watch(mailboxId, () => {
   <div class="flex flex-col gap-4">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 class="text-lg font-semibold text-foreground">Ruleset</h2>
-        <p class="text-sm text-muted-foreground">
-          Aturan pemrosesan email. Prioritas lebih kecil dieksekusi lebih dulu.
-        </p>
+        <h2 class="text-lg font-semibold text-foreground">{{ t("rulesets.title") }}</h2>
+        <p class="text-sm text-muted-foreground">{{ t("rulesets.description") }}</p>
       </div>
       <Button @click="createRuleset">
         <Icon icon="lucide:plus" />
-        <span>Buat Ruleset</span>
+        <span>{{ t("rulesets.actions.create") }}</span>
       </Button>
     </div>
 
@@ -202,19 +196,19 @@ watch(mailboxId, () => {
 
     <div v-else-if="error" class="flex flex-col gap-4">
       <Alert variant="destructive">{{ error }}</Alert>
-      <Button variant="ghost" @click="retry">Coba Lagi</Button>
+      <Button variant="ghost" @click="retry">{{ t("common.actions.retry") }}</Button>
     </div>
 
     <EmptyState
       v-else-if="rulesets.length === 0"
       icon="lucide:filter"
-      heading="Belum ada ruleset"
-      description="Buat ruleset pertama untuk mengatur pemrosesan email."
+      :heading="t('rulesets.empty.heading')"
+      :description="t('rulesets.empty.description')"
     >
       <template #action>
         <Button class="mt-4" @click="createRuleset">
           <Icon icon="lucide:plus" />
-          <span>Buat Ruleset</span>
+          <span>{{ t("rulesets.actions.create") }}</span>
         </Button>
       </template>
     </EmptyState>
@@ -225,11 +219,11 @@ watch(mailboxId, () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Nama</TableHead>
-                <TableHead class="w-24">Prioritas</TableHead>
-                <TableHead class="w-24">Logika</TableHead>
-                <TableHead class="w-24">Aktif</TableHead>
-                <TableHead class="w-24">Aksi</TableHead>
+                <TableHead>{{ t("rulesets.list.name") }}</TableHead>
+                <TableHead class="w-24">{{ t("rulesets.list.priority") }}</TableHead>
+                <TableHead class="w-24">{{ t("rulesets.list.logic") }}</TableHead>
+                <TableHead class="w-24">{{ t("rulesets.list.active") }}</TableHead>
+                <TableHead class="w-24">{{ t("rulesets.list.actions") }}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -238,7 +232,8 @@ watch(mailboxId, () => {
                   <div class="flex flex-col">
                     <span class="truncate">{{ ruleset.name }}</span>
                     <span class="text-xs text-muted-foreground">
-                      {{ ruleset.conditions.length }} kondisi, {{ ruleset.actions.length }} aksi
+                      {{ t("rulesets.list.conditionCount", ruleset.conditions.length) }},
+                      {{ t("rulesets.list.actionCount", ruleset.actions.length) }}
                     </span>
                   </div>
                 </TableCell>
@@ -246,12 +241,12 @@ watch(mailboxId, () => {
                   <Badge variant="outline">{{ ruleset.priority }}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="outline">{{ ruleset.logic_operator }}</Badge>
+                  <Badge variant="outline">{{ logicLabels[ruleset.logic_operator] }}</Badge>
                 </TableCell>
                 <TableCell>
                   <Switch
                     :model-value="ruleset.is_enabled"
-                    :ariaLabel="`Status aktif ruleset ${ruleset.name}`"
+                    :ariaLabel="t('rulesets.list.toggleAria', { name: ruleset.name })"
                     :disabled="toggleLoadingId === ruleset.id"
                     @update:model-value="toggleEnabled(ruleset, $event)"
                   />
@@ -259,7 +254,7 @@ watch(mailboxId, () => {
                 <TableCell>
                   <div class="flex items-center gap-1">
                     <Button
-                      :aria-label="`Edit ruleset ${ruleset.name}`"
+                      :aria-label="t('rulesets.list.editAria', { name: ruleset.name })"
                       variant="ghost"
                       size="icon"
                       @click="editRuleset(ruleset)"
@@ -267,7 +262,7 @@ watch(mailboxId, () => {
                       <Icon icon="lucide:pencil" />
                     </Button>
                     <Button
-                      :aria-label="`Hapus ruleset ${ruleset.name}`"
+                      :aria-label="t('rulesets.list.deleteAria', { name: ruleset.name })"
                       variant="ghost"
                       size="icon"
                       @click="openDelete(ruleset)"
@@ -299,19 +294,20 @@ watch(mailboxId, () => {
     <DialogRoot v-model:open="deleteOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Hapus Ruleset</DialogTitle>
+          <DialogTitle>{{ t("rulesets.deleteDialog.title") }}</DialogTitle>
         </DialogHeader>
         <p class="text-sm text-foreground">
-          Hapus ruleset <strong>{{ rulesetToDelete?.name }}</strong
-          >? Tindakan ini tidak dapat dibatalkan.
+          {{ t("rulesets.deleteDialog.confirmPrefix") }}
+          <strong>{{ rulesetToDelete?.name }}</strong
+          >{{ t("rulesets.deleteDialog.confirmSuffix") }}
         </p>
         <DialogFooter>
           <Button variant="ghost" :disabled="deleteSubmitting" @click="deleteOpen = false">
-            Batal
+            {{ t("common.actions.cancel") }}
           </Button>
           <Button variant="destructive" :disabled="deleteSubmitting" @click="confirmDelete">
             <Icon v-if="deleteSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>Hapus</span>
+            <span>{{ t("common.actions.delete") }}</span>
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -9,8 +9,8 @@ export const localPartSchema = z
   .string()
   .min(LOCAL_PART_MIN_LENGTH)
   .max(LOCAL_PART_MAX_LENGTH)
-  .regex(LOCAL_PART_PATTERN, "Local part contains invalid characters")
-  .refine((value) => !value.startsWith("."), "Local part must not start with a dot")
-  .refine((value) => !value.endsWith("."), "Local part must not end with a dot")
-  .refine((value) => !value.includes(".."), "Local part must not contain consecutive dots")
+  .regex(LOCAL_PART_PATTERN, "validation.localPart.invalidChars")
+  .refine((value) => !value.startsWith("."), "validation.localPart.leadingDot")
+  .refine((value) => !value.endsWith("."), "validation.localPart.trailingDot")
+  .refine((value) => !value.includes(".."), "validation.localPart.consecutiveDots")
   .transform((v) => v.toLowerCase());

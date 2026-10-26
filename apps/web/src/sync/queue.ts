@@ -1,7 +1,7 @@
 import { getMailboxDb, type MailboxDb, type QueueMutationType } from "@/db/mailbox-db";
 import { ApiError, getMessage, type MutationResult, postMutations } from "@/lib/api";
 import { deleteCachedRaw } from "@/lib/raw-cache";
-import type { SyncMutationItem } from "@runmail/shared";
+import { isSystemFolderKey, type SyncMutationItem } from "@runmail/shared";
 import { runDeltaSync } from "./engine";
 import { toLocalMessage } from "./mapping";
 
@@ -55,12 +55,12 @@ export async function enqueueMutation(
       });
     } else if (mutation.mutation_type === "move" && typeof mutation.mutation_value === "string") {
       // Mirror the server's moveMessage logic: folder_entered_at is stamped
-      // only when landing in the Trash/Spam system folders; otherwise null.
+      // only when landing in the trash/spam system folders; otherwise null.
       const target = await db.folders.get(mutation.mutation_value);
       const stamp =
         target !== undefined &&
-        target.folder_type === "system" &&
-        (target.name.toLowerCase() === "trash" || target.name.toLowerCase() === "spam");
+        isSystemFolderKey(target.name) &&
+        (target.name === "system.trash" || target.name === "system.spam");
       await db.messages.update(mutation.message_id, {
         folder_id: mutation.mutation_value,
         folder_entered_at: stamp ? now : null,

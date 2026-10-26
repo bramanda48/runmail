@@ -25,4 +25,4 @@ function isValidHostname(value: string): boolean {
 export const domainNameSchema = z
   .string()
   .transform((value) => value.trim().toLowerCase())
-  .refine(isValidHostname, "Invalid domain name");
+  .refine(isValidHostname, "validation.domainName.invalid");

@@ -10,6 +10,7 @@
     "prepare": "simple-git-hooks",
     "dev": "portless",
     "build": "cd apps/web && bun run build",
+    "migrate": "cd apps/worker && bun run migrate",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",

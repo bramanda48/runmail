@@ -1,0 +1,21 @@
+{
+  "actions": {
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Hapus",
+    "edit": "Ubah",
+    "close": "Tutup",
+    "retry": "Coba lagi",
+    "back": "Kembali",
+    "confirm": "Konfirmasi",
+    "search": "Cari",
+    "loading": "Memuat…"
+  },
+  "yes": "Ya",
+  "no": "Tidak",
+  "language": {
+    "label": "Bahasa",
+    "en": "English",
+    "id": "Bahasa Indonesia"
+  }
+}

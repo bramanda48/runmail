@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "build": "wrangler types && wrangler deploy --dry-run",
+    "migrate": "wrangler d1 migrations apply DB",
     "typecheck": "tsc --noEmit",
     "wrangler": "wrangler"
   },

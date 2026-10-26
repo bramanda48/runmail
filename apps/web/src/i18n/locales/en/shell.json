@@ -1,0 +1,60 @@
+{
+  "app": {
+    "openMenu": "Open menu"
+  },
+  "topbar": {
+    "toggleMenu": "Open or close menu"
+  },
+  "adminBadge": "Admin",
+  "drawer": {
+    "closeMenu": "Close menu",
+    "title": "Navigation",
+    "description": "Application navigation menu"
+  },
+  "adminSidebar": {
+    "navLabel": "Admin navigation",
+    "domains": "Domain",
+    "mailboxes": "Mailbox",
+    "users": "User",
+    "backToMailboxes": "Back to Mailbox"
+  },
+  "memberSidebar": {
+    "navLabel": "Account navigation",
+    "mailboxes": "Mailboxes",
+    "profile": "Profile"
+  },
+  "mailboxSidebar": {
+    "compose": "Compose",
+    "syncNow": "Sync now",
+    "pending": "{count} pending",
+    "status": {
+      "syncing": "Syncing…",
+      "offline": "Offline",
+      "error": "Sync failed",
+      "fullResync": "Resyncing",
+      "synced": "Synced"
+    }
+  },
+  "mailboxWorkspace": {
+    "searchPlaceholder": "Search in email",
+    "settings": "Settings"
+  },
+  "accountMenu": {
+    "trigger": "Account menu",
+    "fallbackName": "User",
+    "profile": "Profile",
+    "switchMailbox": "Switch mailbox",
+    "adminMenu": "Admin menu",
+    "logout": "Log out",
+    "logoutConfirm": "Are you sure you want to log out?"
+  },
+  "accessoryRail": {
+    "label": "Additional apps",
+    "addApp": "Add app",
+    "comingSoon": "Coming soon",
+    "calendar": "Calendar",
+    "keep": "Keep",
+    "tasks": "Tasks",
+    "contacts": "Contacts"
+  }
+}

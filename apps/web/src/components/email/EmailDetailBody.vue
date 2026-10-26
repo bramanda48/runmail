@@ -4,8 +4,11 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Icon } from "@/icons";
+import { useI18n } from "vue-i18n";
 
 export type EmailBodyState = "loading" | "empty" | "html" | "text" | "error" | "parse-error";
+
+const { t } = useI18n();
 
 defineProps<{
   bodyState: EmailBodyState;
@@ -56,7 +59,7 @@ function formatSize(bytes?: number) {
       <pre v-else class="whitespace-pre-wrap text-sm text-foreground">{{ bodyText }}</pre>
 
       <div v-if="attachments.length > 0" class="mt-6 flex flex-col gap-2">
-        <p class="text-sm font-medium text-foreground">Lampiran</p>
+        <p class="text-sm font-medium text-foreground">{{ t("message.attachments.title") }}</p>
         <ul class="flex flex-col gap-1">
           <li
             v-for="(att, i) in attachments"
@@ -64,7 +67,7 @@ function formatSize(bytes?: number) {
             class="flex items-center gap-2 text-sm text-muted-foreground"
           >
             <Icon icon="lucide:paperclip" class="size-4" />
-            <span>{{ att.filename || "lampiran" }}</span>
+            <span>{{ att.filename || t("message.attachments.untitled") }}</span>
             <span v-if="att.size">({{ formatSize(att.size) }})</span>
           </li>
         </ul>
@@ -73,27 +76,31 @@ function formatSize(bytes?: number) {
       <div class="flex items-center gap-3 py-8">
         <Button variant="outline" class="rounded-full px-6 shadow-xs" @click="emits('reply')">
           <Icon icon="lucide:reply" />
-          <span>Balas</span>
+          <span>{{ t("message.reply") }}</span>
         </Button>
         <Button variant="outline" class="rounded-full px-6 shadow-xs" @click="emits('forward')">
           <Icon icon="lucide:forward" />
-          <span>Teruskan</span>
+          <span>{{ t("message.forward") }}</span>
         </Button>
       </div>
     </template>
 
     <div v-else-if="bodyState === 'empty'" class="py-8 text-center text-sm text-muted-foreground">
-      Email ini tidak memiliki konten.
+      {{ t("message.empty") }}
     </div>
 
     <Alert v-else-if="bodyState === 'parse-error'">
-      Email tidak dapat ditampilkan. Anda dapat mencoba memuat ulang.
-      <Button variant="ghost" size="sm" class="ml-2" @click="emits('retry')">Coba Lagi</Button>
+      {{ t("message.parseError") }}
+      <Button variant="ghost" size="sm" class="ml-2" @click="emits('retry')">
+        {{ t("common.actions.retry") }}
+      </Button>
     </Alert>
 
     <Alert v-else-if="bodyState === 'error'" variant="destructive">
       {{ error }}
-      <Button variant="ghost" size="sm" class="ml-2" @click="emits('retry')">Coba Lagi</Button>
+      <Button variant="ghost" size="sm" class="ml-2" @click="emits('retry')">
+        {{ t("common.actions.retry") }}
+      </Button>
     </Alert>
   </div>
 </template>

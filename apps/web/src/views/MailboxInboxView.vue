@@ -4,14 +4,20 @@ import ComposeModal from "@/components/email/ComposeModal.vue";
 import EmailListContainer from "@/components/email/EmailListContainer.vue";
 import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
+import { ApiError } from "@/lib/api";
 import { parseSearchQuery } from "@/lib/search";
 import { computeUnreadCounts } from "@/lib/unread-counts";
+import { translateApiError } from "@/i18n/api-errors";
+import { folderDisplayName } from "@/i18n/folders";
 import Dexie from "dexie";
+import { useI18n } from "vue-i18n";
 import { computed, onMounted, ref, shallowRef, watch } from "vue";
+
+const { t } = useI18n();
 
 const { route, router, mailboxStore, mailboxId, resolveMailbox } = useMailboxWorkspace({
   onResolveError: () => {
-    listError.value = "Tidak dapat memuat mailbox. Coba lagi.";
+    listError.value = t("inbox.errors.loadMailbox");
   },
 });
 
@@ -50,7 +56,9 @@ function applyQueryParam() {
 
 const activeFolder = computed(() => folders.value.find((f) => f.id === activeFolderId.value));
 
-const trashFolder = computed(() => folders.value.find((f) => f.name.toLowerCase() === "trash"));
+const trashFolder = computed(() =>
+  folders.value.find((f) => f.folder_type === "system" && f.name === "system.trash"),
+);
 
 const showPagination = computed(() => !debouncedSearch.value && totalMessages.value > perPage);
 
@@ -73,7 +81,7 @@ async function loadFolders() {
       folderIdParam.value && list.some((f) => f.id === folderIdParam.value)
         ? folderIdParam.value
         : null;
-    const inbox = list.find((f) => f.name.toLowerCase() === "inbox");
+    const inbox = list.find((f) => f.folder_type === "system" && f.name === "system.inbox");
     activeFolderId.value = fromUrl ?? inbox?.id ?? list[0]?.id ?? null;
   }
 }
@@ -153,7 +161,8 @@ async function loadMessages() {
     messages.value = sorted;
     totalMessages.value = await db.messages.where("folder_id").equals(folderId).count();
   } catch (err) {
-    listError.value = "Gagal memuat daftar email.";
+    listError.value =
+      err instanceof ApiError ? translateApiError(err) : t("inbox.errors.loadMessages");
   } finally {
     isLoading.value = false;
   }
@@ -280,7 +289,9 @@ watch(folderIdParam, () => {
   if (id) {
     activeFolderId.value = id;
   } else {
-    const inbox = folders.value.find((f) => f.name.toLowerCase() === "inbox");
+    const inbox = folders.value.find(
+      (f) => f.folder_type === "system" && f.name === "system.inbox",
+    );
     activeFolderId.value = inbox?.id ?? folders.value[0]?.id ?? null;
   }
   page.value = 1;
@@ -325,7 +336,7 @@ watch(
     @search="onSearch"
     @compose="composeOpen = true"
   >
-    <h1 class="sr-only">{{ activeFolder?.name || "Inbox" }}</h1>
+    <h1 class="sr-only">{{ activeFolder ? folderDisplayName(activeFolder) : t("system.inbox") }}</h1>
     <EmailListContainer
       :messages="messages"
       :loading="isLoading"

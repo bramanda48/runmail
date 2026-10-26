@@ -1,0 +1,42 @@
+{
+  "username": {
+    "pattern": "Nama pengguna harus 6-20 karakter dengan huruf, angka, tanda hubung, garis bawah, atau titik"
+  },
+  "login": {
+    "passwordRequired": "Kata sandi wajib diisi"
+  },
+  "password": {
+    "min": "Kata sandi minimal 8 karakter",
+    "max": "Kata sandi maksimal 72 karakter"
+  },
+  "domainName": {
+    "invalid": "Masukkan nama domain yang valid"
+  },
+  "localPart": {
+    "invalidChars": "Alamat email mengandung karakter yang tidak valid",
+    "leadingDot": "Alamat email tidak boleh diawali dengan titik",
+    "trailingDot": "Alamat email tidak boleh diakhiri dengan titik",
+    "consecutiveDots": "Alamat email tidak boleh berisi titik berturut-turut"
+  },
+  "folderName": {
+    "noOuterWhitespace": "Nama folder tidak boleh diawali atau diakhiri spasi",
+    "required": "Nama folder wajib diisi",
+    "max": "Nama folder maksimal 64 karakter"
+  },
+  "ruleset": {
+    "conditionValueRequired": "Nilai kondisi wajib diisi",
+    "conditionValueMax": "Nilai kondisi maksimal 500 karakter",
+    "nameRequired": "Nama ruleset wajib diisi",
+    "nameMax": "Nama ruleset maksimal 100 karakter",
+    "priorityNegative": "Prioritas harus berupa bilangan bulat non-negatif",
+    "conditionsMin": "Tambahkan minimal satu kondisi",
+    "conditionsMax": "Maksimal 50 kondisi diperbolehkan",
+    "actionsMin": "Tambahkan minimal satu aksi",
+    "actionsMax": "Maksimal 50 aksi diperbolehkan"
+  },
+  "syncMutation": {
+    "messageIdRequired": "ID pesan wajib diisi",
+    "moveFolderIdRequired": "Folder tujuan wajib diisi untuk memindahkan pesan",
+    "itemsMin": "Minimal satu perubahan diperlukan"
+  }
+}
