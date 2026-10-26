@@ -13,9 +13,9 @@ import { jwtAuth } from "../../middleware/auth";
 import { requireMailboxAccess } from "../../middleware/mailbox";
 import * as service from "./service";
 
-export const inboxRoutes = new Hono<AppEnv>();
+export const messageRoutes = new Hono<AppEnv>();
 
-inboxRoutes.get("/:mailbox_id/messages", jwtAuth, requireMailboxAccess, async (c) => {
+messageRoutes.get("/:mailbox_id/messages", jwtAuth, requireMailboxAccess, async (c) => {
   const parsed = cursorQuerySchema.safeParse(c.req.query());
   if (!parsed.success) {
     return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
@@ -40,7 +40,7 @@ inboxRoutes.get("/:mailbox_id/messages", jwtAuth, requireMailboxAccess, async (c
   return c.json({ data: { messages }, meta }, 200);
 });
 
-inboxRoutes.get("/:mailbox_id/messages/:message_id", jwtAuth, requireMailboxAccess, async (c) => {
+messageRoutes.get("/:mailbox_id/messages/:message_id", jwtAuth, requireMailboxAccess, async (c) => {
   const result = await service.getMessageDetail(
     c,
     c.get("mailbox").mailbox_id,
@@ -52,7 +52,7 @@ inboxRoutes.get("/:mailbox_id/messages/:message_id", jwtAuth, requireMailboxAcce
   return c.json({ data: { message: result.message } }, 200);
 });
 
-inboxRoutes.get(
+messageRoutes.get(
   "/:mailbox_id/messages/:message_id/raw",
   jwtAuth,
   requireMailboxAccess,
@@ -73,7 +73,7 @@ const readBodySchema = z.object({
   is_read: z.boolean(),
 });
 
-inboxRoutes.patch(
+messageRoutes.patch(
   "/:mailbox_id/messages/:message_id/read",
   jwtAuth,
   requireMailboxAccess,
@@ -99,7 +99,7 @@ const starBodySchema = z.object({
   is_starred: z.boolean(),
 });
 
-inboxRoutes.patch(
+messageRoutes.patch(
   "/:mailbox_id/messages/:message_id/star",
   jwtAuth,
   requireMailboxAccess,
@@ -125,7 +125,7 @@ const moveBodySchema = z.object({
   folder_id: z.string().min(1),
 });
 
-inboxRoutes.patch(
+messageRoutes.patch(
   "/:mailbox_id/messages/:message_id/move",
   jwtAuth,
   requireMailboxAccess,
@@ -158,7 +158,7 @@ inboxRoutes.patch(
   },
 );
 
-inboxRoutes.delete(
+messageRoutes.delete(
   "/:mailbox_id/messages/:message_id",
   jwtAuth,
   requireMailboxAccess,

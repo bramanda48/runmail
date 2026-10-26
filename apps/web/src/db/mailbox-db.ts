@@ -124,11 +124,6 @@ export function getMailboxDb(mailboxId: string): MailboxDb {
   return db;
 }
 
-/** Alias kept for the specified factory name. */
-export function openMailboxDb(mailboxId: string): MailboxDb {
-  return getMailboxDb(mailboxId);
-}
-
 export function closeMailboxDb(mailboxId: string): void {
   const db = instances.get(mailboxId);
   if (db) {

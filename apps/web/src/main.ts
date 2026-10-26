@@ -1,14 +1,15 @@
 import { createPinia } from "pinia";
 import { createApp } from "vue";
 import App from "./App.vue";
+import "./assets/globals.css";
 import { i18n } from "./i18n";
 import "./icons";
 import router from "./router";
-import "./styles/globals.css";
 
 const app = createApp(App);
+const pinia = createPinia();
 
-app.use(createPinia());
+app.use(pinia);
 app.use(i18n);
 app.use(router);
 

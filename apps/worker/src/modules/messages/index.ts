@@ -1,4 +1,4 @@
-export { inboxRoutes } from "./routes";
+export { messageRoutes } from "./routes";
 export {
   getSyncDelta,
   processMutations,

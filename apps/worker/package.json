@@ -7,6 +7,7 @@
     "build": "wrangler types && wrangler deploy --dry-run",
     "migrate": "wrangler d1 migrations apply DB",
     "typecheck": "tsc --noEmit",
+    "types": "wrangler types --env-interface CloudflareBindings",
     "wrangler": "wrangler"
   },
   "dependencies": {

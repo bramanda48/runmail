@@ -13,9 +13,9 @@ import { deleteRawEmail, getRawEmail as getRawEmailFromR2 } from "../../lib/r2";
 
 export type MessageWithRecipients = Message & { to_addresses: string[] };
 
-export type InboxErrorCode = "NOT_FOUND" | "INVALID_FOLDER" | "NOT_IN_TRASH";
+export type MessageErrorCode = "NOT_FOUND" | "INVALID_FOLDER" | "NOT_IN_TRASH";
 
-export type InboxError = { error: InboxErrorCode };
+export type MessageError = { error: MessageErrorCode };
 
 type MessageRow = typeof messages.$inferSelect;
 
@@ -124,7 +124,7 @@ export async function getMessageDetail(
   c: AppContext,
   mailboxId: string,
   messageId: string,
-): Promise<{ message: MessageWithRecipients } | InboxError> {
+): Promise<{ message: MessageWithRecipients } | MessageError> {
   const db = getDb(c);
   const row = await loadMessage(db, mailboxId, messageId);
   if (!row) return { error: "NOT_FOUND" };
@@ -135,7 +135,7 @@ export async function getRawEmail(
   c: AppContext,
   mailboxId: string,
   messageId: string,
-): Promise<{ response: Response } | InboxError> {
+): Promise<{ response: Response } | MessageError> {
   const db = getDb(c);
   const row = await loadMessage(db, mailboxId, messageId);
   if (!row) return { error: "NOT_FOUND" };
@@ -160,7 +160,7 @@ async function setFlag(
   messageId: string,
   field: "is_read" | "is_starred",
   value: boolean,
-): Promise<{ message: MessageWithRecipients } | InboxError> {
+): Promise<{ message: MessageWithRecipients } | MessageError> {
   const db = getDb(c);
   const row = await loadMessage(db, mailboxId, messageId);
   if (!row) return { error: "NOT_FOUND" };
@@ -207,7 +207,7 @@ export async function setMessageRead(
   mailboxId: string,
   messageId: string,
   isRead: boolean,
-): Promise<{ message: MessageWithRecipients } | InboxError> {
+): Promise<{ message: MessageWithRecipients } | MessageError> {
   return setFlag(c, mailboxId, messageId, "is_read", isRead);
 }
 
@@ -216,7 +216,7 @@ export async function setMessageStarred(
   mailboxId: string,
   messageId: string,
   isStarred: boolean,
-): Promise<{ message: MessageWithRecipients } | InboxError> {
+): Promise<{ message: MessageWithRecipients } | MessageError> {
   return setFlag(c, mailboxId, messageId, "is_starred", isStarred);
 }
 
@@ -225,7 +225,7 @@ export async function moveMessage(
   mailboxId: string,
   messageId: string,
   targetFolderId: string,
-): Promise<{ message: MessageWithRecipients } | InboxError> {
+): Promise<{ message: MessageWithRecipients } | MessageError> {
   const db = getDb(c);
   const row = await loadMessage(db, mailboxId, messageId);
   if (!row) return { error: "NOT_FOUND" };
@@ -290,7 +290,7 @@ export async function permanentDelete(
   mailboxId: string,
   messageId: string,
   env: R2Env,
-): Promise<{ ok: true } | InboxError> {
+): Promise<{ ok: true } | MessageError> {
   const db = getDb(c);
   const row = await loadMessage(db, mailboxId, messageId);
   if (!row) return { error: "NOT_FOUND" };
@@ -416,7 +416,7 @@ export async function processMutations(
   for (let i = 0; i < mutations.length; i++) {
     const mutation = mutations[i];
     try {
-      let outcome: { message: MessageWithRecipients } | InboxError;
+      let outcome: { message: MessageWithRecipients } | MessageError;
       if (mutation.mutation_type === "read") {
         outcome = await setMessageRead(c, mailboxId, mutation.message_id, mutation.mutation_value);
       } else if (mutation.mutation_type === "star") {

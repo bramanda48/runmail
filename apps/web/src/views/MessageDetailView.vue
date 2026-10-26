@@ -8,12 +8,13 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
-import { getMailboxDb, type LocalFolder, type LocalMessage } from "@/db/mailbox-db";
+import { getMailboxDb, type LocalMessage } from "@/db/mailbox-db";
 import { translateApiError } from "@/i18n/api-errors";
 import { ApiError, fetchRawEmail } from "@/lib/api";
 import { getCachedRaw, putCachedRaw } from "@/lib/raw-cache";
 import { sanitizeEmailHtml } from "@/lib/sanitize";
-import { computeUnreadCounts } from "@/lib/unread-counts";
+import { useMailboxFoldersStore } from "@/stores/mailbox-folders";
+import { storeToRefs } from "pinia";
 import PostalMime from "postal-mime";
 import { computed, onMounted, ref, shallowRef, watch } from "vue";
 import { useI18n } from "vue-i18n";
@@ -27,8 +28,8 @@ const INBOX_FOLDER_KEY = "system.inbox";
 const messageId = computed(() => route.params.message_id as string);
 
 const message = ref<LocalMessage | null>(null);
-const folders = ref<LocalFolder[]>([]);
-const unreadCounts = ref<Record<string, number>>({});
+const foldersStore = useMailboxFoldersStore();
+const { folders, unreadCounts } = storeToRefs(foldersStore);
 
 const bodyState = ref<EmailBodyState>("loading");
 const bodyHtml = ref("");
@@ -112,6 +113,7 @@ async function loadMessage(autoRead = false) {
       mutation_type: "read",
       mutation_value: true,
     });
+    foldersStore.invalidate();
     message.value.is_read = true;
   }
   await loadSiblings();
@@ -176,12 +178,6 @@ function allowImages() {
   imagesAllowed.value = true;
 }
 
-async function loadFolders() {
-  const db = getMailboxDb(mailboxId.value);
-  folders.value = await db.folders.toArray();
-  unreadCounts.value = await computeUnreadCounts(db);
-}
-
 async function toggleRead() {
   if (!message.value) return;
   await mailboxStore.enqueue({
@@ -189,6 +185,7 @@ async function toggleRead() {
     mutation_type: "read",
     mutation_value: !message.value.is_read,
   });
+  foldersStore.invalidate();
   back();
 }
 
@@ -199,13 +196,12 @@ async function moveSingle(folderId: string) {
     mutation_type: "move",
     mutation_value: folderId,
   });
+  foldersStore.invalidate();
   back();
 }
 
 function quoteBody(): string {
-  return bodyText.value
-    ? `\n\n---\n${bodyText.value}`
-    : `\n\n---\n${t("message.quote.htmlOnly")}`;
+  return bodyText.value ? `\n\n---\n${bodyText.value}` : `\n\n---\n${t("message.quote.htmlOnly")}`;
 }
 
 function openReply() {
@@ -269,7 +265,7 @@ function back() {
 async function init() {
   await resolveMailbox();
   if (mailboxStore.mailboxId !== mailboxId.value) return;
-  await loadFolders();
+  await foldersStore.load(mailboxId.value);
   await loadMessage(true);
 }
 

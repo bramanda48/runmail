@@ -3,6 +3,7 @@ import AccountMenu from "@/components/app/AccountMenu.vue";
 import AdminSidebar from "@/components/app/AdminSidebar.vue";
 import LocaleSwitcher from "@/components/app/LocaleSwitcher.vue";
 import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
+import ThemeSwitcher from "@/components/app/ThemeSwitcher.vue";
 import Wordmark from "@/components/app/Wordmark.vue";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ function toggleSidebar() {
 
       <div class="flex shrink-0 items-center gap-4 lg:w-64 lg:justify-end">
         <LocaleSwitcher />
+        <ThemeSwitcher />
         <AccountMenu />
       </div>
     </header>

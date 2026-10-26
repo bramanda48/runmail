@@ -1,4 +1,3 @@
-import type { ForwardableEmailMessage as EmailMessage } from "@cloudflare/workers-types";
 import {
   domains,
   folders,
@@ -12,7 +11,6 @@ import {
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import PostalMime from "postal-mime";
 import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/allocate";
-import type { Bindings } from "../../lib/db";
 import { getDb } from "../../lib/db";
 import { uuidv7 } from "../../lib/ids";
 import { createExecutionLogger } from "../../lib/logger";
@@ -30,8 +28,8 @@ import {
 } from "./helpers";
 
 export async function handleInboundEmail(
-  message: EmailMessage,
-  env: Bindings,
+  message: ForwardableEmailMessage,
+  env: CloudflareBindings,
   _ctx: ExecutionContext,
 ): Promise<void> {
   const execution_id = crypto.randomUUID();

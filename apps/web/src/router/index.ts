@@ -1,5 +1,6 @@
+import { getLastMailboxId } from "@/lib/last-mailbox";
 import { useAuthStore } from "@/stores/auth";
-import { getLastMailboxId, useMailboxAccessStore } from "@/stores/mailbox-access";
+import { useMailboxStore } from "@/stores/mailbox";
 import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router";
 
 declare module "vue-router" {
@@ -108,11 +109,11 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
-  const auth = useAuthStore();
-  const access = useMailboxAccessStore();
+  const authStore = useAuthStore();
+  const mailboxStore = useMailboxStore();
 
-  if (!auth.isAuthenticated) {
-    const restored = await auth.restoreSession();
+  if (!authStore.isAuthenticated) {
+    const restored = await authStore.restoreSession();
     if (to.meta.requiresAuth && !restored) {
       return { path: "/login", query: { redirect: to.fullPath } };
     }
@@ -122,10 +123,10 @@ router.beforeEach(async (to) => {
     }
   }
 
-  if (to.name === "login" && auth.isAuthenticated) {
+  if (to.name === "login" && authStore.isAuthenticated) {
     const mailboxId = getLastMailboxId();
     if (mailboxId !== null) {
-      const verdict = await access.ensureAccessible(mailboxId);
+      const verdict = await mailboxStore.ensureAccessible(mailboxId);
       if (verdict === "ok") {
         return { path: `/mailboxes/${mailboxId}/inbox` };
       }
@@ -133,12 +134,12 @@ router.beforeEach(async (to) => {
     return { path: "/mailboxes" };
   }
 
-  if (to.meta.requiresAdmin && !auth.isAdmin) {
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
     return { path: "/mailboxes" };
   }
 
   if (to.meta.mailboxScoped && typeof to.params.mailbox_id === "string") {
-    const verdict = await access.ensureAccessible(to.params.mailbox_id);
+    const verdict = await mailboxStore.ensureAccessible(to.params.mailbox_id);
     if (verdict === "forbidden" || verdict === "not_found" || verdict === "inactive") {
       return { path: "/mailboxes" };
     }

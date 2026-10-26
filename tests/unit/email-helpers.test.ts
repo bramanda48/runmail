@@ -8,7 +8,7 @@ import {
   parseEmailAddress,
   resolveEmailDate,
   serializeHeaders,
-} from "../../apps/worker/src/modules/email/helpers";
+} from "../../apps/worker/src/handler/inbound/helpers";
 
 describe("MAX_EMAIL_BYTES", () => {
   it("is 25 MB", () => {
