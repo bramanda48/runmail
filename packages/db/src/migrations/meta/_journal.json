@@ -36,6 +36,13 @@
       "when": 1792549579827,
       "tag": "0004_system_folder_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792549580000,
+      "tag": "0005_teams",
+      "breakpoints": true
     }
   ]
 }

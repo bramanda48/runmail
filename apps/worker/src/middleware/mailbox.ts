@@ -1,4 +1,4 @@
-import { mailboxes, mailboxUsers } from "@runmail/db";
+import { mailboxes, mailboxTeams, mailboxUsers, teamMembers } from "@runmail/db";
 import { API_ERROR_CODES } from "@runmail/shared";
 import { and, eq } from "drizzle-orm";
 import type { MiddlewareHandler } from "hono";
@@ -21,14 +21,13 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
   }
   const db = getDb(c);
 
-  const [row] = await db
+  const [mailbox] = await db
     .select({ id: mailboxes.id, is_active: mailboxes.is_active })
     .from(mailboxes)
-    .innerJoin(mailboxUsers, eq(mailboxUsers.mailbox_id, mailboxes.id))
-    .where(and(eq(mailboxes.id, mailboxId), eq(mailboxUsers.user_id, auth.user_id)))
+    .where(eq(mailboxes.id, mailboxId))
     .limit(1);
 
-  if (!row) {
+  if (!mailbox) {
     return c.json(
       {
         error: {
@@ -40,7 +39,7 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
     );
   }
 
-  if (!row.is_active) {
+  if (!mailbox.is_active) {
     return c.json(
       {
         error: {
@@ -49,6 +48,36 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
         },
       },
       403,
+    );
+  }
+
+  // Union access: direct link OR membership in a team the mailbox is shared to.
+  const [direct] = await db
+    .select({ id: mailboxUsers.id })
+    .from(mailboxUsers)
+    .where(and(eq(mailboxUsers.mailbox_id, mailboxId), eq(mailboxUsers.user_id, auth.user_id)))
+    .limit(1);
+
+  let allowed = Boolean(direct);
+  if (!allowed) {
+    const [viaTeam] = await db
+      .select({ id: mailboxTeams.id })
+      .from(mailboxTeams)
+      .innerJoin(teamMembers, eq(teamMembers.team_id, mailboxTeams.team_id))
+      .where(and(eq(mailboxTeams.mailbox_id, mailboxId), eq(teamMembers.user_id, auth.user_id)))
+      .limit(1);
+    allowed = Boolean(viaTeam);
+  }
+
+  if (!allowed) {
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.NOT_FOUND,
+          message: "Mailbox tidak ditemukan",
+        },
+      },
+      404,
     );
   }
 

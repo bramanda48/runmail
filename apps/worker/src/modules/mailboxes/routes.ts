@@ -268,3 +268,95 @@ mailboxRoutes.delete("/:mailbox_id/users/:user_id", jwtAuth, requireAdmin, async
   }
   return c.json({ data: { ok: true } }, 200);
 });
+
+const linkTeamBodySchema = z.object({
+  team_id: z.string().min(1),
+});
+
+mailboxRoutes.get("/:mailbox_id/teams", jwtAuth, requireAdmin, async (c) => {
+  const parsed = cursorQuerySchema.safeParse(c.req.query());
+  if (!parsed.success) {
+    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+  }
+  const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
+
+  let cursorId: string | undefined;
+  if (parsed.data.cursor) {
+    const payload = decodeCursor<IdCursorPayload>(parsed.data.cursor);
+    if (!payload) {
+      return c.json(badRequest({ cursor: ["Invalid cursor"] }), 400);
+    }
+    cursorId = payload.id;
+  }
+
+  const result = await service.listMailboxTeams(
+    c,
+    c.req.param("mailbox_id") ?? "",
+    limit,
+    cursorId,
+  );
+  if ("error" in result) {
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.NOT_FOUND,
+          message: "Mailbox tidak ditemukan",
+        },
+      },
+      404,
+    );
+  }
+  return c.json({ data: { teams: result.teams }, meta: result.meta }, 200);
+});
+
+mailboxRoutes.post("/:mailbox_id/teams", jwtAuth, requireAdmin, async (c) => {
+  const parsed = linkTeamBodySchema.safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success) {
+    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+  }
+
+  const result = await service.linkTeam(c, c.req.param("mailbox_id") ?? "", parsed.data.team_id);
+  if ("error" in result) {
+    if (result.error === "ALREADY_LINKED") {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.VALIDATION_ERROR,
+            message: "Team sudah terhubung ke mailbox ini",
+          },
+        },
+        409,
+      );
+    }
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.NOT_FOUND,
+          message: "Mailbox atau team tidak ditemukan",
+        },
+      },
+      404,
+    );
+  }
+  return c.json({ data: { ok: true } }, 201);
+});
+
+mailboxRoutes.delete("/:mailbox_id/teams/:team_id", jwtAuth, requireAdmin, async (c) => {
+  const result = await service.unlinkTeam(
+    c,
+    c.req.param("mailbox_id") ?? "",
+    c.req.param("team_id") ?? "",
+  );
+  if ("error" in result) {
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.NOT_FOUND,
+          message: "Kaitan team tidak ditemukan",
+        },
+      },
+      404,
+    );
+  }
+  return c.json({ data: { ok: true } }, 200);
+});

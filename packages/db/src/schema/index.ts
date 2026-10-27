@@ -6,4 +6,5 @@ export * from "./messages";
 export * from "./rulesets";
 export * from "./settings";
 export * from "./sync";
+export * from "./teams";
 export * from "./users";

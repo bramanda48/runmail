@@ -100,6 +100,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/AdminMailboxesView.vue"),
     meta: { requiresAuth: true, requiresAdmin: true },
   },
+  {
+    path: "/admin/teams",
+    name: "admin-teams",
+    component: () => import("@/views/AdminTeamsView.vue"),
+    meta: { requiresAuth: true, requiresAdmin: true },
+  },
   { path: "/:pathMatch(.*)*", name: "not-found", redirect: "/mailboxes" },
 ];
 

@@ -15,6 +15,7 @@
     "navLabel": "Navigasi admin",
     "domains": "Domain",
     "mailboxes": "Kotak surat",
+    "teams": "Tim",
     "users": "Pengguna",
     "backToMailboxes": "Kembali ke Mailbox"
   },

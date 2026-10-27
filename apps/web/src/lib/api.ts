@@ -5,6 +5,7 @@ import type {
   Folder,
   LogicOperator,
   Mailbox,
+  MailboxLinkedTeam,
   MailboxLinkedUser,
   MatchType,
   Message,
@@ -13,6 +14,8 @@ import type {
   Ruleset,
   RulesetDetail,
   SyncMutationItem,
+  Team,
+  TeamLinkedUser,
   User,
   VerifyDomainResponse,
 } from "@runmail/shared";
@@ -414,6 +417,84 @@ export async function getMailboxUsers(
     "GET",
     `/mailboxes/${mailboxId}/users${pageQuery(cursor, limit)}`,
   );
+}
+
+// --- Teams ---
+
+export interface TeamList {
+  teams: Team[];
+}
+
+export async function listTeams(
+  cursor?: string,
+  limit?: number,
+): Promise<RequestWithMeta<TeamList>> {
+  return requestWithMeta<TeamList>("GET", `/teams${pageQuery(cursor, limit)}`);
+}
+
+export async function createTeam(body: { name: string }): Promise<{ team: Team }> {
+  return request<{ team: Team }>("POST", "/teams", { body });
+}
+
+export async function updateTeam(teamId: string, body: { name: string }): Promise<{ team: Team }> {
+  return request<{ team: Team }>("PATCH", `/teams/${teamId}`, { body });
+}
+
+export async function deleteTeam(teamId: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>("DELETE", `/teams/${teamId}`);
+}
+
+export interface TeamLinkedUserList {
+  users: TeamLinkedUser[];
+}
+
+export async function getTeamUsers(
+  teamId: string,
+  cursor?: string,
+  limit?: number,
+): Promise<RequestWithMeta<TeamLinkedUserList>> {
+  return requestWithMeta<TeamLinkedUserList>(
+    "GET",
+    `/teams/${teamId}/users${pageQuery(cursor, limit)}`,
+  );
+}
+
+export async function addTeamUser(teamId: string, userId: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>("POST", `/teams/${teamId}/users`, {
+    body: { user_id: userId },
+  });
+}
+
+export async function removeTeamUser(teamId: string, userId: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>("DELETE", `/teams/${teamId}/users/${userId}`);
+}
+
+export interface MailboxLinkedTeamList {
+  teams: MailboxLinkedTeam[];
+}
+
+export async function getMailboxTeams(
+  mailboxId: string,
+  cursor?: string,
+  limit?: number,
+): Promise<RequestWithMeta<MailboxLinkedTeamList>> {
+  return requestWithMeta<MailboxLinkedTeamList>(
+    "GET",
+    `/mailboxes/${mailboxId}/teams${pageQuery(cursor, limit)}`,
+  );
+}
+
+export async function linkMailboxTeam(mailboxId: string, teamId: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>("POST", `/mailboxes/${mailboxId}/teams`, {
+    body: { team_id: teamId },
+  });
+}
+
+export async function unlinkMailboxTeam(
+  mailboxId: string,
+  teamId: string,
+): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>("DELETE", `/mailboxes/${mailboxId}/teams/${teamId}`);
 }
 
 // --- Folders ---

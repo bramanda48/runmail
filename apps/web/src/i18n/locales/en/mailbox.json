@@ -2,6 +2,12 @@
   "title": "Mailboxes",
   "subtitle": "Choose the mailbox you want to open.",
   "inactive": "Inactive mailbox",
+  "direct": {
+    "title": "Direct access"
+  },
+  "team": {
+    "title": "Shared to team {name}"
+  },
   "status": {
     "active": "Active",
     "inactive": "Inactive"

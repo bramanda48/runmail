@@ -92,6 +92,7 @@ const USED_ICONS = [
   "trash-2",
   "type",
   "users",
+  "user",
   "x",
 ];
 

@@ -1,5 +1,14 @@
-import { domains, folders, mailboxes, mailboxUsers, users } from "@runmail/db";
-import type { Mailbox, MailboxLinkedUser, PageMeta } from "@runmail/shared";
+import {
+  domains,
+  folders,
+  mailboxes,
+  mailboxTeams,
+  mailboxUsers,
+  teamMembers,
+  teams,
+  users,
+} from "@runmail/db";
+import type { Mailbox, MailboxLinkedTeam, MailboxLinkedUser, PageMeta } from "@runmail/shared";
 import { buildIdCursor, buildPageMeta, SYSTEM_FOLDER_KEYS } from "@runmail/shared";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { getDb } from "../../lib/db";
@@ -31,9 +40,9 @@ export async function listMailboxesForUser(
   userId: string,
   limit: number,
   cursorId: string | undefined,
-): Promise<{ mailboxes: Mailbox[]; meta: PageMeta }> {
+): Promise<{ mailboxes: (Mailbox & { via_teams: MailboxLinkedTeam[] })[]; meta: PageMeta }> {
   const db = getDb(c);
-  const rows = await db
+  const directRows = await db
     .select({
       id: mailboxes.id,
       domain_id: mailboxes.domain_id,
@@ -46,8 +55,47 @@ export async function listMailboxesForUser(
     .from(mailboxUsers)
     .innerJoin(mailboxes, eq(mailboxUsers.mailbox_id, mailboxes.id))
     .innerJoin(domains, eq(mailboxes.domain_id, domains.id))
-    .where(eq(mailboxUsers.user_id, userId))
-    .orderBy(desc(mailboxes.created_at), desc(mailboxes.id));
+    .where(eq(mailboxUsers.user_id, userId));
+
+  const teamRows = await db
+    .select({
+      id: mailboxes.id,
+      domain_id: mailboxes.domain_id,
+      local_part: mailboxes.local_part,
+      domain_name: domains.domain_name,
+      is_active: mailboxes.is_active,
+      created_at: mailboxes.created_at,
+      updated_at: mailboxes.updated_at,
+      team_id: teams.id,
+      team_name: teams.name,
+    })
+    .from(teamMembers)
+    .innerJoin(mailboxTeams, eq(mailboxTeams.team_id, teamMembers.team_id))
+    .innerJoin(mailboxes, eq(mailboxTeams.mailbox_id, mailboxes.id))
+    .innerJoin(teams, eq(mailboxTeams.team_id, teams.id))
+    .innerJoin(domains, eq(mailboxes.domain_id, domains.id))
+    .where(eq(teamMembers.user_id, userId));
+
+  const merged = new Map<string, MailboxRow & { via_teams: MailboxLinkedTeam[] }>();
+  for (const row of directRows) {
+    merged.set(row.id, { ...row, via_teams: [] });
+  }
+  for (const row of teamRows) {
+    const existing = merged.get(row.id);
+    const team = { team_id: row.team_id, name: row.team_name };
+    if (existing) {
+      if (!existing.via_teams.some((t) => t.team_id === team.team_id)) {
+        existing.via_teams.push(team);
+      }
+    } else {
+      const { team_id: _teamId, team_name: _teamName, ...rest } = row;
+      merged.set(row.id, { ...rest, via_teams: [team] });
+    }
+  }
+
+  const rows = [...merged.values()].sort(
+    (a, b) => b.created_at - a.created_at || (b.id < a.id ? -1 : b.id > a.id ? 1 : 0),
+  );
 
   let start = 0;
   if (cursorId) {
@@ -59,7 +107,12 @@ export async function listMailboxesForUser(
   const meta = buildPageMeta(window, limit, (row) => ({
     ...buildIdCursor(row),
   }));
-  return { mailboxes: window.slice(0, limit).map(toMailbox), meta };
+  return {
+    mailboxes: window
+      .slice(0, limit)
+      .map((row) => ({ ...toMailbox(row), via_teams: row.via_teams })),
+    meta,
+  };
 }
 
 export async function listAllMailboxes(
@@ -261,6 +314,86 @@ export async function unlinkUser(
 
   if (deleted.length === 0) return { error: "NOT_FOUND" };
   return { ok: true };
+}
+export async function linkTeam(
+  c: AppContext,
+  mailboxId: string,
+  teamId: string,
+): Promise<{ ok: true } | MailboxError> {
+  const db = getDb(c);
+  const [mailbox] = await db
+    .select({ id: mailboxes.id })
+    .from(mailboxes)
+    .where(eq(mailboxes.id, mailboxId))
+    .limit(1);
+  if (!mailbox) return { error: "NOT_FOUND" };
+  const [team] = await db.select({ id: teams.id }).from(teams).where(eq(teams.id, teamId)).limit(1);
+  if (!team) return { error: "NOT_FOUND" };
+  try {
+    await db.insert(mailboxTeams).values({
+      id: uuidv7(),
+      mailbox_id: mailboxId,
+      team_id: teamId,
+      created_at: Date.now(),
+    });
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      return { error: "ALREADY_LINKED" };
+    }
+    throw err;
+  }
+  return { ok: true };
+}
+
+export async function unlinkTeam(
+  c: AppContext,
+  mailboxId: string,
+  teamId: string,
+): Promise<{ ok: true } | MailboxError> {
+  const db = getDb(c);
+  const deleted = await db
+    .delete(mailboxTeams)
+    .where(and(eq(mailboxTeams.mailbox_id, mailboxId), eq(mailboxTeams.team_id, teamId)))
+    .returning({ id: mailboxTeams.id });
+  if (deleted.length === 0) return { error: "NOT_FOUND" };
+  return { ok: true };
+}
+
+export async function listMailboxTeams(
+  c: AppContext,
+  mailboxId: string,
+  limit: number,
+  cursorId: string | undefined,
+): Promise<{ teams: MailboxLinkedTeam[]; meta: PageMeta } | MailboxError> {
+  const db = getDb(c);
+  const [mailbox] = await db
+    .select({ id: mailboxes.id })
+    .from(mailboxes)
+    .where(eq(mailboxes.id, mailboxId))
+    .limit(1);
+  if (!mailbox) return { error: "NOT_FOUND" };
+  const rows = await db
+    .select({ id: teams.id, name: teams.name })
+    .from(mailboxTeams)
+    .innerJoin(teams, eq(mailboxTeams.team_id, teams.id))
+    .where(eq(mailboxTeams.mailbox_id, mailboxId))
+    .orderBy(asc(mailboxTeams.team_id));
+  let start = 0;
+  if (cursorId) {
+    const idx = rows.findIndex((row) => row.id === cursorId);
+    start = idx === -1 ? 0 : idx + 1;
+  }
+  const window = rows.slice(start, start + limit + 1);
+  const meta = buildPageMeta(window, limit, (row) => ({
+    ...buildIdCursor(row),
+  }));
+  return {
+    teams: window.slice(0, limit).map((row) => ({
+      team_id: row.id,
+      name: row.name,
+    })),
+    meta,
+  };
 }
 
 export async function listMailboxUsers(
