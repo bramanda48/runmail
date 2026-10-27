@@ -1,4 +1,4 @@
-import { refreshTokens, users } from "@runmail/db";
+import { refreshTokens, teamMembers, teams, users } from "@runmail/db";
 import { and, eq, gt, isNull } from "drizzle-orm";
 import { getDb } from "../../lib/db";
 import type { AppContext } from "../../lib/env";
@@ -17,7 +17,15 @@ export type AuthResult = {
   access_token: string;
   refresh_token: string;
   expires_in: number;
-  user: { id: string; username: string; role: string };
+  user: {
+    id: string;
+    username: string;
+    role: string;
+    teams?: {
+      id: string;
+      name: string;
+    }[];
+  };
 };
 
 export type AuthError = { error: TokenErrorCode | "INVALID_CREDENTIALS" };
@@ -108,6 +116,12 @@ export async function refresh(
     return { error: "UNAUTHORIZED" as const };
   }
 
+  const teamRows = await db
+    .select({ id: teams.id, name: teams.name })
+    .from(teamMembers)
+    .innerJoin(teams, eq(teamMembers.team_id, teams.id))
+    .where(eq(teamMembers.user_id, user.id));
+
   const { token: refresh_token, token_hash: newHash } = await generateRefreshToken();
   const ttlMs = parseInt(c.env.REFRESH_TOKEN_TTL_SECONDS, 10) * 1000;
   const issuedAt = Date.now();
@@ -130,7 +144,7 @@ export async function refresh(
     access_token,
     refresh_token,
     expires_in: parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    user: { id: user.id, username: user.username, role: user.role },
+    user: { id: user.id, username: user.username, role: user.role, teams: teamRows },
   };
 }
 

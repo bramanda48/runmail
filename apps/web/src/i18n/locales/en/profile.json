@@ -5,6 +5,7 @@
     "title": "Profile",
     "description": "Your current account information.",
     "username": "Username",
+    "teams": "Teams",
     "role": {
       "admin": "Admin",
       "member": "Member"

@@ -207,6 +207,7 @@ export interface SessionUser {
   id: string;
   username: string;
   role: Role;
+  teams?: { id: string; name: string }[];
 }
 
 export interface AuthPayload {
