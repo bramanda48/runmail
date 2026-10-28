@@ -44,7 +44,7 @@ async function logout() {
   <DropdownMenu>
     <DropdownMenuTrigger
       :aria-label="t('shell.accountMenu.trigger')"
-      class="flex size-8 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      class="flex size-9 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {{ initials }}
     </DropdownMenuTrigger>

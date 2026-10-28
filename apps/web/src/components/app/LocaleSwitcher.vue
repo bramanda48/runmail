@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import type { Locale } from "@/i18n";
-import { SUPPORTED_LOCALES, setLocale } from "@/i18n";
-import { Icon } from "@/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,8 +7,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import type { Locale } from "@/i18n";
+import { SUPPORTED_LOCALES, setLocale } from "@/i18n";
+import { Icon } from "@/icons";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { Button } from "../ui/button";
 
 const { t, locale } = useI18n();
 
@@ -23,12 +24,14 @@ const options = computed(() =>
 
 <template>
   <DropdownMenu>
-    <DropdownMenuTrigger
-      :aria-label="t('common.language.label')"
-      class="flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold uppercase text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <Icon icon="lucide:languages" class="size-4" />
-      {{ current }}
+    <DropdownMenuTrigger :aria-label="t('common.language.label')">
+      <Button
+        :aria-label="t('common.theme.label')"
+        variant="link"
+        class="text-muted-foreground hover:text-accent-foreground"
+      >
+        {{ current }}
+      </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" :side-offset="8" class="min-w-48">
       <DropdownMenuLabel class="text-xs font-medium text-muted-foreground">

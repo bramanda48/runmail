@@ -12,6 +12,7 @@ import { useThemeStore, type Theme } from "@/stores/theme";
 import { storeToRefs } from "pinia";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
+import { Button } from "../ui/button";
 
 const themeStore = useThemeStore();
 const { theme: currentTheme, resolved: currentResolved } = storeToRefs(themeStore);
@@ -31,11 +32,14 @@ const options = computed(() => [
 
 <template>
   <DropdownMenu>
-    <DropdownMenuTrigger
-      :aria-label="t('common.theme.label')"
-      class="flex h-8 items-center justify-center rounded-md px-2 text-muted-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring"
-    >
-      <Icon :icon="triggerIcon" class="size-4" />
+    <DropdownMenuTrigger>
+      <Button
+        :aria-label="t('common.theme.label')"
+        variant="link"
+        class="text-muted-foreground hover:text-accent-foreground"
+      >
+        <Icon :icon="triggerIcon" class="size-5!" />
+      </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" :side-offset="8" class="min-w-48">
       <DropdownMenuLabel class="text-xs font-medium text-muted-foreground">
