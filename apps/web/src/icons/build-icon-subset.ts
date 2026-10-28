@@ -63,7 +63,6 @@ const USED_ICONS = [
   "log-out",
   "mail",
   "mail-open",
-  "mail-badge",
   "maximize-2",
   "menu",
   "minus",
