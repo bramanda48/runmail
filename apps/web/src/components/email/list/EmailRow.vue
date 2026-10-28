@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import MoveFolderMenu from "@/components/email/MoveFolderMenu.vue";
+import MoveFolderMenu from "@/components/email/list/MoveFolderMenu.vue";
 import { Button } from "@/components/ui/button";
 import type { LocalFolder, LocalMessage } from "@/db/mailbox-db";
 import { formatNumericDate, formatShortDate, formatTime } from "@/i18n/format";

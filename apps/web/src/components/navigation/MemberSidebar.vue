@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import NavItem from "@/components/app/NavItem.vue";
+import NavItem from "@/components/navigation/NavItem.vue";
 import { computed } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRoute } from "vue-router";

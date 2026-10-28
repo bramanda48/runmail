@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import EmptyState from "@/components/app/EmptyState.vue";
-import MemberShell from "@/components/app/MemberShell.vue";
-import Pagination from "@/components/app/Pagination.vue";
+import EmptyState from "@/components/forms/EmptyState.vue";
+import MemberShell from "@/components/layouts/MemberShell.vue";
+import Pagination from "@/components/forms/Pagination.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

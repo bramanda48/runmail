@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AdminShell from "@/components/app/AdminShell.vue";
-import EmptyState from "@/components/app/EmptyState.vue";
-import Pagination from "@/components/app/Pagination.vue";
+import AdminShell from "@/components/layouts/AdminShell.vue";
+import EmptyState from "@/components/forms/EmptyState.vue";
+import Pagination from "@/components/forms/Pagination.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

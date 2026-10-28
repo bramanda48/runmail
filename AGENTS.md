@@ -154,7 +154,7 @@ bun run seed:admin [--username] [--password] [--remote --yes]
 ### i18n & Localization
 - **Wajib lewat `t()`:** seluruh string yang dilihat user (teks, placeholder, aria-label, dialog konfirmasi, empty/error state) diambil dari `apps/web/src/i18n/locales/{en,id}/<namespace>.json`. Dilarang hardcode copy di SFC.
 - **Locale aktif:** disimpan di `localStorage["runmail_locale"]`; saat pertama dibuka dideteksi sekali dari `navigator.languages` (`id*` → `id`, selain itu `en`), lalu dipersist. Fallback selalu `en`.
-- **Switcher:** `components/app/LocaleSwitcher.vue` ditempatkan tepat di kiri `AccountMenu` pada topbar (`MailboxWorkspace`, `MemberShell`, `AdminShell`) dan di halaman login.
+- **Switcher:** `components/topbar/LocaleSwitcher.vue` ditempatkan tepat di kiri `AccountMenu` pada topbar (`MailboxWorkspace`, `MemberShell`, `AdminShell`) dan di halaman login.
 - **Format tanggal/angka:** gunakan helper `src/i18n/format.ts` (Intl, locale `en-US`/`id-ID`). Dilarang hardcode `"id-ID"`/`"en-US"` di komponen.
 - **Error API:** backend tetap language-agnostic. Klien menerjemahkan via `error.code` (`translateApiError`) dengan fallback pesan server; field error via `translateFieldErrors`.
 - **Pesan validasi shared:** Zod schema di `packages/shared` memakai key stabil `validation.*`; UI yang menerjemahkan. Jangan menulis pesan prosa di schema.
@@ -164,15 +164,18 @@ bun run seed:admin [--username] [--password] [--remote --yes]
 
 ### Theming
 - **Tema:** `light`, `dark`, `system` (default `system` — ikuti OS pada kunjungan pertama, lalu persist). Disimpan di `localStorage["runmail_theme"]`.
-- **Switcher:** `components/app/ThemeSwitcher.vue` ditempatkan di kiri `LocaleSwitcher` pada topbar (`MailboxWorkspace`, `MemberShell`, `AdminShell`) dan halaman login.
+- **Switcher:** `components/topbar/ThemeSwitcher.vue` ditempatkan di kiri `LocaleSwitcher` pada topbar (`MailboxWorkspace`, `MemberShell`, `AdminShell`) dan halaman login.
 - **Apply:** `class="dark"` di `<html>` via `src/stores/theme.ts` (`useThemeStore` — `setTheme`, `init`); FOUC dicegah via inline script di `index.html` `<head>`.
 - **CSS:** `:root` = light, `.dark` = dark. `@custom-variant dark (&:is(.dark *))` aktif di `globals.css`. `color-scheme: light/dark` untuk native form controls.
 - **Dilarang:** `dark:` utility manual di app components — wajib semantic tokens (`bg-background`, `text-foreground`, dst) yang auto-switch. Stock shadcn-vue `dark:` di `components/ui/` tidak dihapus.
 
 ### Component Organization
 - **apps/web/src/components/ui/** — shadcn-vue generated/adapted components
-- **apps/web/src/components/app/** — Runmail-specific reusable components
-- **apps/web/src/components/email/** — Email-specific components (list, row, detail, toolbar)
+- **apps/web/src/components/layouts/** — MailboxWorkspace, MemberShell, AdminShell
+- **apps/web/src/components/navigation/** — sidebars, FolderNavigation, NavItem, MobileNavDrawer
+- **apps/web/src/components/topbar/** — AccountMenu, Wordmark, ThemeSwitcher, LocaleSwitcher, MailboxSearchBar
+- **apps/web/src/components/forms/** — generik dipakai ulang (Pagination, PasswordField, EmptyState)
+- **apps/web/src/components/email/** — email + settings mailbox: `list/`, `detail/`, `compose/`, `rules/`, `folders/`, root `AccessoryRail.vue`
 - **apps/web/src/views/** — Screen/page components
 - **apps/web/src/router/** — Vue Router config
 - **apps/web/src/stores/** — Pinia stores
@@ -244,7 +247,7 @@ Git hooks menjalankan lint-staged:
 ### Design System Violations
 - **No heavy drop shadows:** depth dari border + tonal muted, bukan shadow.
 - **No mixed icon sets / no lucide-vue-next:** Iconify + `lucide:*` saja.
-- **No custom ui variants:** `components/ui/` WAJIB sama dengan stock shadcn-vue (new-york); varian custom dilarang. Composite app-specific tinggal di `components/app/` (mis. password-field, pagination cursor).
+- **No custom ui variants:** `components/ui/` WAJIB sama dengan stock shadcn-vue (new-york); varian custom dilarang. Composite app-specific tinggal di `components/forms/` (mis. password-field, pagination cursor).
 - **No hex hardcode / no inline CSS-variable override** di views/komponen.
 - **No shadcn-vue add --overwrite** tanpa approval eksplisit user.
 
@@ -276,11 +279,10 @@ Git hooks menjalankan lint-staged:
 - **User management search/filter:** belum menjadi requirement MVP
 - **Bulk operations:** (bulk user deactivate, bulk mailbox assignment) belum diputuskan
 
-**Instruksi Agent:** Jangan tambahkan fitur admin diluar PRD tanpa konfirmasi eksplisit. Jika diminta, tanyakan scope dan priority.
-
 ### Branding Final
-- **Logo/wordmark Runmail:** belum tersedia, gunakan text wordmark netral
-  (`components/app/Wordmark.vue`, ikon `text-primary` agar kontras di slate terang).
+- **Logo/wordmark Runmail:** tersedia di `apps/web/public/logo/` (`horizontal.svg`, `horizontal-dark.svg`, `symbol.svg`, `wordmark.svg`).
+  `components/topbar/Wordmark.vue` render logo theme-aware via `useThemeStore().resolved`; favicon dari `public/favicon.svg` (copy `symbol.svg`).
+- **Background shell:** `apps/web/public/background/` (`light.png`, `dark.png`), URL terpusat di `useThemeStore().backgroundImage`; dipasang atas + bawah (rotate-180) di ketiga shell/layouts.
 - **Font final: Inter** (diputuskan 2026-10-08 via DESIGN.md; dimuat dari Google
   Fonts di `apps/web/index.html`, fallback system-ui).
 - **Skala tipografi:** mengikuti standar shadcn-vue harfiah (H1

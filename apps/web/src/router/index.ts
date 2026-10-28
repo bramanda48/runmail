@@ -51,22 +51,22 @@ const routes: RouteRecordRaw[] = [
       {
         path: "folders",
         name: "settings-folders",
-        component: () => import("@/components/settings/FolderSettingsTab.vue"),
+        component: () => import("@/components/email/folders/FolderSettingsTab.vue"),
       },
       {
         path: "rulesets",
         name: "settings-rulesets",
-        component: () => import("@/components/settings/RulesetSettingsTab.vue"),
+        component: () => import("@/components/email/rules/RulesetSettingsTab.vue"),
       },
       {
         path: "rulesets/new",
         name: "settings-ruleset-new",
-        component: () => import("@/components/settings/RulesetEditorTab.vue"),
+        component: () => import("@/components/email/rules/RulesetEditorTab.vue"),
       },
       {
         path: "rulesets/:ruleset_id",
         name: "settings-ruleset-edit",
-        component: () => import("@/components/settings/RulesetEditorTab.vue"),
+        component: () => import("@/components/email/rules/RulesetEditorTab.vue"),
       },
     ],
   },

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import MemberShell from "@/components/app/MemberShell.vue";
-import PasswordField from "@/components/app/PasswordField.vue";
+import MemberShell from "@/components/layouts/MemberShell.vue";
+import PasswordField from "@/components/forms/PasswordField.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

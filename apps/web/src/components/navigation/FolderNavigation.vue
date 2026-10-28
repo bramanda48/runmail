@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import NavItem from "@/components/app/NavItem.vue";
+import NavItem from "@/components/navigation/NavItem.vue";
 import type { LocalFolder } from "@/db/mailbox-db";
 import { folderDisplayName } from "@/i18n/folders";
 import { folderIcon, sortFolders } from "@/lib/folders";

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import AccountMenu from "@/components/app/AccountMenu.vue";
-import FolderNavigation from "@/components/app/FolderNavigation.vue";
-import LocaleSwitcher from "@/components/app/LocaleSwitcher.vue";
-import MailboxSearchBar from "@/components/app/MailboxSearchBar.vue";
-import MailboxSidebar from "@/components/app/MailboxSidebar.vue";
-import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
-import ThemeSwitcher from "@/components/app/ThemeSwitcher.vue";
-import Wordmark from "@/components/app/Wordmark.vue";
+import AccountMenu from "@/components/topbar/AccountMenu.vue";
+import FolderNavigation from "@/components/navigation/FolderNavigation.vue";
+import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
+import MailboxSearchBar from "@/components/topbar/MailboxSearchBar.vue";
+import MailboxSidebar from "@/components/navigation/MailboxSidebar.vue";
+import MobileNavDrawer from "@/components/navigation/MobileNavDrawer.vue";
+import ThemeSwitcher from "@/components/topbar/ThemeSwitcher.vue";
+import Wordmark from "@/components/topbar/Wordmark.vue";
 import AccessoryRail from "@/components/email/AccessoryRail.vue";
 import { Button } from "@/components/ui/button";
 import type { LocalFolder } from "@/db/mailbox-db";

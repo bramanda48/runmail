@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import EmailHeaderInfo from "@/components/email/EmailHeaderInfo.vue";
+import EmailHeaderInfo from "@/components/email/detail/EmailHeaderInfo.vue";
 import { Button } from "@/components/ui/button";
 import type { LocalMessage } from "@/db/mailbox-db";
 import { formatDateTime } from "@/i18n/format";

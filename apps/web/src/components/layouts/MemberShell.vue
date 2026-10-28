@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import AccountMenu from "@/components/app/AccountMenu.vue";
-import AdminSidebar from "@/components/app/AdminSidebar.vue";
-import LocaleSwitcher from "@/components/app/LocaleSwitcher.vue";
-import MobileNavDrawer from "@/components/app/MobileNavDrawer.vue";
-import ThemeSwitcher from "@/components/app/ThemeSwitcher.vue";
-import Wordmark from "@/components/app/Wordmark.vue";
-import { Badge } from "@/components/ui/badge";
+import AccountMenu from "@/components/topbar/AccountMenu.vue";
+import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
+import MemberSidebar from "@/components/navigation/MemberSidebar.vue";
+import MobileNavDrawer from "@/components/navigation/MobileNavDrawer.vue";
+import ThemeSwitcher from "@/components/topbar/ThemeSwitcher.vue";
+import Wordmark from "@/components/topbar/Wordmark.vue";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/icons";
 import { useThemeStore } from "@/stores/theme";
@@ -51,10 +50,7 @@ function toggleSidebar() {
         >
           <Icon icon="lucide:menu" />
         </Button>
-        <div class="flex items-center gap-2">
-          <Wordmark size="lg" />
-          <Badge variant="secondary">{{ t("shell.adminBadge") }}</Badge>
-        </div>
+        <Wordmark size="lg" />
       </div>
 
       <!-- spacer to keep right-aligned AccountMenu same position as mail -->
@@ -71,11 +67,11 @@ function toggleSidebar() {
 
     <div class="relative z-10 flex min-w-0 flex-1 gap-0 overflow-hidden">
       <aside v-if="!sidebarCollapsed" class="hidden w-64 shrink-0 flex-col overflow-hidden lg:flex">
-        <AdminSidebar />
+        <MemberSidebar />
       </aside>
 
       <MobileNavDrawer v-model:open="drawerOpen">
-        <AdminSidebar />
+        <MemberSidebar />
       </MobileNavDrawer>
 
       <main

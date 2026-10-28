@@ -2,8 +2,8 @@
 import RulesetActionRow, {
   type ActionRow,
   type FolderOption,
-} from "@/components/app/RulesetActionRow.vue";
-import RulesetConditionRow, { type ConditionRow } from "@/components/app/RulesetConditionRow.vue";
+} from "@/components/email/rules/RulesetActionRow.vue";
+import RulesetConditionRow, { type ConditionRow } from "@/components/email/rules/RulesetConditionRow.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import RemoteImageNotice from "@/components/email/RemoteImageNotice.vue";
+import RemoteImageNotice from "@/components/email/detail/RemoteImageNotice.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

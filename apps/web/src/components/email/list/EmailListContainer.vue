@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import EmptyState from "@/components/app/EmptyState.vue";
-import Pagination from "@/components/app/Pagination.vue";
-import EmailRow from "@/components/email/EmailRow.vue";
-import MoveFolderMenu from "@/components/email/MoveFolderMenu.vue";
+import EmptyState from "@/components/forms/EmptyState.vue";
+import Pagination from "@/components/forms/Pagination.vue";
+import EmailRow from "@/components/email/list/EmailRow.vue";
+import MoveFolderMenu from "@/components/email/list/MoveFolderMenu.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
