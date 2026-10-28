@@ -1,9 +1,9 @@
+import { getDb } from "@/lib/db";
+import type { AppEnv } from "@/lib/env";
 import { mailboxes, mailboxTeams, mailboxUsers, teamMembers } from "@runmail/db";
 import { API_ERROR_CODES } from "@runmail/shared";
 import { and, eq } from "drizzle-orm";
 import type { MiddlewareHandler } from "hono";
-import { getDb } from "../lib/db";
-import type { AppEnv } from "../lib/env";
 
 export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) => {
   const auth = c.get("auth");

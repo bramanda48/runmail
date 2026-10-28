@@ -1,11 +1,11 @@
+import { getDb } from "@/lib/db";
+import type { AppContext } from "@/lib/env";
+import { uuidv7 } from "@/lib/ids";
+import { isUniqueViolation } from "@/lib/sqlite";
 import { teamMembers, teams, users } from "@runmail/db";
 import type { PageMeta, Team, TeamLinkedUser } from "@runmail/shared";
 import { buildIdCursor, buildPageMeta } from "@runmail/shared";
 import { and, asc, desc, eq } from "drizzle-orm";
-import { getDb } from "../../lib/db";
-import type { AppContext } from "../../lib/env";
-import { uuidv7 } from "../../lib/ids";
-import { isUniqueViolation } from "../../lib/sqlite";
 
 export type TeamErrorCode = "NOT_FOUND" | "TEAM_NAME_ALREADY_EXISTS" | "ALREADY_MEMBER";
 

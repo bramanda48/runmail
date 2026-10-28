@@ -1,4 +1,4 @@
-import type { AppContext } from "../../lib/env";
+import type { AppContext } from "@/lib/env";
 import {
   clearCachedAccessToken,
   exchangeAuthorizationCode,
@@ -6,8 +6,8 @@ import {
   setCachedAccessToken,
   verifyOAuthState,
   type CloudflareTokenResponse,
-} from "../../lib/oauth";
-import { deleteSetting, getSetting, SETTING_NAMES, upsertSetting } from "../settings";
+} from "@/lib/oauth";
+import { deleteSetting, getSetting, SETTING_NAMES, upsertSetting } from "@/modules/settings";
 
 const CLOUDFLARE_OAUTH_SCOPES = [
   "zone.read",

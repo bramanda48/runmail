@@ -1,12 +1,12 @@
+import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "@/lib/allocate";
+import { getDb } from "@/lib/db";
+import type { AppContext } from "@/lib/env";
+import { uuidv7 } from "@/lib/ids";
+import { isUniqueViolation } from "@/lib/sqlite";
 import { folders, messages, rulesetActions, rulesets } from "@runmail/db";
 import type { Folder } from "@runmail/shared";
 import { isReservedFolderName, isSystemFolderKey } from "@runmail/shared";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/allocate";
-import { getDb } from "../../lib/db";
-import type { AppContext } from "../../lib/env";
-import { uuidv7 } from "../../lib/ids";
-import { isUniqueViolation } from "../../lib/sqlite";
 
 export type FolderErrorCode = "FOLDER_NAME_CONFLICT" | "FOLDER_IS_SYSTEM" | "NOT_FOUND";
 

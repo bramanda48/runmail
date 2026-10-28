@@ -1,22 +1,22 @@
+import { handleInboundEmail } from "@/handler/inbound";
+import type { AppEnv } from "@/lib/env";
+import { validateEnv } from "@/lib/env";
+import { createExecutionLogger, createLogger } from "@/lib/logger";
+import { requestLogger } from "@/middleware/logging";
+import { authRoutes } from "@/modules/auth";
+import { domainRoutes } from "@/modules/domains";
+import { folderRoutes } from "@/modules/folders";
+import { mailboxRoutes } from "@/modules/mailboxes";
+import { messageRoutes } from "@/modules/messages";
+import { oauthRoutes } from "@/modules/oauth";
+import { runRetentionCleanup } from "@/modules/retention";
+import { rulesetRoutes } from "@/modules/rulesets";
+import { syncRoutes } from "@/modules/sync";
+import { teamRoutes } from "@/modules/teams";
+import { userRoutes } from "@/modules/users";
 import { API_ERROR_CODES, type ApiErrorCode } from "@runmail/shared";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { handleInboundEmail } from "./handler/inbound";
-import type { AppEnv } from "./lib/env";
-import { validateEnv } from "./lib/env";
-import { createExecutionLogger, createLogger } from "./lib/logger";
-import { requestLogger } from "./middleware/logging";
-import { authRoutes } from "./modules/auth";
-import { domainRoutes } from "./modules/domains";
-import { folderRoutes } from "./modules/folders";
-import { mailboxRoutes } from "./modules/mailboxes";
-import { messageRoutes } from "./modules/messages";
-import { oauthRoutes } from "./modules/oauth";
-import { runRetentionCleanup } from "./modules/retention";
-import { rulesetRoutes } from "./modules/rulesets";
-import { syncRoutes } from "./modules/sync";
-import { teamRoutes } from "./modules/teams";
-import { userRoutes } from "./modules/users";
 
 const app = new Hono<AppEnv>();
 

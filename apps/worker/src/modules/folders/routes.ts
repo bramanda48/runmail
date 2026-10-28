@@ -1,11 +1,11 @@
+import type { AppEnv } from "@/lib/env";
+import { badRequest } from "@/lib/http-error";
+import { jwtAuth } from "@/middleware/auth";
+import { requireMailboxAccess } from "@/middleware/mailbox";
+import * as service from "@/modules/folders/service";
 import { API_ERROR_CODES, folderNameSchema } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest } from "../../lib/http-error";
-import { jwtAuth } from "../../middleware/auth";
-import { requireMailboxAccess } from "../../middleware/mailbox";
-import * as service from "./service";
 
 export const folderRoutes = new Hono<AppEnv>();
 

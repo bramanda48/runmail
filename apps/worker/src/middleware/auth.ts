@@ -1,7 +1,7 @@
+import type { AppEnv } from "@/lib/env";
+import { verifyAccessToken } from "@/modules/auth";
 import { API_ERROR_CODES } from "@runmail/shared";
 import type { MiddlewareHandler } from "hono";
-import type { AppEnv } from "../lib/env";
-import { verifyAccessToken } from "../modules/auth";
 
 export const jwtAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
   const header = c.req.header("Authorization");

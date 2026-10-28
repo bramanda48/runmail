@@ -1,3 +1,7 @@
+import { getDb } from "@/lib/db";
+import type { AppContext } from "@/lib/env";
+import { uuidv7 } from "@/lib/ids";
+import { isUniqueViolation } from "@/lib/sqlite";
 import {
   domains,
   folders,
@@ -11,10 +15,6 @@ import {
 import type { Mailbox, MailboxLinkedTeam, MailboxLinkedUser, PageMeta } from "@runmail/shared";
 import { buildIdCursor, buildPageMeta, SYSTEM_FOLDER_KEYS } from "@runmail/shared";
 import { and, asc, desc, eq } from "drizzle-orm";
-import { getDb } from "../../lib/db";
-import type { AppContext } from "../../lib/env";
-import { uuidv7 } from "../../lib/ids";
-import { isUniqueViolation } from "../../lib/sqlite";
 
 export type MailboxErrorCode =
   "DOMAIN_NOT_ACTIVE" | "MAILBOX_ADDRESS_ALREADY_EXISTS" | "NOT_FOUND" | "ALREADY_LINKED";

@@ -1,6 +1,6 @@
+import type { AppEnv } from "@/lib/env";
+import { createLogger } from "@/lib/logger";
 import { createMiddleware } from "hono/factory";
-import type { AppEnv } from "../lib/env";
-import { createLogger } from "../lib/logger";
 
 export const requestLogger = createMiddleware<AppEnv>(async (c, next) => {
   const logger = createLogger(c);

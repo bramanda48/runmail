@@ -1,15 +1,15 @@
-import { API_ERROR_CODES } from "@runmail/shared";
-import { Hono } from "hono";
-import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest } from "../../lib/http-error";
-import { jwtAuth, requireAdmin } from "../../middleware/auth";
+import type { AppEnv } from "@/lib/env";
+import { badRequest } from "@/lib/http-error";
+import { jwtAuth, requireAdmin } from "@/middleware/auth";
 import {
   disconnectOAuth,
   getAuthorizationUrl,
   handleOAuthCallback,
   isOAuthConfigured,
-} from "./service";
+} from "@/modules/oauth/service";
+import { API_ERROR_CODES } from "@runmail/shared";
+import { Hono } from "hono";
+import { z } from "zod";
 
 const oauth = new Hono<AppEnv>();
 

@@ -1,16 +1,16 @@
-import { domains } from "@runmail/db";
-import type { Domain, PageMeta, VerifyDomainResponse } from "@runmail/shared";
-import { buildIdCursor, buildPageMeta } from "@runmail/shared";
-import { desc, eq } from "drizzle-orm";
 import {
   CloudflareOAuthNotConfiguredError,
   getEmailRoutingStatus,
   listZones,
-} from "../../lib/cloudflare";
-import { getDb } from "../../lib/db";
-import type { AppContext } from "../../lib/env";
-import { uuidv7 } from "../../lib/ids";
-import { isUniqueViolation } from "../../lib/sqlite";
+} from "@/lib/cloudflare";
+import { getDb } from "@/lib/db";
+import type { AppContext } from "@/lib/env";
+import { uuidv7 } from "@/lib/ids";
+import { isUniqueViolation } from "@/lib/sqlite";
+import { domains } from "@runmail/db";
+import type { Domain, PageMeta, VerifyDomainResponse } from "@runmail/shared";
+import { buildIdCursor, buildPageMeta } from "@runmail/shared";
+import { desc, eq } from "drizzle-orm";
 
 // Re-export for routes error handling
 export { CloudflareOAuthNotConfiguredError };

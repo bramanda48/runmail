@@ -1,2 +1,2 @@
-export { teamRoutes } from "./routes";
-export * from "./service";
+export { teamRoutes } from "@/modules/teams/routes";
+export * from "@/modules/teams/service";

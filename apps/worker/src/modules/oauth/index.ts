@@ -1,2 +1,2 @@
-export { default as oauthRoutes } from "./routes";
-export * from "./service";
+export { default as oauthRoutes } from "@/modules/oauth/routes";
+export * from "@/modules/oauth/service";

@@ -1,11 +1,11 @@
+import type { AppEnv } from "@/lib/env";
+import { badRequest } from "@/lib/http-error";
+import { jwtAuth } from "@/middleware/auth";
+import { requireMailboxAccess } from "@/middleware/mailbox";
+import * as messageService from "@/modules/messages";
 import { syncMutationItemSchema } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest } from "../../lib/http-error";
-import { jwtAuth } from "../../middleware/auth";
-import { requireMailboxAccess } from "../../middleware/mailbox";
-import * as messageService from "../messages";
 
 export const syncRoutes = new Hono<AppEnv>();
 

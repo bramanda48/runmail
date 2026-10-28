@@ -1,6 +1,6 @@
+import type { AppContext } from "@/lib/env";
+import { deleteSetting, getSetting, SETTING_NAMES } from "@/modules/settings/service";
 import { sign, verify } from "hono/jwt";
-import { deleteSetting, getSetting, SETTING_NAMES } from "../modules/settings/service";
-import type { AppContext } from "./env";
 
 type OAuthStatePayload = {
   type: "oauth_state";

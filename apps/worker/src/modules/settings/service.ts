@@ -1,9 +1,9 @@
+import { getDb } from "@/lib/db";
+import type { AppContext } from "@/lib/env";
+import { uuidv7 } from "@/lib/ids";
 import type { Setting } from "@runmail/db";
 import { settings } from "@runmail/db";
 import { eq } from "drizzle-orm";
-import { getDb } from "../../lib/db";
-import type { AppContext } from "../../lib/env";
-import { uuidv7 } from "../../lib/ids";
 
 export const SETTING_NAMES = {
   CLOUDFLARE_OAUTH_TOKEN: "CLOUDFLARE_OAUTH_TOKEN",

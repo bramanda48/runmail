@@ -1,15 +1,12 @@
+import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "@/lib/allocate";
+import { type Db, getDb } from "@/lib/db";
+import type { AppContext } from "@/lib/env";
+import type { deleteRawEmail as deleteRawEmailFn, getRawEmail as getRawEmailFn } from "@/lib/r2";
+import { deleteRawEmail, getRawEmail as getRawEmailFromR2 } from "@/lib/r2";
 import { folders, messageRecipients, messages, syncEvents } from "@runmail/db";
 import type { Message, MessageCursorPayload, PageMeta, SyncMutationItem } from "@runmail/shared";
 import { buildMessageCursor, buildPageMeta, isSystemFolderKey } from "@runmail/shared";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
-import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/allocate";
-import { type Db, getDb } from "../../lib/db";
-import type { AppContext } from "../../lib/env";
-import type {
-  deleteRawEmail as deleteRawEmailFn,
-  getRawEmail as getRawEmailFn,
-} from "../../lib/r2";
-import { deleteRawEmail, getRawEmail as getRawEmailFromR2 } from "../../lib/r2";
 
 export type MessageWithRecipients = Message & { to_addresses: string[] };
 

@@ -1,3 +1,8 @@
+import type { AppEnv } from "@/lib/env";
+import { badRequest, notFound } from "@/lib/http-error";
+import { jwtAuth } from "@/middleware/auth";
+import { requireMailboxAccess } from "@/middleware/mailbox";
+import * as service from "@/modules/rulesets/service";
 import type { IdCursorPayload } from "@runmail/shared";
 import {
   API_ERROR_CODES,
@@ -7,11 +12,6 @@ import {
   rulesetSchema,
 } from "@runmail/shared";
 import { Hono } from "hono";
-import type { AppEnv } from "../../lib/env";
-import { badRequest, notFound } from "../../lib/http-error";
-import { jwtAuth } from "../../middleware/auth";
-import { requireMailboxAccess } from "../../middleware/mailbox";
-import * as service from "./service";
 
 function mapServiceError(result: service.RulesetError) {
   if (result.error === "RULESET_INVALID_REGEX") {

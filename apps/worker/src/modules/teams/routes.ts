@@ -1,3 +1,7 @@
+import type { AppEnv } from "@/lib/env";
+import { badRequest } from "@/lib/http-error";
+import { jwtAuth, requireAdmin } from "@/middleware/auth";
+import * as service from "@/modules/teams/service";
 import type { IdCursorPayload } from "@runmail/shared";
 import {
   API_ERROR_CODES,
@@ -7,10 +11,6 @@ import {
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest } from "../../lib/http-error";
-import { jwtAuth, requireAdmin } from "../../middleware/auth";
-import * as service from "./service";
 
 export const teamRoutes = new Hono<AppEnv>();
 

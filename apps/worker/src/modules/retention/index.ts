@@ -1,1 +1,1 @@
-export { retentionDaysFromEnv, runRetentionCleanup } from "./service";
+export { retentionDaysFromEnv, runRetentionCleanup } from "@/modules/retention/service";

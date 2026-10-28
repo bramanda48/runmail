@@ -1,11 +1,11 @@
+import type { AppEnv } from "@/lib/env";
+import { badRequest } from "@/lib/http-error";
+import { jwtAuth } from "@/middleware/auth";
+import * as service from "@/modules/auth/service";
 import type { ApiErrorCode } from "@runmail/shared";
 import { API_ERROR_CODES, loginSchema, passwordSchema } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest } from "../../lib/http-error";
-import { jwtAuth } from "../../middleware/auth";
-import * as service from "./service";
 
 export const authRoutes = new Hono<AppEnv>();
 

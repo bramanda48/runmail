@@ -1,1 +1,1 @@
-export { syncRoutes } from "./routes";
+export { syncRoutes } from "@/modules/sync/routes";

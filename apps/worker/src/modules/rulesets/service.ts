@@ -1,11 +1,11 @@
+import { getDb } from "@/lib/db";
+import type { AppContext } from "@/lib/env";
+import { uuidv7 } from "@/lib/ids";
 import { folders, rulesetActions, rulesetConditions, rulesets } from "@runmail/db";
 import type { PageMeta, RulesetDetail, rulesetSchema } from "@runmail/shared";
 import { buildIdCursor, buildPageMeta, validateRegexSafe } from "@runmail/shared";
 import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import type { z } from "zod";
-import { getDb } from "../../lib/db";
-import type { AppContext } from "../../lib/env";
-import { uuidv7 } from "../../lib/ids";
 
 export type RulesetInput = z.infer<typeof rulesetSchema>;
 

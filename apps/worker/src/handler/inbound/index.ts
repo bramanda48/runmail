@@ -1,4 +1,20 @@
 import {
+  buildRecipientRows,
+  findHeader,
+  MAX_EMAIL_BYTES,
+  normalizeSnippet,
+  parseEmailAddress,
+  resolveEmailDate,
+  serializeHeaders,
+} from "@/handler/inbound/helpers";
+import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "@/lib/allocate";
+import { getDb } from "@/lib/db";
+import { uuidv7 } from "@/lib/ids";
+import { createExecutionLogger } from "@/lib/logger";
+import { deleteRawEmail, putRawEmail, rawObjectKey } from "@/lib/r2";
+import type { EvaluableRuleset } from "@/lib/rules-engine";
+import { evaluateRulesets } from "@/lib/rules-engine";
+import {
   domains,
   folders,
   mailboxes,
@@ -10,22 +26,6 @@ import {
 } from "@runmail/db";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import PostalMime from "postal-mime";
-import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/allocate";
-import { getDb } from "../../lib/db";
-import { uuidv7 } from "../../lib/ids";
-import { createExecutionLogger } from "../../lib/logger";
-import { deleteRawEmail, putRawEmail, rawObjectKey } from "../../lib/r2";
-import type { EvaluableRuleset } from "../../lib/rules-engine";
-import { evaluateRulesets } from "../../lib/rules-engine";
-import {
-  buildRecipientRows,
-  findHeader,
-  MAX_EMAIL_BYTES,
-  normalizeSnippet,
-  parseEmailAddress,
-  resolveEmailDate,
-  serializeHeaders,
-} from "./helpers";
 
 export async function handleInboundEmail(
   message: ForwardableEmailMessage,
