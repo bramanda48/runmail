@@ -3,7 +3,7 @@ import { badRequest } from "@/lib/http-error";
 import { jwtAuth } from "@/middleware/auth";
 import * as service from "@/modules/auth/service";
 import type { ApiErrorCode } from "@runmail/shared";
-import { API_ERROR_CODES, loginSchema, passwordSchema } from "@runmail/shared";
+import { API_ERROR_CODES, loginSchema, passwordSchema, usernameSchema } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
 
@@ -29,6 +29,44 @@ authRoutes.post("/login", async (c) => {
   }
 
   return c.json({ data: result }, 200);
+});
+
+const setupBodySchema = z.object({
+  username: usernameSchema,
+  password: passwordSchema,
+});
+
+authRoutes.post("/setup", async (c) => {
+  const parsed = setupBodySchema.safeParse(await c.req.json().catch(() => null));
+  if (!parsed.success) {
+    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+  }
+
+  const result = await service.setup(c, parsed.data);
+  if ("error" in result) {
+    if (result.error === "SETUP_COMPLETE") {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.FORBIDDEN,
+            message: "Setup sudah selesai",
+          },
+        },
+        403,
+      );
+    }
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.USERNAME_ALREADY_EXISTS,
+          message: "Username sudah digunakan",
+        },
+      },
+      409,
+    );
+  }
+
+  return c.json({ data: result }, 201);
 });
 
 const refreshBodySchema = z.object({

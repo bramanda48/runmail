@@ -4,9 +4,10 @@ import {
   loginRequest,
   logoutRequest,
   refreshRequest,
-  type SessionUser,
   setAccessTokenProvider,
   setRefreshHandler,
+  setupRequest,
+  type SessionUser,
 } from "@/lib/api";
 import { useMailboxStore } from "@/stores/mailbox";
 import { defineStore } from "pinia";
@@ -122,6 +123,18 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
+  async function setup(username: string, password: string): Promise<SessionUser> {
+    status.value = "loading";
+    try {
+      const payload = await setupRequest(username, password);
+      applySession(payload, payload.refresh_token);
+      return payload.user;
+    } catch (err) {
+      status.value = "unauthenticated";
+      throw err;
+    }
+  }
+
   async function restoreSession(): Promise<boolean> {
     if (status.value === "authenticated" && accessToken.value) return true;
     const token = await refresh();
@@ -178,6 +191,7 @@ export const useAuthStore = defineStore("auth", () => {
     user,
     status,
     login,
+    setup,
     restoreSession,
     logout,
     endSessionLocally,

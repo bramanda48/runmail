@@ -231,6 +231,21 @@ export async function refreshRequest(refreshToken: string): Promise<AuthPayload>
   });
 }
 
+export async function setupRequest(username: string, password: string): Promise<AuthPayload> {
+  return request<AuthPayload>("POST", "/auth/setup", {
+    body: { username, password },
+    auth: false,
+  });
+}
+
+export async function getPublicSetting<TValue = string>(
+  key: string,
+): Promise<{ key: string; value: TValue }> {
+  return request<{ key: string; value: TValue }>("GET", `/settings/${key}`, {
+    auth: false,
+  });
+}
+
 export async function logoutRequest(refreshToken: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("POST", "/auth/logout", {
     body: { refresh_token: refreshToken },

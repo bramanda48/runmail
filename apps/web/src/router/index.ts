@@ -1,3 +1,4 @@
+import { getPublicSetting } from "@/lib/api";
 import { getLastMailboxId } from "@/lib/last-mailbox";
 import { useAuthStore } from "@/stores/auth";
 import { useMailboxStore } from "@/stores/mailbox";
@@ -13,6 +14,11 @@ declare module "vue-router" {
 
 const routes: RouteRecordRaw[] = [
   { path: "/", redirect: "/login" },
+  {
+    path: "/setup",
+    name: "setup",
+    component: () => import("@/views/SetupView.vue"),
+  },
   {
     path: "/login",
     name: "login",
@@ -117,6 +123,13 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   const authStore = useAuthStore();
   const mailboxStore = useMailboxStore();
+
+  if (to.name === "setup") {
+    const { value: complete } = await getPublicSetting<boolean>("is_setup_complete");
+    if (complete) {
+      return { path: "/login" };
+    }
+  }
 
   if (!authStore.isAuthenticated) {
     const restored = await authStore.restoreSession();

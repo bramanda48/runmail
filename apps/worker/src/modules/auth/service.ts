@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db";
 import type { AppContext } from "@/lib/env";
 import { uuidv7 } from "@/lib/ids";
+import { isUniqueViolation } from "@/lib/sqlite";
 import {
   generateRefreshToken,
   hashPassword,
@@ -8,6 +9,7 @@ import {
   sha256Hex,
   verifyPassword,
 } from "@/modules/auth/helpers";
+import { ensureSettings, updateSettings } from "@/modules/settings/service";
 import { refreshTokens, teamMembers, teams, users } from "@runmail/db";
 import { and, eq, gt, isNull } from "drizzle-orm";
 
@@ -189,4 +191,61 @@ export async function changePassword(
   ]);
 
   return { ok: true };
+}
+
+export type SetupError = { error: "SETUP_COMPLETE" | "USERNAME_EXISTS" };
+
+export async function setup(
+  c: AppContext,
+  input: { username: string; password: string },
+): Promise<AuthResult | SetupError> {
+  const settings = await ensureSettings(c);
+  if (settings.is_setup_complete) return { error: "SETUP_COMPLETE" };
+
+  const db = getDb(c);
+  const now = Date.now();
+  const id = uuidv7();
+  const password_hash = await hashPassword(input.password);
+
+  try {
+    await db.insert(users).values({
+      id,
+      username: input.username,
+      password_hash,
+      role: "admin",
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+    });
+  } catch (err) {
+    if (isUniqueViolation(err)) return { error: "USERNAME_EXISTS" };
+    throw err;
+  }
+
+  await updateSettings(c, { is_setup_complete: true });
+
+  const { token: refresh_token, token_hash } = await generateRefreshToken();
+  const ttlMs = parseInt(c.env.REFRESH_TOKEN_TTL_SECONDS, 10) * 1000;
+  const issuedAt = Date.now();
+
+  await db.insert(refreshTokens).values({
+    id: uuidv7(),
+    user_id: id,
+    token_hash,
+    expires_at: issuedAt + ttlMs,
+    created_at: issuedAt,
+  });
+
+  const access_token = await issueAccessToken(
+    c.env.JWT_SIGNING_SECRET,
+    parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
+    { id, role: "admin" },
+  );
+
+  return {
+    access_token,
+    refresh_token,
+    expires_in: parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
+    user: { id, username: input.username, role: "admin" },
+  };
 }

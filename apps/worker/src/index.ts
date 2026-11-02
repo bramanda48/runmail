@@ -4,13 +4,14 @@ import { validateEnv } from "@/lib/env";
 import { createExecutionLogger, createLogger } from "@/lib/logger";
 import { requestLogger } from "@/middleware/logging";
 import { authRoutes } from "@/modules/auth";
+import { cloudflareRoutes } from "@/modules/cloudflare";
 import { domainRoutes } from "@/modules/domains";
 import { folderRoutes } from "@/modules/folders";
 import { mailboxRoutes } from "@/modules/mailboxes";
 import { messageRoutes } from "@/modules/messages";
-import { oauthRoutes } from "@/modules/oauth";
 import { runRetentionCleanup } from "@/modules/retention";
 import { rulesetRoutes } from "@/modules/rulesets";
+import { settingsRoutes } from "@/modules/settings";
 import { syncRoutes } from "@/modules/sync";
 import { teamRoutes } from "@/modules/teams";
 import { userRoutes } from "@/modules/users";
@@ -46,7 +47,8 @@ app.route("/api/v1/mailboxes", folderRoutes);
 app.route("/api/v1/mailboxes", rulesetRoutes);
 app.route("/api/v1/mailboxes", messageRoutes);
 app.route("/api/v1/mailboxes", syncRoutes);
-app.route("/api/v1/integrations/cloudflare", oauthRoutes);
+app.route("/api/v1/integrations", cloudflareRoutes);
+app.route("/api/v1/settings", settingsRoutes);
 
 app.onError((err, c) => {
   const logger = createLogger(c);
