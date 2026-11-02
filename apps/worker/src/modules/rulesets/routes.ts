@@ -12,6 +12,7 @@ import {
   rulesetSchema,
 } from "@runmail/shared";
 import { Hono } from "hono";
+import { z } from "zod";
 
 function mapServiceError(result: service.RulesetError) {
   if (result.error === "RULESET_INVALID_REGEX") {
@@ -44,9 +45,12 @@ function mapServiceError(result: service.RulesetError) {
 export const rulesetRoutes = new Hono<AppEnv>();
 
 rulesetRoutes.get("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async (c) => {
-  const parsed = cursorQuerySchema.safeParse(c.req.query());
+  const query = c.req.query();
+  const parsed = cursorQuerySchema.safeParse(query);
+
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -69,9 +73,11 @@ rulesetRoutes.get("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async 
 });
 
 rulesetRoutes.post("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async (c) => {
-  const parsed = rulesetSchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = rulesetSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.createRuleset(c, c.get("mailbox").mailbox_id, parsed.data);
@@ -95,9 +101,11 @@ rulesetRoutes.get("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
 });
 
 rulesetRoutes.put("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAccess, async (c) => {
-  const parsed = rulesetSchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = rulesetSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.updateRuleset(

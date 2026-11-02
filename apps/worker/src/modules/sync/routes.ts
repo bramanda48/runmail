@@ -3,9 +3,9 @@ import { badRequest } from "@/lib/http-error";
 import { jwtAuth } from "@/middleware/auth";
 import { requireMailboxAccess } from "@/middleware/mailbox";
 import * as messageService from "@/modules/messages";
-import { syncMutationItemSchema } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
+import { mutationsBodySchema } from "./validation";
 
 export const syncRoutes = new Hono<AppEnv>();
 
@@ -15,9 +15,12 @@ const syncQuerySchema = z.object({
 });
 
 syncRoutes.get("/:mailbox_id/sync", jwtAuth, requireMailboxAccess, async (c) => {
-  const parsed = syncQuerySchema.safeParse(c.req.query());
+  const query = c.req.query();
+  const parsed = syncQuerySchema.safeParse(query);
+
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
   const delta = await messageService.getSyncDelta(c, c.get("mailbox").mailbox_id, {
     last_sync_version: parsed.data.last_sync_version,
@@ -49,14 +52,12 @@ syncRoutes.get("/:mailbox_id/sync", jwtAuth, requireMailboxAccess, async (c) => 
   );
 });
 
-const mutationsBodySchema = z.object({
-  mutations: z.array(syncMutationItemSchema).min(1).max(100),
-});
-
 syncRoutes.post("/:mailbox_id/sync/mutations", jwtAuth, requireMailboxAccess, async (c) => {
-  const parsed = mutationsBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = mutationsBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
   const { results } = await messageService.processMutations(
     c,

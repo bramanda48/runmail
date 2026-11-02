@@ -7,27 +7,20 @@ import {
   handleCloudflareCallback,
   isCloudflareConfigured,
 } from "@/modules/cloudflare/service";
+import { authorizeSchema, callbackSchema } from "@/modules/cloudflare/validation";
 import { API_ERROR_CODES } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
 
 const cloudflare = new Hono<AppEnv>();
 
-const authorizeSchema = z.object({
-  redirect_uri: z.string().url(),
-});
-
-const callbackSchema = z.object({
-  code: z.string().min(1),
-  state: z.string().min(1),
-});
-
 // Per-route auth: defined before the wildcard middleware below.
 cloudflare.post("/cloudflare/callback", jwtAuth, requireAdmin, async (c) => {
-  const parsed = callbackSchema.safeParse(await c.req.json().catch(() => null));
-
+  const body = await c.req.json();
+  const parsed = callbackSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const { code, state } = parsed.data;
@@ -69,10 +62,11 @@ cloudflare.get("/cloudflare/status", async (c) => {
 
 // Cloudflare callbacks to the frontend, so redirect_uri comes from the request body.
 cloudflare.post("/cloudflare/authorize", async (c) => {
-  const parsed = authorizeSchema.safeParse(await c.req.json().catch(() => null));
-
+  const body = await c.req.json();
+  const parsed = authorizeSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const { url, state } = await getAuthorizationUrl(c.env, parsed.data.redirect_uri);
