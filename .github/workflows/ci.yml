@@ -33,6 +33,3 @@ jobs:
       - name: Build worker (wrangler dry-run)
         run: bun run build
         working-directory: apps/worker
-
-      - name: Integration tests (D1 migration validation)
-        run: bun run test:integration

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AdminShell from "@/components/layouts/AdminShell.vue";
 import EmptyState from "@/components/forms/EmptyState.vue";
 import Pagination from "@/components/forms/Pagination.vue";
+import AdminShell from "@/components/layouts/AdminShell.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -243,9 +243,9 @@ async function submitAdd() {
       <Alert v-else-if="statusError" class="mb-6 [&>div]:min-w-0 [&>div]:flex-1">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <p>{{ statusError }}</p>
-          <Button variant="outline" class="min-h-11 shrink-0 text-foreground" @click="checkStatus"
-            >{{ t("admin.domains.cloudflare.checkAgain") }}</Button
-          >
+          <Button class="min-h-11 shrink-0 text-foreground" @click="checkStatus">
+            {{ t("admin.domains.cloudflare.checkAgain") }}
+          </Button>
         </div>
       </Alert>
       <Alert
