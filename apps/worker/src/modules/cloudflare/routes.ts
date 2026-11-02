@@ -2,16 +2,16 @@ import type { AppEnv } from "@/lib/env";
 import { badRequest } from "@/lib/http-error";
 import { jwtAuth, requireAdmin } from "@/middleware/auth";
 import {
-  disconnectOAuth,
+  disconnectCloudflare,
   getAuthorizationUrl,
-  handleOAuthCallback,
-  isOAuthConfigured,
-} from "@/modules/oauth/service";
+  handleCloudflareCallback,
+  isCloudflareConfigured,
+} from "@/modules/cloudflare/service";
 import { API_ERROR_CODES } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
 
-const oauth = new Hono<AppEnv>();
+const cloudflare = new Hono<AppEnv>();
 
 const authorizeSchema = z.object({
   redirect_uri: z.string().url(),
@@ -23,7 +23,7 @@ const callbackSchema = z.object({
 });
 
 // Per-route auth: defined before the wildcard middleware below.
-oauth.post("/callback", jwtAuth, requireAdmin, async (c) => {
+cloudflare.post("/cloudflare/callback", jwtAuth, requireAdmin, async (c) => {
   const parsed = callbackSchema.safeParse(await c.req.json().catch(() => null));
 
   if (!parsed.success) {
@@ -32,7 +32,7 @@ oauth.post("/callback", jwtAuth, requireAdmin, async (c) => {
 
   const { code, state } = parsed.data;
 
-  const result = await handleOAuthCallback(c, { code, state });
+  const result = await handleCloudflareCallback(c, { code, state });
 
   if (!result.success) {
     return c.json(
@@ -56,10 +56,10 @@ oauth.post("/callback", jwtAuth, requireAdmin, async (c) => {
   );
 });
 
-oauth.use("*", jwtAuth, requireAdmin);
+cloudflare.use("*", jwtAuth, requireAdmin);
 
-oauth.get("/status", async (c) => {
-  const configured = await isOAuthConfigured(c);
+cloudflare.get("/cloudflare/status", async (c) => {
+  const configured = await isCloudflareConfigured(c);
   return c.json({
     data: {
       configured,
@@ -68,7 +68,7 @@ oauth.get("/status", async (c) => {
 });
 
 // Cloudflare callbacks to the frontend, so redirect_uri comes from the request body.
-oauth.post("/authorize", async (c) => {
+cloudflare.post("/cloudflare/authorize", async (c) => {
   const parsed = authorizeSchema.safeParse(await c.req.json().catch(() => null));
 
   if (!parsed.success) {
@@ -85,8 +85,8 @@ oauth.post("/authorize", async (c) => {
   });
 });
 
-oauth.delete("/disconnect", async (c) => {
-  await disconnectOAuth(c);
+cloudflare.delete("/cloudflare/disconnect", async (c) => {
+  await disconnectCloudflare(c);
 
   return c.json({
     data: {
@@ -95,4 +95,4 @@ oauth.delete("/disconnect", async (c) => {
   });
 });
 
-export default oauth;
+export default cloudflare;

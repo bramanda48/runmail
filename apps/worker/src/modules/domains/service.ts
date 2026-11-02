@@ -12,9 +12,6 @@ import type { Domain, PageMeta, VerifyDomainResponse } from "@runmail/shared";
 import { buildIdCursor, buildPageMeta } from "@runmail/shared";
 import { desc, eq } from "drizzle-orm";
 
-// Re-export for routes error handling
-export { CloudflareOAuthNotConfiguredError };
-
 export type DomainErrorCode =
   "DOMAIN_EXISTS" | "DOMAIN_NOT_AVAILABLE" | "NOT_FOUND" | "OAUTH_NOT_CONFIGURED";
 

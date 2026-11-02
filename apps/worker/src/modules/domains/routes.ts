@@ -1,3 +1,4 @@
+import { CloudflareOAuthNotConfiguredError } from "@/lib/cloudflare";
 import type { AppEnv } from "@/lib/env";
 import { badRequest } from "@/lib/http-error";
 import { jwtAuth, requireAdmin } from "@/middleware/auth";
@@ -25,7 +26,6 @@ function cloudflareUnavailable() {
 function isCloudflareError(err: unknown): boolean {
   return err instanceof Error && err.message === "CLOUDFLARE_API_ERROR";
 }
-
 export const domainRoutes = new Hono<AppEnv>();
 
 domainRoutes.use("*", jwtAuth, requireAdmin);
@@ -35,7 +35,7 @@ domainRoutes.get("/available", async (c) => {
     const { zones } = await service.listAvailableZones(c);
     return c.json({ data: { zones } }, 200);
   } catch (err) {
-    if (err instanceof service.CloudflareOAuthNotConfiguredError) {
+    if (err instanceof CloudflareOAuthNotConfiguredError) {
       return c.json(
         {
           error: {

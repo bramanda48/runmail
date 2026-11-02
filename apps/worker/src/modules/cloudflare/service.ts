@@ -1,13 +1,13 @@
-import type { AppContext } from "@/lib/env";
 import {
   clearCachedAccessToken,
   exchangeAuthorizationCode,
-  generateOAuthState,
+  generateCloudflareState,
   setCachedAccessToken,
-  verifyOAuthState,
+  verifyCloudflareState,
   type CloudflareTokenResponse,
-} from "@/lib/oauth";
-import { deleteSetting, getSetting, SETTING_NAMES, upsertSetting } from "@/modules/settings";
+} from "@/lib/cloudflare-auth";
+import type { AppContext } from "@/lib/env";
+import { clearCloudflareToken, getSettings, updateSettings } from "@/modules/settings";
 
 const CLOUDFLARE_OAUTH_SCOPES = [
   "zone.read",
@@ -24,7 +24,7 @@ export async function getAuthorizationUrl(
   },
   redirectUri: string,
 ): Promise<{ url: string; state: string }> {
-  const state = await generateOAuthState(env.JWT_SIGNING_SECRET, redirectUri);
+  const state = await generateCloudflareState(env.JWT_SIGNING_SECRET, redirectUri);
 
   const authUrl = new URL("https://dash.cloudflare.com/oauth2/auth");
   authUrl.searchParams.set("client_id", env.CLOUDFLARE_OAUTH_CLIENT_ID);
@@ -36,7 +36,7 @@ export async function getAuthorizationUrl(
   return { url: authUrl.toString(), state };
 }
 
-export async function handleOAuthCallback(
+export async function handleCloudflareCallback(
   c: AppContext,
   params: {
     code: string;
@@ -50,7 +50,7 @@ export async function handleOAuthCallback(
     JWT_SIGNING_SECRET: string;
   };
 
-  const stateResult = await verifyOAuthState(env.JWT_SIGNING_SECRET, params.state);
+  const stateResult = await verifyCloudflareState(env.JWT_SIGNING_SECRET, params.state);
   if (!stateResult.valid) {
     return { success: false, error: "Invalid or expired state parameter" };
   }
@@ -74,19 +74,20 @@ export async function handleOAuthCallback(
     return { success: false, error: `Token exchange failed: ${message}` };
   }
 
-  await upsertSetting(c, SETTING_NAMES.CLOUDFLARE_OAUTH_TOKEN, tokenResponse.refresh_token);
+  await updateSettings(c, {
+    cloudflare_oauth_token: tokenResponse.refresh_token,
+  });
 
   setCachedAccessToken(tokenResponse.access_token, tokenResponse.expires_in);
-
   return { success: true };
 }
 
-export async function isOAuthConfigured(c: AppContext): Promise<boolean> {
-  const setting = await getSetting(c, SETTING_NAMES.CLOUDFLARE_OAUTH_TOKEN);
-  return setting !== null;
+export async function isCloudflareConfigured(c: AppContext): Promise<boolean> {
+  const row = await getSettings(c);
+  return row?.cloudflare_oauth_token != null;
 }
 
-export async function disconnectOAuth(c: AppContext): Promise<void> {
-  await deleteSetting(c, SETTING_NAMES.CLOUDFLARE_OAUTH_TOKEN);
+export async function disconnectCloudflare(c: AppContext): Promise<void> {
+  await clearCloudflareToken(c);
   clearCachedAccessToken();
 }

@@ -1,5 +1,5 @@
+import { getCloudflareAccessToken } from "@/lib/cloudflare-auth";
 import type { AppContext } from "@/lib/env";
-import { getCloudflareAccessToken } from "@/lib/oauth";
 import { EmailRouting } from "cloudflare/resources/email-routing/email-routing";
 import { Zones } from "cloudflare/resources/zones/zones";
 import { createClient } from "cloudflare/tree-shakable";

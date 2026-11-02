@@ -1,20 +1,23 @@
 import type { AppContext } from "@/lib/env";
-import { deleteSetting, getSetting, SETTING_NAMES } from "@/modules/settings/service";
+import { clearCloudflareToken, getSettings, updateSettings } from "@/modules/settings/service";
 import { sign, verify } from "hono/jwt";
 
-type OAuthStatePayload = {
-  type: "oauth_state";
+type CloudflareStatePayload = {
+  type: "cloudflare_state";
   nonce: string;
   redirectUri: string;
   exp: number;
 };
 
-export async function generateOAuthState(secret: string, redirectUri: string): Promise<string> {
+export async function generateCloudflareState(
+  secret: string,
+  redirectUri: string,
+): Promise<string> {
   const nonce = crypto.randomUUID();
   const exp = Math.floor(Date.now() / 1000) + 300; // 5 minutes
 
-  const payload: OAuthStatePayload = {
-    type: "oauth_state",
+  const payload: CloudflareStatePayload = {
+    type: "cloudflare_state",
     nonce,
     redirectUri,
     exp,
@@ -23,7 +26,7 @@ export async function generateOAuthState(secret: string, redirectUri: string): P
   return await sign(payload, secret, "HS256");
 }
 
-export async function verifyOAuthState(
+export async function verifyCloudflareState(
   secret: string,
   state: string,
 ): Promise<{ valid: true; nonce: string; redirectUri: string } | { valid: false }> {
@@ -36,7 +39,7 @@ export async function verifyOAuthState(
       !("type" in payload) ||
       !("nonce" in payload) ||
       !("redirectUri" in payload) ||
-      payload.type !== "oauth_state" ||
+      payload.type !== "cloudflare_state" ||
       typeof payload.nonce !== "string" ||
       typeof payload.redirectUri !== "string"
     ) {
@@ -53,7 +56,7 @@ export type CloudflareTokenResponse = {
   access_token: string;
   refresh_token: string;
   expires_in: number; // seconds
-  token_type: "Bearer";
+  token_type: string;
   scope: string;
 };
 
@@ -93,7 +96,7 @@ export async function exchangeRefreshToken(params: {
   refreshToken: string;
   clientId: string;
   clientSecret: string;
-}): Promise<{ access_token: string; expires_in: number }> {
+}): Promise<CloudflareTokenResponse> {
   const tokenUrl = "https://dash.cloudflare.com/oauth2/token";
 
   const body = new URLSearchParams({
@@ -131,8 +134,7 @@ export async function exchangeRefreshToken(params: {
     throw new Error(`Cloudflare token refresh failed: ${response.status} ${text}`);
   }
 
-  const data = (await response.json()) as { access_token: string; expires_in: number };
-  return data;
+  return (await response.json()) as CloudflareTokenResponse;
 }
 
 // Module-level cache works because workers reuse isolates across requests.
@@ -167,24 +169,27 @@ export async function getCloudflareAccessToken(c: AppContext): Promise<string | 
 
   refreshPromise = (async (): Promise<string | null> => {
     try {
-      const setting = await getSetting(c, SETTING_NAMES.CLOUDFLARE_OAUTH_TOKEN);
-      if (!setting) {
+      const row = await getSettings(c);
+      if (!row?.cloudflare_oauth_token) {
         return null;
       }
 
       try {
         const tokenData = await exchangeRefreshToken({
-          refreshToken: setting.value,
+          refreshToken: row.cloudflare_oauth_token,
           clientId: env.CLOUDFLARE_OAUTH_CLIENT_ID,
           clientSecret: env.CLOUDFLARE_OAUTH_CLIENT_SECRET,
         });
 
-        setCachedAccessToken(tokenData.access_token, tokenData.expires_in);
+        await updateSettings(c, {
+          cloudflare_oauth_token: tokenData.refresh_token,
+        });
 
+        setCachedAccessToken(tokenData.access_token, tokenData.expires_in);
         return cachedAccessToken;
       } catch (err) {
         if (err instanceof Error && err.message === "REFRESH_TOKEN_REVOKED") {
-          await deleteSetting(c, SETTING_NAMES.CLOUDFLARE_OAUTH_TOKEN);
+          await clearCloudflareToken(c);
           clearCachedAccessToken();
           return null;
         }
