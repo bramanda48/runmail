@@ -5,43 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1788964209104,
-      "tag": "0000_init_schema",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1789041084754,
-      "tag": "0001_sync_counters_and_indexes",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1790225373888,
-      "tag": "0002_lean_iceman",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "6",
-      "when": 1792549578827,
-      "tag": "0003_remove_settings_metadata",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "6",
-      "when": 1792549579827,
-      "tag": "0004_system_folder_keys",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "6",
-      "when": 1792549580000,
-      "tag": "0005_teams",
+      "when": 1793454149791,
+      "tag": "0000_productive_prism",
       "breakpoints": true
     }
   ]
