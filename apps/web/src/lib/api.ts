@@ -17,7 +17,6 @@ import type {
   Team,
   TeamLinkedUser,
   User,
-  VerifyDomainResponse,
 } from "@runmail/shared";
 
 /**
@@ -332,17 +331,8 @@ export function completeCloudflareOAuthCallback(
   return callbackCloudflareOAuth(code, state);
 }
 
-export interface AvailableZone {
-  id: string;
-  name: string;
-}
-
 export interface DomainList {
   domains: Domain[];
-}
-
-export async function listAvailableDomains(): Promise<{ zones: AvailableZone[] }> {
-  return request<{ zones: AvailableZone[] }>("GET", "/domains/available");
 }
 
 export async function listDomains(
@@ -356,10 +346,6 @@ export async function addDomain(domainName: string): Promise<{ domain: Domain }>
   return request<{ domain: Domain }>("POST", "/domains", {
     body: { domain_name: domainName },
   });
-}
-
-export async function verifyDomain(domainId: string): Promise<VerifyDomainResponse> {
-  return request<VerifyDomainResponse>("POST", `/domains/${domainId}/verify`);
 }
 
 // --- Mailboxes ---

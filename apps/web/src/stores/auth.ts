@@ -9,6 +9,7 @@ import {
   setupRequest,
   type SessionUser,
 } from "@/lib/api";
+import { setCloudflareAccessTokenProvider } from "@/lib/cloudflare-client";
 import { useMailboxStore } from "@/stores/mailbox";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
@@ -184,6 +185,7 @@ export const useAuthStore = defineStore("auth", () => {
   // Register this store as the token provider for the api client.
   // api.ts never imports the store, so there is no import cycle.
   setAccessTokenProvider(() => accessToken.value);
+  setCloudflareAccessTokenProvider(() => accessToken.value);
   setRefreshHandler(() => refresh());
 
   return {
