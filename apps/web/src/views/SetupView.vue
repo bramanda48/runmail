@@ -7,21 +7,19 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
+import { translateApiError } from "@/i18n/api-errors";
+import { isConnectionError, mapValidationErrors, resetFieldErrors } from "@/composables/use-auth-form";
 import { Icon } from "@/icons";
 import { ApiError } from "@/lib/api";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_PATTERN } from "@runmail/shared";
 import { useAuthStore } from "@/stores/auth";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
-const USERNAME_PATTERN = /^[A-Za-z0-9\-_.]{6,20}$/;
-const PASSWORD_MIN = 8;
-const PASSWORD_MAX = 72;
-
-const { t } = useI18n();
 const authStore = useAuthStore();
 const router = useRouter();
+const { t } = useI18n();
 
 const username = ref("");
 const password = ref("");
@@ -33,9 +31,7 @@ const apiError = ref("");
 const isSubmitting = ref(false);
 
 function validate(): boolean {
-  usernameError.value = "";
-  passwordError.value = "";
-  confirmError.value = "";
+  resetFieldErrors(usernameError, passwordError, confirmError);
 
   let hasError = false;
 
@@ -51,10 +47,10 @@ function validate(): boolean {
   if (!password.value) {
     passwordError.value = t("auth.errors.setupRequired");
     hasError = true;
-  } else if (password.value.length < PASSWORD_MIN) {
+  } else if (password.value.length < PASSWORD_MIN_LENGTH) {
     passwordError.value = t("validation.password.min");
     hasError = true;
-  } else if (password.value.length > PASSWORD_MAX) {
+  } else if (password.value.length > PASSWORD_MAX_LENGTH) {
     passwordError.value = t("validation.password.max");
     hasError = true;
   }
@@ -81,17 +77,21 @@ async function handleSubmit() {
     await router.push("/mailboxes");
   } catch (err) {
     isSubmitting.value = false;
-    if (!(err instanceof ApiError) || err.status === 0) {
+    if (isConnectionError(err)) {
       apiError.value = t("auth.errors.network");
       return;
     }
 
-    const fieldErrors = translateFieldErrors(err.details);
-    usernameError.value = fieldErrors.username?.[0] ?? "";
-    passwordError.value = fieldErrors.password?.[0] ?? "";
-    confirmError.value = fieldErrors.confirm_password?.[0] ?? fieldErrors.confirmPassword?.[0] ?? "";
-    if (!usernameError.value && !passwordError.value && !confirmError.value) {
-      apiError.value = translateApiError(err);
+    if (err instanceof ApiError) {
+      const mapped = mapValidationErrors(err.details, {
+        username: usernameError,
+        password: passwordError,
+        confirmPassword: confirmError,
+        confirm_password: confirmError,
+      });
+      if (!mapped) {
+        apiError.value = translateApiError(err);
+      }
     }
   }
 }

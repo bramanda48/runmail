@@ -29,11 +29,7 @@ const {
 const loadError = ref("");
 const composeOpen = shallowRef(false);
 
-/** Route-driven tab state: the URL is the source of truth. */
-const isRulesetEditor = computed(
-  () => route.name === "settings-ruleset-new" || route.name === "settings-ruleset-edit",
-);
-
+/** Route-driven tab state: URL sumber kebenaran. */
 const activeTab = computed({
   get: () =>
     route.name === "settings-rulesets" ||
@@ -48,11 +44,6 @@ const activeTab = computed({
     }
   },
 });
-
-function goBackToRulesets() {
-  router.push({ name: "settings-rulesets", params: { mailbox_id: mailboxId.value } });
-}
-
 async function init() {
   loadError.value = "";
   await resolveMailbox();

@@ -5,7 +5,8 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
+import { translateApiError } from "@/i18n/api-errors";
+import { mapValidationErrors, resetFieldErrors } from "@/composables/use-auth-form";
 import { Icon } from "@/icons";
 import { ApiError, changePassword } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
@@ -14,10 +15,9 @@ import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
-const { t } = useI18n();
-
 const authStore = useAuthStore();
 const router = useRouter();
+const { t } = useI18n();
 
 const currentPassword = ref("");
 const newPassword = ref("");
@@ -31,10 +31,7 @@ const successMessage = ref("");
 const isSubmitting = ref(false);
 
 function clearErrors() {
-  currentPasswordError.value = "";
-  newPasswordError.value = "";
-  confirmPasswordError.value = "";
-  inlineError.value = "";
+  resetFieldErrors(currentPasswordError, newPasswordError, confirmPasswordError, inlineError);
 }
 
 function applyApiError(err: ApiError) {
@@ -43,13 +40,10 @@ function applyApiError(err: ApiError) {
     return;
   }
   if (err.code === "VALIDATION_ERROR") {
-    const details = translateFieldErrors(err.details);
-    if (details.current_password?.length) {
-      currentPasswordError.value = details.current_password[0];
-    }
-    if (details.new_password?.length) {
-      newPasswordError.value = details.new_password[0];
-    }
+    mapValidationErrors(err.details, {
+      current_password: currentPasswordError,
+      new_password: newPasswordError,
+    });
     return;
   }
   inlineError.value = translateApiError(err);

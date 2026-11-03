@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AdminShell from "@/components/layouts/AdminShell.vue";
 import EmptyState from "@/components/forms/EmptyState.vue";
 import Pagination from "@/components/forms/Pagination.vue";
+import AdminShell from "@/components/layouts/AdminShell.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,8 +29,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { translateApiError } from "@/i18n/api-errors";
+import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
+import { useCursorPagination } from "@/composables/use-cursor-pagination";
+import { useFormSubmit } from "@/composables/use-form-submit";
 import { Icon } from "@/icons";
+import { translateApiError } from "@/i18n/api-errors";
 import {
   ApiError,
   addTeamUser,
@@ -42,29 +45,42 @@ import {
   removeTeamUser,
   updateTeam,
 } from "@/lib/api";
-import type { ApiMeta, Role, Team, TeamLinkedUser, User } from "@runmail/shared";
-import { computed, onMounted, ref } from "vue";
+import { paginateAll } from "@/lib/paginate-all";
+import type { Role, Team, TeamLinkedUser, User } from "@runmail/shared";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 
+const { handleOperationError } = useCloudflareOAuth();
+
 const perPage = 10;
 
-const teams = ref<Team[]>([]);
-const memberCounts = ref<Record<string, number>>({});
-const meta = ref<ApiMeta | null>(null);
-const cursors = ref<(string | undefined)[]>([undefined]);
-const pageIndex = ref(0);
-const isLoading = ref(false);
-const error = ref("");
-
-const page = computed(() => pageIndex.value + 1);
-const start = computed(() => pageIndex.value * perPage + 1);
-const end = computed(() => start.value + teams.value.length - 1);
-const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
-const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
+const {
+  items: teams,
+  page,
+  start,
+  end,
+  showPagination,
+  paginationTotal,
+  isLoading,
+  error,
+  load,
+  goNext,
+  goPrev,
+  reload,
+} = useCursorPagination<Team>(
+  async (cursor, limit) => {
+    const { data, meta: responseMeta } = await listTeams(cursor, limit);
+    return { items: data.teams, meta: responseMeta ?? null };
+  },
+  "admin.teams.loadError",
+  perPage,
+  handleOperationError,
 );
+
+const memberCounts = ref<Record<string, number>>({});
+
 
 const roleLabels = computed<Record<Role, string>>(() => ({
   admin: t("admin.role.admin"),
@@ -72,105 +88,90 @@ const roleLabels = computed<Record<Role, string>>(() => ({
 }));
 
 async function countMembers(teamId: string): Promise<number> {
-  let count = 0;
-  let cursor: string | undefined;
-  do {
-    const { data, meta: responseMeta } = await getTeamUsers(teamId, cursor, 100);
-    count += data.users.length;
-    cursor =
-      responseMeta?.has_more && responseMeta.next_cursor ? responseMeta.next_cursor : undefined;
-    if (!responseMeta?.has_more) break;
-  } while (cursor);
-  return count;
+  const users = await paginateAll(
+    async (cursor, limit) => {
+      const { data, meta: responseMeta } = await getTeamUsers(teamId, cursor, limit);
+      return {
+        items: data.users,
+        hasMore: responseMeta?.has_more ?? false,
+        nextCursor: responseMeta?.next_cursor,
+      };
+    },
+    100,
+  );
+  return users.length;
 }
 
-async function load(cursor?: string) {
-  isLoading.value = true;
-  error.value = "";
-  try {
-    const { data, meta: responseMeta } = await listTeams(cursor, perPage);
-    teams.value = data.teams;
-    meta.value = responseMeta ?? null;
-    if (
-      meta.value?.has_more &&
-      meta.value.next_cursor &&
-      cursors.value.length === pageIndex.value + 1
-    ) {
-      cursors.value.push(meta.value.next_cursor);
-    }
-    const counts = await Promise.allSettled(data.teams.map((team) => countMembers(team.id)));
-    const next: Record<string, number> = {};
-    data.teams.forEach((team, i) => {
-      const result = counts[i];
-      next[team.id] = result.status === "fulfilled" ? result.value : 0;
-    });
-    memberCounts.value = next;
-  } catch (err) {
-    if (err instanceof ApiError) {
-      error.value = translateApiError(err);
-    } else {
-      error.value = t("admin.teams.loadError");
-    }
-  } finally {
-    isLoading.value = false;
-  }
+async function refreshCounts(list: Team[]) {
+  const counts = await Promise.allSettled(list.map((team) => countMembers(team.id)));
+  const next: Record<string, number> = {};
+  list.forEach((team, i) => {
+    const result = counts[i];
+    next[team.id] = result.status === "fulfilled" ? result.value : 0;
+  });
+  memberCounts.value = next;
 }
 
-function goNext() {
-  if (!meta.value?.has_more || cursors.value.length <= pageIndex.value + 1) {
-    return;
-  }
-  pageIndex.value += 1;
-  load(cursors.value[pageIndex.value]);
-}
-
-function goPrev() {
-  if (pageIndex.value <= 0) return;
-  pageIndex.value -= 1;
-  load(cursors.value[pageIndex.value]);
-}
+watch(teams, (list) => {
+  void refreshCounts(list);
+});
 
 function retry() {
-  load(cursors.value[pageIndex.value]);
+  reload();
 }
 
-onMounted(() => load(undefined));
+onMounted(() => load());
 
 // Create dialog
+const createForm = useFormSubmit("admin.connectionError", handleOperationError);
+const { inlineError: createInlineError, isSubmitting: createSubmitting } = createForm;
 const createOpen = ref(false);
 const createName = ref("");
 const createNameError = ref("");
-const createInlineError = ref("");
-const createSubmitting = ref(false);
+
+function validateName(raw: string, setError: (message: string) => void): boolean {
+  if (!raw.trim()) {
+    setError(t("admin.teams.validation.nameRequired"));
+    return false;
+  }
+  return true;
+}
 
 function openCreate() {
   createName.value = "";
-  createNameError.value = "";
-  createInlineError.value = "";
+  createForm.resetErrors([{ value: createNameError.value, set: (m) => (createNameError.value = m) }]);
   createOpen.value = true;
 }
 
 async function submitCreate() {
-  createNameError.value = "";
-  createInlineError.value = "";
+  const nameField = {
+    value: createNameError.value,
+    set: (m: string) => (createNameError.value = m),
+  };
+  createForm.resetErrors([nameField]);
 
-  if (!createName.value.trim()) {
-    createNameError.value = t("admin.teams.validation.nameRequired");
-    return;
-  }
+  if (!validateName(createName.value, (m) => (createNameError.value = m))) return;
 
   createSubmitting.value = true;
   try {
     await createTeam({ name: createName.value.trim() });
     createOpen.value = false;
-    await load(cursors.value[pageIndex.value]);
+    reload();
   } catch (err) {
     if (err instanceof ApiError) {
-      if (err.code === "VALIDATION_ERROR" && err.status === 409) {
-        createNameError.value = translateApiError(err);
-      } else {
-        createInlineError.value = translateApiError(err);
-      }
+      const handled = createForm.applyApiError(
+        err,
+        { name: ["name"] },
+        { name: nameField },
+        (apiErr) => {
+          if (apiErr.code === "VALIDATION_ERROR" && apiErr.status === 409) {
+            createNameError.value = translateApiError(apiErr);
+            return true;
+          }
+          return false;
+        },
+      );
+      if (handled) createOpen.value = false;
     } else {
       createInlineError.value = t("admin.connectionError");
     }
@@ -180,43 +181,50 @@ async function submitCreate() {
 }
 
 // Rename dialog
+const renameForm = useFormSubmit("admin.connectionError", handleOperationError);
+const { inlineError: renameInlineError, isSubmitting: renameSubmitting } = renameForm;
 const renameOpen = ref(false);
 const renamingTeam = ref<Team | null>(null);
 const renameName = ref("");
 const renameNameError = ref("");
-const renameInlineError = ref("");
-const renameSubmitting = ref(false);
 
 function openRename(team: Team) {
   renamingTeam.value = team;
   renameName.value = team.name;
-  renameNameError.value = "";
-  renameInlineError.value = "";
+  renameForm.resetErrors([{ value: renameNameError.value, set: (m) => (renameNameError.value = m) }]);
   renameOpen.value = true;
 }
 
 async function submitRename() {
   if (!renamingTeam.value) return;
-  renameNameError.value = "";
-  renameInlineError.value = "";
+  const nameField = {
+    value: renameNameError.value,
+    set: (m: string) => (renameNameError.value = m),
+  };
+  renameForm.resetErrors([nameField]);
 
-  if (!renameName.value.trim()) {
-    renameNameError.value = t("admin.teams.validation.nameRequired");
-    return;
-  }
+  if (!validateName(renameName.value, (m) => (renameNameError.value = m))) return;
 
   renameSubmitting.value = true;
   try {
     await updateTeam(renamingTeam.value.id, { name: renameName.value.trim() });
     renameOpen.value = false;
-    await load(cursors.value[pageIndex.value]);
+    reload();
   } catch (err) {
     if (err instanceof ApiError) {
-      if (err.code === "VALIDATION_ERROR" && err.status === 409) {
-        renameNameError.value = translateApiError(err);
-      } else {
-        renameInlineError.value = translateApiError(err);
-      }
+      const handled = renameForm.applyApiError(
+        err,
+        { name: ["name"] },
+        { name: nameField },
+        (apiErr) => {
+          if (apiErr.code === "VALIDATION_ERROR" && apiErr.status === 409) {
+            renameNameError.value = translateApiError(apiErr);
+            return true;
+          }
+          return false;
+        },
+      );
+      if (handled) renameOpen.value = false;
     } else {
       renameInlineError.value = t("admin.connectionError");
     }
@@ -226,10 +234,10 @@ async function submitRename() {
 }
 
 // Delete confirmation
+const deleteForm = useFormSubmit("admin.connectionError", handleOperationError);
+const { inlineError: deleteInlineError, isSubmitting: deleteSubmitting } = deleteForm;
 const deleteOpen = ref(false);
 const deletingTeam = ref<Team | null>(null);
-const deleteInlineError = ref("");
-const deleteSubmitting = ref(false);
 
 function openDelete(team: Team) {
   deletingTeam.value = team;
@@ -244,10 +252,10 @@ async function confirmDelete() {
   try {
     await deleteTeam(deletingTeam.value.id);
     deleteOpen.value = false;
-    await load(cursors.value[pageIndex.value]);
+    reload();
   } catch (err) {
     if (err instanceof ApiError) {
-      deleteInlineError.value = translateApiError(err);
+      if (deleteForm.applyApiError(err, {}, {})) deleteOpen.value = false;
     } else {
       deleteInlineError.value = t("admin.connectionError");
     }
@@ -273,27 +281,31 @@ const userOptions = computed(() =>
 );
 
 async function fetchAllUsers(): Promise<User[]> {
-  const acc: User[] = [];
-  let cursor: string | undefined;
-  do {
-    const { data, meta } = await listUsers(cursor, 100);
-    acc.push(...data.users);
-    cursor = meta?.has_more && meta.next_cursor ? meta.next_cursor : undefined;
-    if (!meta?.has_more) break;
-  } while (cursor);
-  return acc;
+  return paginateAll(
+    async (cursor, limit) => {
+      const { data, meta } = await listUsers(cursor, limit);
+      return {
+        items: data.users,
+        hasMore: meta?.has_more ?? false,
+        nextCursor: meta?.next_cursor,
+      };
+    },
+    100,
+  );
 }
 
 async function loadLinkedUsers(teamId: string): Promise<void> {
-  const acc: TeamLinkedUser[] = [];
-  let cursor: string | undefined;
-  do {
-    const { data, meta } = await getTeamUsers(teamId, cursor, 100);
-    acc.push(...data.users);
-    cursor = meta?.has_more && meta.next_cursor ? meta.next_cursor : undefined;
-    if (!meta?.has_more) break;
-  } while (cursor);
-  linkedUsers.value = acc;
+  linkedUsers.value = await paginateAll(
+    async (cursor, limit) => {
+      const { data, meta } = await getTeamUsers(teamId, cursor, limit);
+      return {
+        items: data.users,
+        hasMore: meta?.has_more ?? false,
+        nextCursor: meta?.next_cursor,
+      };
+    },
+    100,
+  );
 }
 
 async function openManageMembers(team: Team) {

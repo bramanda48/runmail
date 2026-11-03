@@ -21,8 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Icon } from "@/icons";
 import { translateApiError } from "@/i18n/api-errors";
+import { Icon } from "@/icons";
 import { ApiError, deleteRuleset, getRuleset, listRulesets, updateRuleset } from "@/lib/api";
 import type { ApiMeta, LogicOperator, RulesetDetail } from "@runmail/shared";
 import { computed, onMounted, ref, toRef, watch } from "vue";
@@ -166,7 +166,7 @@ async function toggleEnabled(ruleset: RulesetDetail, value: boolean) {
   }
 }
 
-onMounted(() => load(undefined));
+onMounted(() => load());
 watch(mailboxId, () => {
   pageIndex.value = 0;
   cursors.value = [undefined];

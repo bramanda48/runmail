@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import AdminShell from "@/components/layouts/AdminShell.vue";
 import EmptyState from "@/components/forms/EmptyState.vue";
 import Pagination from "@/components/forms/Pagination.vue";
+import AdminShell from "@/components/layouts/AdminShell.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   DialogContent,
   DialogDescription,
@@ -22,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -31,8 +31,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
+import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
+import { useCursorPagination } from "@/composables/use-cursor-pagination";
+import { useFormSubmit } from "@/composables/use-form-submit";
 import { Icon } from "@/icons";
+import { translateApiError } from "@/i18n/api-errors";
 import {
   ApiError,
   createMailbox,
@@ -48,104 +51,82 @@ import {
   unlinkMailboxUser,
   updateMailbox,
 } from "@/lib/api";
-import type { ApiMeta, Domain, Mailbox, MailboxLinkedTeam, MailboxLinkedUser, Role, Team, User } from "@runmail/shared";
+import { paginateAll } from "@/lib/paginate-all";
+import type {
+  Domain,
+  Mailbox,
+  MailboxLinkedTeam,
+  MailboxLinkedUser,
+  Role,
+  Team,
+  User,
+} from "@runmail/shared";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
 
+const { handleOperationError } = useCloudflareOAuth();
+
 const perPage = 10;
 
-const mailboxes = ref<Mailbox[]>([]);
-const meta = ref<ApiMeta | null>(null);
-const cursors = ref<(string | undefined)[]>([undefined]);
-const pageIndex = ref(0);
-const isLoading = ref(false);
-const error = ref("");
-
-const page = computed(() => pageIndex.value + 1);
-const start = computed(() => pageIndex.value * perPage + 1);
-const end = computed(() => start.value + mailboxes.value.length - 1);
-const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
-const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
+const {
+  items: mailboxes,
+  page,
+  start,
+  end,
+  showPagination,
+  paginationTotal,
+  isLoading,
+  error,
+  load,
+  goNext,
+  goPrev,
+  reload,
+} = useCursorPagination<Mailbox>(
+  async (cursor, limit) => {
+    const { data, meta: responseMeta } = await listAllMailboxes(cursor, limit);
+    return { items: data.mailboxes, meta: responseMeta ?? null };
+  },
+  "admin.mailboxes.loadError",
+  perPage,
+  handleOperationError,
 );
 
-async function load(cursor?: string) {
-  isLoading.value = true;
-  error.value = "";
-  try {
-    const { data, meta: responseMeta } = await listAllMailboxes(cursor, perPage);
-    mailboxes.value = data.mailboxes;
-    meta.value = responseMeta ?? null;
-    if (
-      meta.value?.has_more &&
-      meta.value.next_cursor &&
-      cursors.value.length === pageIndex.value + 1
-    ) {
-      cursors.value.push(meta.value.next_cursor);
-    }
-  } catch (err) {
-    if (err instanceof ApiError) {
-      error.value = translateApiError(err);
-    } else {
-      error.value = t("admin.mailboxes.loadError");
-    }
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-function goNext() {
-  if (!meta.value?.has_more || cursors.value.length <= pageIndex.value + 1) {
-    return;
-  }
-  pageIndex.value += 1;
-  load(cursors.value[pageIndex.value]);
-}
-
-function goPrev() {
-  if (pageIndex.value <= 0) return;
-  pageIndex.value -= 1;
-  load(cursors.value[pageIndex.value]);
-}
-
 function retry() {
-  load(cursors.value[pageIndex.value]);
+  reload();
 }
 
-onMounted(() => load(undefined));
+onMounted(() => load());
 
 // Create mailbox dialog
+const createForm = useFormSubmit("admin.connectionError", handleOperationError);
+const createInlineError = createForm.inlineError;
+const createSubmitting = createForm.isSubmitting;
 const createOpen = ref(false);
 const domains = ref<Domain[]>([]);
 const selectedDomainId = ref("");
 const localPart = ref("");
 const localPartError = ref("");
-const createInlineError = ref("");
-const createSubmitting = ref(false);
 const loadingDomains = ref(false);
 
-const activeDomains = computed(() =>
-  domains.value.filter((d) => d.verification_status === "active"),
-);
 const domainOptions = computed(() =>
-  activeDomains.value.map((d) => ({ value: d.id, label: d.domain_name })),
+  domains.value.map((d) => ({ value: d.id, label: d.domain_name })),
 );
-const selectedDomain = computed(() =>
-  activeDomains.value.find((d) => d.id === selectedDomainId.value),
-);
+const selectedDomain = computed(() => domains.value.find((d) => d.id === selectedDomainId.value));
 
 async function fetchAllDomains(): Promise<Domain[]> {
-  const acc: Domain[] = [];
-  let cursor: string | undefined;
-  do {
-    const { data, meta } = await listDomains(cursor, 100);
-    acc.push(...data.domains);
-    cursor = meta?.has_more && meta.next_cursor ? meta.next_cursor : undefined;
-    if (!meta?.has_more) break;
-  } while (cursor);
-  return acc;
+  return paginateAll(
+    async (cursor, limit) => {
+      const { data, meta } = await listDomains(cursor, limit);
+      return {
+        items: data.domains,
+        hasMore: meta?.has_more ?? false,
+        nextCursor: meta?.next_cursor,
+      };
+    },
+    100,
+  );
 }
 
 async function openCreateDialog() {
@@ -156,7 +137,7 @@ async function openCreateDialog() {
   createInlineError.value = "";
   loadingDomains.value = true;
   try {
-    // Fetch all domains for the selector; active domains are required to create a mailbox.
+    // Fetch all domains for the selector.
     domains.value = await fetchAllDomains();
   } catch (err) {
     if (err instanceof ApiError) {
@@ -170,27 +151,33 @@ async function openCreateDialog() {
 }
 
 function applyCreateError(err: ApiError) {
-  if (err.code === "MAILBOX_ADDRESS_ALREADY_EXISTS") {
-    localPartError.value = translateApiError(err);
-    return;
+  const closed = createForm.applyApiError(
+    err,
+    { localPart: ["local_part"] },
+    {
+      localPart: { value: localPartError.value, set: (message) => (localPartError.value = message) },
+    },
+    (fallbackErr) => {
+      if (fallbackErr.code === "MAILBOX_ADDRESS_ALREADY_EXISTS") {
+        localPartError.value = translateApiError(fallbackErr);
+        return true;
+      }
+      if (fallbackErr.code === "DOMAIN_NOT_ACTIVE") {
+        createInlineError.value = translateApiError(fallbackErr);
+        return true;
+      }
+      return false;
+    },
+  );
+  if (closed) {
+    createOpen.value = false;
   }
-  if (err.code === "DOMAIN_NOT_ACTIVE") {
-    createInlineError.value = translateApiError(err);
-    return;
-  }
-  if (err.code === "VALIDATION_ERROR") {
-    const details = translateFieldErrors(err.details);
-    if (details.local_part?.length) {
-      localPartError.value = details.local_part[0];
-    }
-    return;
-  }
-  createInlineError.value = translateApiError(err);
 }
 
 async function submitCreate() {
-  localPartError.value = "";
-  createInlineError.value = "";
+  createForm.resetErrors([
+    { value: localPartError.value, set: (message) => (localPartError.value = message) },
+  ]);
 
   if (!selectedDomainId.value) {
     createInlineError.value = t("admin.mailboxes.validation.domainRequired");
@@ -208,7 +195,7 @@ async function submitCreate() {
       local_part: localPart.value.trim(),
     });
     createOpen.value = false;
-    await load(cursors.value[pageIndex.value]);
+    reload();
   } catch (err) {
     if (err instanceof ApiError) {
       applyCreateError(err);
@@ -221,12 +208,13 @@ async function submitCreate() {
 }
 
 // Edit / activate-deactivate dialog
+const editForm = useFormSubmit("admin.connectionError", handleOperationError);
+const editInlineError = editForm.inlineError;
+const editSubmitting = editForm.isSubmitting;
 const editOpen = ref(false);
 const deactivateOpen = ref(false);
 const editingMailbox = ref<Mailbox | null>(null);
 const editIsActive = ref(true);
-const editSubmitting = ref(false);
-const editInlineError = ref("");
 
 function openEdit(mailbox: Mailbox) {
   editingMailbox.value = mailbox;
@@ -249,6 +237,13 @@ async function confirmDeactivate() {
   await submitEdit();
 }
 
+function applyEditError(err: ApiError) {
+  const shouldClose = editForm.applyApiError(err, {}, {});
+  if (shouldClose) {
+    editOpen.value = false;
+  }
+}
+
 async function submitEdit() {
   if (!editingMailbox.value) return;
   editInlineError.value = "";
@@ -256,10 +251,10 @@ async function submitEdit() {
   try {
     await updateMailbox(editingMailbox.value.id, { is_active: editIsActive.value });
     editOpen.value = false;
-    await load(cursors.value[pageIndex.value]);
+    reload();
   } catch (err) {
     if (err instanceof ApiError) {
-      editInlineError.value = err.message || t("admin.mailboxes.updateError");
+      applyEditError(err);
     } else {
       editInlineError.value = t("admin.connectionError");
     }
@@ -290,27 +285,31 @@ const userOptions = computed(() =>
 );
 
 async function fetchAllUsers(): Promise<User[]> {
-  const acc: User[] = [];
-  let cursor: string | undefined;
-  do {
-    const { data, meta } = await listUsers(cursor, 100);
-    acc.push(...data.users);
-    cursor = meta?.has_more && meta.next_cursor ? meta.next_cursor : undefined;
-    if (!meta?.has_more) break;
-  } while (cursor);
-  return acc;
+  return paginateAll(
+    async (cursor, limit) => {
+      const { data, meta } = await listUsers(cursor, limit);
+      return {
+        items: data.users,
+        hasMore: meta?.has_more ?? false,
+        nextCursor: meta?.next_cursor,
+      };
+    },
+    100,
+  );
 }
 
 async function loadLinkedUsers(mailboxId: string): Promise<void> {
-  const acc: MailboxLinkedUser[] = [];
-  let cursor: string | undefined;
-  do {
-    const { data, meta } = await getMailboxUsers(mailboxId, cursor, 100);
-    acc.push(...data.users);
-    cursor = meta?.has_more && meta.next_cursor ? meta.next_cursor : undefined;
-    if (!meta?.has_more) break;
-  } while (cursor);
-  linkedUsers.value = acc;
+  linkedUsers.value = await paginateAll(
+    async (cursor, limit) => {
+      const { data, meta } = await getMailboxUsers(mailboxId, cursor, limit);
+      return {
+        items: data.users,
+        hasMore: meta?.has_more ?? false,
+        nextCursor: meta?.next_cursor,
+      };
+    },
+    100,
+  );
 }
 
 async function openManageUsers(mailbox: Mailbox) {
@@ -328,12 +327,12 @@ async function openManageUsers(mailbox: Mailbox) {
     loadLinkedTeams(mailbox.id),
   ]);
   if (usersResult.status === "fulfilled") {
-     allUsers.value = usersResult.value;
-   } else if (usersResult.reason instanceof ApiError) {
-     manageInlineError.value = usersResult.reason.message;
-   } else {
-     manageInlineError.value = t("admin.mailboxes.manageDialog.loadUsersError");
-   }
+    allUsers.value = usersResult.value;
+  } else if (usersResult.reason instanceof ApiError) {
+    manageInlineError.value = usersResult.reason.message;
+  } else {
+    manageInlineError.value = t("admin.mailboxes.manageDialog.loadUsersError");
+  }
   if (teamsResult.status === "fulfilled") {
     allTeams.value = teamsResult.value;
   } else if (teamsResult.reason instanceof ApiError) {
@@ -342,12 +341,12 @@ async function openManageUsers(mailbox: Mailbox) {
     manageInlineError.value = t("admin.mailboxes.teamDialog.loadTeamsError");
   }
   if (linkedResult.status === "rejected") {
-     const err = linkedResult.reason;
-     manageInlineError.value =
-       err instanceof ApiError
-         ? err.message || t("admin.mailboxes.manageDialog.loadLinkedError")
-         : t("admin.connectionError");
-   }
+    const err = linkedResult.reason;
+    manageInlineError.value =
+      err instanceof ApiError
+        ? err.message || t("admin.mailboxes.manageDialog.loadLinkedError")
+        : t("admin.connectionError");
+  }
   if (linkedTeamsResult.status === "rejected") {
     const err = linkedTeamsResult.reason;
     manageInlineError.value =
@@ -419,27 +418,31 @@ const teamOptions = computed(() =>
 );
 
 async function fetchAllTeams(): Promise<Team[]> {
-  const acc: Team[] = [];
-  let cursor: string | undefined;
-  do {
-    const { data, meta } = await listTeams(cursor, 100);
-    acc.push(...data.teams);
-    cursor = meta?.has_more && meta.next_cursor ? meta.next_cursor : undefined;
-    if (!meta?.has_more) break;
-  } while (cursor);
-  return acc;
+  return paginateAll(
+    async (cursor, limit) => {
+      const { data, meta } = await listTeams(cursor, limit);
+      return {
+        items: data.teams,
+        hasMore: meta?.has_more ?? false,
+        nextCursor: meta?.next_cursor,
+      };
+    },
+    100,
+  );
 }
 
 async function loadLinkedTeams(mailboxId: string): Promise<void> {
-  const acc: MailboxLinkedTeam[] = [];
-  let cursor: string | undefined;
-  do {
-    const { data, meta } = await getMailboxTeams(mailboxId, cursor, 100);
-    acc.push(...data.teams);
-    cursor = meta?.has_more && meta.next_cursor ? meta.next_cursor : undefined;
-    if (!meta?.has_more) break;
-  } while (cursor);
-  linkedTeams.value = acc;
+  linkedTeams.value = await paginateAll(
+    async (cursor, limit) => {
+      const { data, meta } = await getMailboxTeams(mailboxId, cursor, limit);
+      return {
+        items: data.teams,
+        hasMore: meta?.has_more ?? false,
+        nextCursor: meta?.next_cursor,
+      };
+    },
+    100,
+  );
 }
 
 async function refreshLinkedTeams(): Promise<void> {
@@ -599,16 +602,18 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
 
         <div class="flex flex-col gap-4 py-2">
           <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
-          <Alert v-if="!loadingDomains && activeDomains.length === 0">
+          <Alert v-if="!loadingDomains && domains.length === 0">
             {{ t("admin.mailboxes.createDialog.noActiveDomains") }}
           </Alert>
 
           <div class="flex flex-col gap-1.5">
-            <label for="select-domain" class="text-sm font-medium text-foreground">{{ t("admin.mailboxes.createDialog.domainLabel") }}</label>
+            <label for="select-domain" class="text-sm font-medium text-foreground">{{
+              t("admin.mailboxes.createDialog.domainLabel")
+            }}</label>
             <Select v-model="selectedDomainId">
               <SelectTrigger
                 id="select-domain"
-                :disabled="loadingDomains || createSubmitting || activeDomains.length === 0"
+                :disabled="loadingDomains || createSubmitting || domains.length === 0"
               >
                 <SelectValue :placeholder="t('admin.mailboxes.createDialog.domainPlaceholder')" />
               </SelectTrigger>
@@ -625,17 +630,21 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
           </div>
 
           <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{ t("admin.mailboxes.createDialog.addressLabel") }}</span>
+            <span class="text-sm font-medium text-foreground">{{
+              t("admin.mailboxes.createDialog.addressLabel")
+            }}</span>
             <div class="flex items-center gap-2">
               <Input
                 v-model="localPart"
                 :placeholder="t('admin.mailboxes.createDialog.localPartPlaceholder')"
                 class="flex-1"
-                :disabled="createSubmitting || activeDomains.length === 0"
+                :disabled="createSubmitting || domains.length === 0"
                 :aria-invalid="Boolean(localPartError)"
               />
               <span class="whitespace-nowrap text-sm text-muted-foreground">
-                @{{ selectedDomain?.domain_name || t("admin.mailboxes.createDialog.domainFallback") }}
+                @{{
+                  selectedDomain?.domain_name || t("admin.mailboxes.createDialog.domainFallback")
+                }}
               </span>
             </div>
             <p v-if="localPartError" class="text-sm text-destructive">{{ localPartError }}</p>
@@ -646,7 +655,7 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
           <Button variant="ghost" :disabled="createSubmitting" @click="createOpen = false">
             {{ t("common.actions.cancel") }}
           </Button>
-          <Button :disabled="createSubmitting || activeDomains.length === 0" @click="submitCreate">
+          <Button :disabled="createSubmitting || domains.length === 0" @click="submitCreate">
             <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
             <span>{{ t("admin.mailboxes.createDialog.submit") }}</span>
           </Button>
@@ -666,14 +675,20 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
           <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
 
           <div>
-            <p class="text-sm text-muted-foreground">{{ t("admin.mailboxes.editDialog.addressLabel") }}</p>
+            <p class="text-sm text-muted-foreground">
+              {{ t("admin.mailboxes.editDialog.addressLabel") }}
+            </p>
             <p class="font-medium text-foreground">{{ editingMailbox?.address }}</p>
           </div>
 
           <div class="flex items-center justify-between rounded-lg border p-3">
             <div>
-              <p class="text-sm font-medium text-foreground">{{ t("admin.mailboxes.editDialog.activeLabel") }}</p>
-              <p class="text-xs text-muted-foreground">{{ t("admin.mailboxes.editDialog.activeHint") }}</p>
+              <p class="text-sm font-medium text-foreground">
+                {{ t("admin.mailboxes.editDialog.activeLabel") }}
+              </p>
+              <p class="text-xs text-muted-foreground">
+                {{ t("admin.mailboxes.editDialog.activeHint") }}
+              </p>
             </div>
             <Switch
               :model-value="editIsActive"
@@ -706,7 +721,9 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button variant="ghost" @click="deactivateOpen = false">{{ t("common.actions.cancel") }}</Button>
+          <Button variant="ghost" @click="deactivateOpen = false">{{
+            t("common.actions.cancel")
+          }}</Button>
           <Button variant="destructive" :disabled="editSubmitting" @click="confirmDeactivate">
             <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
             <span>{{ t("admin.mailboxes.deactivateDialog.submit") }}</span>
@@ -721,7 +738,9 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
         <DialogHeader>
           <DialogTitle>{{ t("admin.mailboxes.manageDialog.title") }}</DialogTitle>
           <DialogDescription>
-            {{ t("admin.mailboxes.manageDialog.description", { address: managingMailbox?.address }) }}
+            {{
+              t("admin.mailboxes.manageDialog.description", { address: managingMailbox?.address })
+            }}
           </DialogDescription>
         </DialogHeader>
 
@@ -771,7 +790,9 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
                 <p class="text-xs text-muted-foreground capitalize">{{ user.role }}</p>
               </div>
               <div class="flex items-center gap-2">
-                <Badge v-if="!user.is_active" variant="outline">{{ t("admin.status.inactive") }}</Badge>
+                <Badge v-if="!user.is_active" variant="outline">{{
+                  t("admin.status.inactive")
+                }}</Badge>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -788,66 +809,68 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
           </p>
         </div>
 
-          <div class="border-t pt-4">
-            <p class="text-sm font-medium text-foreground">
-              {{ t("admin.mailboxes.teamDialog.title") }}
-            </p>
-            <p class="text-xs text-muted-foreground">
-              {{ t("admin.mailboxes.teamDialog.description") }}
-            </p>
+        <div class="border-t pt-4">
+          <p class="text-sm font-medium text-foreground">
+            {{ t("admin.mailboxes.teamDialog.title") }}
+          </p>
+          <p class="text-xs text-muted-foreground">
+            {{ t("admin.mailboxes.teamDialog.description") }}
+          </p>
 
-            <div v-if="!manageLoading" class="mt-3 flex items-end gap-2">
-              <div class="flex min-w-0 flex-1 flex-col gap-1.5">
-                <label for="select-team" class="text-sm font-medium text-foreground">{{
-                  t("admin.mailboxes.teamDialog.teamLabel")
-                }}</label>
-                <Select v-model="selectedTeamId">
-                  <SelectTrigger id="select-team" :disabled="manageSubmitting">
-                    <SelectValue :placeholder="t('admin.mailboxes.teamDialog.teamPlaceholder')" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem
-                      v-for="option in teamOptions"
-                      :key="option.value"
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button :disabled="!selectedTeamId || manageSubmitting" @click="linkTeam">
-                <Icon v-if="manageSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-                <span>{{ t("admin.mailboxes.teamDialog.add") }}</span>
+          <div v-if="!manageLoading" class="mt-3 flex items-end gap-2">
+            <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+              <label for="select-team" class="text-sm font-medium text-foreground">{{
+                t("admin.mailboxes.teamDialog.teamLabel")
+              }}</label>
+              <Select v-model="selectedTeamId">
+                <SelectTrigger id="select-team" :disabled="manageSubmitting">
+                  <SelectValue :placeholder="t('admin.mailboxes.teamDialog.teamPlaceholder')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in teamOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button :disabled="!selectedTeamId || manageSubmitting" @click="linkTeam">
+              <Icon v-if="manageSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("admin.mailboxes.teamDialog.add") }}</span>
+            </Button>
+          </div>
+          <div v-if="linkedTeams.length > 0" class="mt-3 flex flex-col gap-2">
+            <p class="text-sm font-medium text-foreground">
+              {{ t("admin.mailboxes.teamDialog.linkedTeams", { count: linkedTeams.length }) }}
+            </p>
+            <div
+              v-for="team in linkedTeams"
+              :key="team.team_id"
+              class="flex items-center justify-between rounded-lg border p-3"
+            >
+              <p class="font-medium text-foreground">{{ team.name }}</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                :disabled="manageSubmitting"
+                @click="unlinkTeam(team)"
+              >
+                {{ t("common.actions.delete") }}
               </Button>
             </div>
-            <div v-if="linkedTeams.length > 0" class="mt-3 flex flex-col gap-2">
-              <p class="text-sm font-medium text-foreground">
-                {{ t("admin.mailboxes.teamDialog.linkedTeams", { count: linkedTeams.length }) }}
-              </p>
-              <div
-                v-for="team in linkedTeams"
-                :key="team.team_id"
-                class="flex items-center justify-between rounded-lg border p-3"
-              >
-                <p class="font-medium text-foreground">{{ team.name }}</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  :disabled="manageSubmitting"
-                  @click="unlinkTeam(team)"
-                >
-                  {{ t("common.actions.delete") }}
-                </Button>
-              </div>
-            </div>
-            <p v-else-if="!manageLoading" class="mt-3 text-sm text-muted-foreground">
-              {{ t("admin.mailboxes.teamDialog.empty") }}
-            </p>
           </div>
+          <p v-else-if="!manageLoading" class="mt-3 text-sm text-muted-foreground">
+            {{ t("admin.mailboxes.teamDialog.empty") }}
+          </p>
+        </div>
 
         <DialogFooter>
-          <Button variant="ghost" @click="manageOpen = false">{{ t("common.actions.close") }}</Button>
+          <Button variant="ghost" @click="manageOpen = false">{{
+            t("common.actions.close")
+          }}</Button>
         </DialogFooter>
       </DialogContent>
     </DialogRoot>
