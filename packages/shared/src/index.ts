@@ -13,7 +13,7 @@ export {
   encodeCursor,
 } from "./contracts/pagination";
 export type { IdCursorPayload, MessageCursorPayload, PageMeta } from "./contracts/pagination";
-export type { Domain, DomainVerificationStatus, VerifyDomainResponse } from "./types/domain";
+export type { Domain } from "./types/domain";
 export type { Folder, FolderType } from "./types/folder";
 export type { Mailbox, MailboxWithDomain } from "./types/mailbox";
 export type { MailboxLinkedUser, MailboxUserLink } from "./types/mailbox-user";
