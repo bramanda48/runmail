@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import type { AppContext } from "@/lib/env";
-import { uuidv7 } from "@/lib/ids";
+import { createId } from "@/lib/ids";
 import { isUniqueViolation } from "@/lib/sqlite";
 import { hashPassword } from "@/modules/auth";
 import { refreshTokens, users } from "@runmail/db";
@@ -62,7 +62,7 @@ export async function createUser(
   if (existing) return { error: "USERNAME_EXISTS" };
 
   const now = Date.now();
-  const id = uuidv7();
+  const id = createId();
   const password_hash = await hashPassword(input.password);
 
   try {

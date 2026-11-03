@@ -5,7 +5,6 @@ import {
 } from "@/lib/cloudflare";
 import { getDb } from "@/lib/db";
 import type { AppContext } from "@/lib/env";
-import { uuidv7 } from "@/lib/ids";
 import { isUniqueViolation } from "@/lib/sqlite";
 import { domains } from "@runmail/db";
 import type { Domain, PageMeta, VerifyDomainResponse } from "@runmail/shared";
@@ -73,19 +72,19 @@ export async function addDomain(
 ): Promise<{ domain: Domain } | DomainError> {
   try {
     const zones = await listZones(c);
-    if (!zones.some((z) => z.name === domainName)) {
+    const zone = zones.find((z) => z.name === domainName);
+    if (!zone) {
       return { error: "DOMAIN_NOT_AVAILABLE" };
     }
 
     const db = getDb(c);
     const now = Date.now();
-    const id = uuidv7();
 
     try {
       const [row] = await db
         .insert(domains)
         .values({
-          id,
+          id: zone.id,
           domain_name: domainName,
           verification_status: "pending_verification",
           created_at: now,

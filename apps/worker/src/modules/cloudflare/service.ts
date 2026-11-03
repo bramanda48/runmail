@@ -1,7 +1,9 @@
+import { CloudflareOAuthNotConfiguredError } from "@/lib/cloudflare";
 import {
   clearCachedAccessToken,
   exchangeAuthorizationCode,
   generateCloudflareState,
+  getCloudflareAccessToken,
   setCachedAccessToken,
   verifyCloudflareState,
   type CloudflareTokenResponse,
@@ -90,4 +92,19 @@ export async function isCloudflareConfigured(c: AppContext): Promise<boolean> {
 export async function disconnectCloudflare(c: AppContext): Promise<void> {
   await clearCloudflareToken(c);
   clearCachedAccessToken();
+}
+
+export async function proxyCloudflareRequest(
+  c: AppContext,
+  upstreamPath: string,
+): Promise<{ accessToken: string; upstreamUrl: string }> {
+  const accessToken = await getCloudflareAccessToken(c);
+  if (!accessToken) {
+    throw new CloudflareOAuthNotConfiguredError();
+  }
+  const normalized = upstreamPath.replace(/^\/+/, "");
+  return {
+    accessToken,
+    upstreamUrl: `https://api.cloudflare.com/client/v4/${normalized}`,
+  };
 }

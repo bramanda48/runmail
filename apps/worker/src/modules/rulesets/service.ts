@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import type { AppContext } from "@/lib/env";
-import { uuidv7 } from "@/lib/ids";
+import { createId } from "@/lib/ids";
 import { folders, rulesetActions, rulesetConditions, rulesets } from "@runmail/db";
 import type { PageMeta, RulesetDetail, rulesetSchema } from "@runmail/shared";
 import { buildIdCursor, buildPageMeta, validateRegexSafe } from "@runmail/shared";
@@ -217,10 +217,10 @@ export async function createRuleset(
 
   const db = getDb(c);
   const now = Date.now();
-  const id = uuidv7();
+  const id = createId();
 
   const conditionValues = input.conditions.map((cond, index) => ({
-    id: uuidv7(),
+    id: createId(),
     ruleset_id: id,
     field: cond.field,
     match_type: cond.match_type,
@@ -228,7 +228,7 @@ export async function createRuleset(
     condition_order: index,
   }));
   const actionValues = input.actions.map((action, index) => ({
-    id: uuidv7(),
+    id: createId(),
     ruleset_id: id,
     action_type: action.action_type,
     action_value: action.action_value,
@@ -287,7 +287,7 @@ export async function updateRuleset(
 
   const now = Date.now();
   const conditionValues = input.conditions.map((cond, index) => ({
-    id: uuidv7(),
+    id: createId(),
     ruleset_id: rulesetId,
     field: cond.field,
     match_type: cond.match_type,
@@ -295,7 +295,7 @@ export async function updateRuleset(
     condition_order: index,
   }));
   const actionValues = input.actions.map((action, index) => ({
-    id: uuidv7(),
+    id: createId(),
     ruleset_id: rulesetId,
     action_type: action.action_type,
     action_value: action.action_value,

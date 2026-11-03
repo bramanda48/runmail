@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import type { AppContext } from "@/lib/env";
-import { uuidv7 } from "@/lib/ids";
+import { createId } from "@/lib/ids";
 import { isUniqueViolation } from "@/lib/sqlite";
 import { teamMembers, teams, users } from "@runmail/db";
 import type { PageMeta, Team, TeamLinkedUser } from "@runmail/shared";
@@ -46,7 +46,7 @@ export async function createTeam(
     const [row] = await db
       .insert(teams)
       .values({
-        id: uuidv7(),
+        id: createId(),
         name: input.name,
         created_at: now,
         updated_at: now,
@@ -149,7 +149,7 @@ export async function addTeamMember(
 
   try {
     await db.insert(teamMembers).values({
-      id: uuidv7(),
+      id: createId(),
       team_id: teamId,
       user_id: userId,
       created_at: Date.now(),

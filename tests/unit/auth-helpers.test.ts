@@ -1,14 +1,14 @@
 import { describe, expect, it } from "bun:test";
+import { createId } from "../../apps/worker/src/lib/ids";
 import {
   generateRefreshToken,
   hashPassword,
   issueAccessToken,
-  uuidv7,
   verifyAccessToken,
   verifyPassword,
 } from "../../apps/worker/src/modules/auth/helpers";
 
-const UUIDV7_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const CUID2_RE = /^[a-z0-9]{32}$/;
 
 describe("hashPassword / verifyPassword", () => {
   it("roundtrips a password", async () => {
@@ -45,14 +45,17 @@ describe("generateRefreshToken", () => {
   });
 });
 
-describe("uuidv7", () => {
-  it("matches RFC 9562 UUIDv7 shape", () => {
-    expect(uuidv7()).toMatch(UUIDV7_RE);
+describe("createId", () => {
+  it("returns a 32-char lowercase alphanumeric string", () => {
+    const id = createId();
+    expect(typeof id).toBe("string");
+    expect(id).toHaveLength(32);
+    expect(id).toMatch(CUID2_RE);
   });
 
   it("produces 100 unique values", () => {
     const seen = new Set<string>();
-    for (let i = 0; i < 100; i++) seen.add(uuidv7());
+    for (let i = 0; i < 100; i++) seen.add(createId());
     expect(seen.size).toBe(100);
   });
 });

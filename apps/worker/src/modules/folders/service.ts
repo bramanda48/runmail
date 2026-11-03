@@ -1,7 +1,7 @@
 import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "@/lib/allocate";
 import { getDb } from "@/lib/db";
 import type { AppContext } from "@/lib/env";
-import { uuidv7 } from "@/lib/ids";
+import { createId } from "@/lib/ids";
 import { isUniqueViolation } from "@/lib/sqlite";
 import { folders, messages, rulesetActions, rulesets } from "@runmail/db";
 import type { Folder } from "@runmail/shared";
@@ -56,7 +56,7 @@ export async function createFolder(
   }
 
   const now = Date.now();
-  const id = uuidv7();
+  const id = createId();
   try {
     const [row] = await db
       .insert(folders)

@@ -1,6 +1,6 @@
 import { getDb } from "@/lib/db";
 import type { AppContext } from "@/lib/env";
-import { uuidv7 } from "@/lib/ids";
+import { createId } from "@/lib/ids";
 import { isUniqueViolation } from "@/lib/sqlite";
 import {
   generateRefreshToken,
@@ -58,7 +58,7 @@ export async function login(
   const now = Date.now();
 
   await db.insert(refreshTokens).values({
-    id: uuidv7(),
+    id: createId(),
     user_id: user.id,
     token_hash,
     expires_at: now + ttlMs,
@@ -129,7 +129,7 @@ export async function refresh(
   const issuedAt = Date.now();
 
   await db.insert(refreshTokens).values({
-    id: uuidv7(),
+    id: createId(),
     user_id: user.id,
     token_hash: newHash,
     expires_at: issuedAt + ttlMs,
@@ -204,7 +204,7 @@ export async function setup(
 
   const db = getDb(c);
   const now = Date.now();
-  const id = uuidv7();
+  const id = createId();
   const password_hash = await hashPassword(input.password);
 
   try {
@@ -229,7 +229,7 @@ export async function setup(
   const issuedAt = Date.now();
 
   await db.insert(refreshTokens).values({
-    id: uuidv7(),
+    id: createId(),
     user_id: id,
     token_hash,
     expires_at: issuedAt + ttlMs,
