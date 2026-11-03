@@ -16,8 +16,7 @@ import type { Mailbox, MailboxLinkedTeam, MailboxLinkedUser, PageMeta } from "@r
 import { buildIdCursor, buildPageMeta, SYSTEM_FOLDER_KEYS } from "@runmail/shared";
 import { and, asc, desc, eq } from "drizzle-orm";
 
-export type MailboxErrorCode =
-  "DOMAIN_NOT_ACTIVE" | "MAILBOX_ADDRESS_ALREADY_EXISTS" | "NOT_FOUND" | "ALREADY_LINKED";
+export type MailboxErrorCode = "MAILBOX_ADDRESS_ALREADY_EXISTS" | "NOT_FOUND" | "ALREADY_LINKED";
 
 export type MailboxError = { error: MailboxErrorCode };
 
@@ -160,8 +159,8 @@ export async function createMailbox(
   const db = getDb(c);
 
   const [domain] = await db.select().from(domains).where(eq(domains.id, input.domain_id)).limit(1);
-  if (domain?.verification_status !== "active") {
-    return { error: "DOMAIN_NOT_ACTIVE" };
+  if (!domain) {
+    return { error: "NOT_FOUND" };
   }
 
   const now = Date.now();
