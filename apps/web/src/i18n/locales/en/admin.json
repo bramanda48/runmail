@@ -68,8 +68,30 @@
     "add": "Add domain",
     "table": {
       "domain": "Domain",
-      "status": "Status",
+      "routingStatus": "Routing Status",
+      "dnsStatus": "DNS Status",
       "actions": "Actions"
+    },
+    "routingStatus": {
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "loadError": "Could not load status."
+    },
+    "dnsStatus": {
+      "ready": "Locked",
+      "unconfigured": "Unconfigured",
+      "misconfigured": "Misconfigured",
+      "misconfigured/locked": "Misconfigured (locked)",
+      "unlocked": "Unlocked",
+      "unknown": "Unknown"
+    },
+    "dnsStatusHint": {
+      "ready": "DNS records are locked and configured correctly.",
+      "unconfigured": "DNS records have not been set up for this zone.",
+      "misconfigured": "DNS records are missing or incorrect.",
+      "misconfigured/locked": "MX records are locked by Email Routing.",
+      "unlocked": "Locked MX records were released; configuration may be incomplete.",
+      "unknown": "Unknown status."
     },
     "empty": {
       "title": "No domains yet",
@@ -104,6 +126,28 @@
     },
     "validation": {
       "domainRequired": "Select a domain first"
+    },
+    "dnsRecords": {
+      "expand": "View DNS",
+      "view": "View DNS",
+      "hide": "Hide DNS",
+      "loading": "Loading DNS records…",
+      "error": "Could not load DNS records.",
+      "retryAria": "Retry DNS record verification",
+      "valueFullAria": "Full DNS value",
+      "required": "Required",
+      "detected": "Detected",
+      "group": {
+        "mx": { "label": "MX record", "description": "Routes incoming email." },
+        "spf": { "label": "SPF record", "description": "Authorizes sending." },
+        "dkim": { "label": "DKIM record", "description": "Signs outgoing email." }
+      },
+      "status": {
+        "checking": "Checking…",
+        "correct": "Correct",
+        "incorrect": "Incorrect",
+        "error": "Error"
+      }
     }
   },
   "mailboxes": {

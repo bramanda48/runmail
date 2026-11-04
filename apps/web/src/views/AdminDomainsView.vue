@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import DomainDnsPanel from "@/components/email/DomainDnsPanel.vue";
 import EmptyState from "@/components/forms/EmptyState.vue";
 import Pagination from "@/components/forms/Pagination.vue";
 import AdminShell from "@/components/layouts/AdminShell.vue";
 import { Alert } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DialogContent,
@@ -28,11 +30,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAvailableZones } from "@/composables/use-available-zones";
 import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
+import { useDomainDnsRecords } from "@/composables/use-domain-dns-records";
 import { useDomainList } from "@/composables/use-domain-list";
+import { useDomainRoutingStatus } from "@/composables/use-domain-routing-status";
 import { Icon } from "@/icons";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
@@ -67,9 +72,20 @@ const {
   reload,
 } = useDomainList(handleOperationError);
 
+const routing = useDomainRoutingStatus(canUseCloudflare, handleOperationError);
+const dns = useDomainDnsRecords(canUseCloudflare, handleOperationError);
+
+watch(
+  () => domains.value.map((d) => d.id),
+  (ids) => {
+    void routing.refresh(ids);
+  },
+);
+
 const addDialog = useAvailableZones(() => registeredNames.value, handleOperationError);
 const canAdd = computed(
-  () => canUseCloudflare.value && !addDialog.isLoadingZones.value && addDialog.selected.value !== "",
+  () =>
+    canUseCloudflare.value && !addDialog.isLoadingZones.value && addDialog.selected.value !== "",
 );
 
 onMounted(() => load());
@@ -183,12 +199,100 @@ onMounted(() => load());
             <TableHeader>
               <TableRow>
                 <TableHead>{{ t("admin.domains.table.domain") }}</TableHead>
+                <TableHead>{{ t("admin.domains.table.routingStatus") }}</TableHead>
+                <TableHead>{{ t("admin.domains.table.dnsStatus") }}</TableHead>
+                <TableHead class="w-32">{{ t("admin.domains.table.actions") }}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-for="domain in domains" :key="domain.id">
-                <TableCell class="font-medium">{{ domain.domain_name }}</TableCell>
-              </TableRow>
+              <template v-for="domain in domains" :key="domain.id">
+                <TableRow>
+                  <TableCell class="font-medium">{{ domain.domain_name }}</TableCell>
+                  <TableCell>
+                    <Skeleton v-if="routing.get(domain.id).status === 'loading'" class="h-6 w-24" />
+                    <span v-else-if="!canUseCloudflare" class="text-muted-foreground">-</span>
+                    <Badge
+                      v-else-if="routing.get(domain.id).status === 'ready'"
+                      :variant="routing.get(domain.id).enabled ? 'secondary' : 'outline'"
+                    >
+                      {{
+                        routing.get(domain.id).enabled
+                          ? t("admin.domains.routingStatus.enabled")
+                          : t("admin.domains.routingStatus.disabled")
+                      }}
+                    </Badge>
+                    <span v-else class="flex items-center gap-2">
+                      <span class="text-sm text-destructive">{{
+                        t("admin.domains.routingStatus.loadError")
+                      }}</span>
+                      <Button variant="ghost" size="sm" @click="routing.retry(domain.id)">
+                        {{ t("common.actions.retry") }}
+                      </Button>
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton v-if="routing.get(domain.id).status === 'loading'" class="h-6 w-24" />
+                    <span v-else-if="!canUseCloudflare" class="text-muted-foreground">-</span>
+                    <TooltipProvider v-else-if="routing.get(domain.id).status === 'ready'">
+                      <Tooltip>
+                        <TooltipTrigger as-child>
+                          <Badge variant="secondary" class="cursor-help">
+                            {{
+                              routing.get(domain.id).dns
+                                ? t(`admin.domains.dnsStatus.${routing.get(domain.id).dns}`)
+                                : t("admin.domains.dnsStatus.unknown")
+                            }}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {{
+                              routing.get(domain.id).dns
+                                ? t(`admin.domains.dnsStatusHint.${routing.get(domain.id).dns}`)
+                                : t("admin.domains.dnsStatusHint.unknown")
+                            }}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <span v-else class="flex items-center gap-2">
+                      <span class="text-sm text-destructive">{{
+                        t("admin.domains.routingStatus.loadError")
+                      }}</span>
+                      <Button variant="ghost" size="sm" @click="routing.retry(domain.id)">
+                        {{ t("common.actions.retry") }}
+                      </Button>
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      :aria-expanded="dns.isExpanded(domain.id)"
+                      :disabled="!canUseCloudflare"
+                      @click="() => dns.toggle(domain, domain.domain_name)"
+                    >
+                      <span>{{
+                        dns.isExpanded(domain.id)
+                          ? t("admin.domains.dnsRecords.hide")
+                          : t("admin.domains.dnsRecords.expand")
+                      }}</span>
+                      <Icon
+                        icon="lucide:chevron-down"
+                        aria-hidden="true"
+                        class="transition-transform"
+                        :class="dns.isExpanded(domain.id) ? 'rotate-180' : ''"
+                      />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+                <TableRow v-if="dns.isExpanded(domain.id)" :key="`${domain.id}-dns`">
+                  <TableCell colspan="4" class="bg-muted/30 p-4">
+                    <DomainDnsPanel
+                      :state="dns.get(domain.id)"
+                      :on-retry-record="(i) => dns.retryRecord(domain.id, i)"
+                    />
+                  </TableCell>
+                </TableRow>
+              </template>
             </TableBody>
           </Table>
         </div>
@@ -258,15 +362,24 @@ onMounted(() => load());
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="addDialog.error.value" variant="destructive">{{ addDialog.error.value }}</Alert>
+          <Alert v-if="addDialog.error.value" variant="destructive">{{
+            addDialog.error.value
+          }}</Alert>
           <div class="flex flex-col gap-1.5">
             <label for="select-domain" class="text-sm font-medium text-foreground">{{
               t("admin.domains.addDialog.domainLabel")
             }}</label>
-            <p v-if="addDialog.isLoadingZones.value" role="status" class="text-sm text-muted-foreground">
+            <p
+              v-if="addDialog.isLoadingZones.value"
+              role="status"
+              class="text-sm text-muted-foreground"
+            >
               {{ t("admin.domains.addDialog.loading") }}
             </p>
-            <p v-else-if="addDialog.options.value.length === 0" class="text-sm text-muted-foreground">
+            <p
+              v-else-if="addDialog.options.value.length === 0"
+              class="text-sm text-muted-foreground"
+            >
               {{ t("admin.domains.addDialog.none") }}
             </p>
             <Select v-else v-model="addDialog.selected.value">

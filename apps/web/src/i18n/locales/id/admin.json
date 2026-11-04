@@ -68,8 +68,30 @@
     "add": "Tambah Domain",
     "table": {
       "domain": "Domain",
-      "status": "Status",
+      "routingStatus": "Status Routing",
+      "dnsStatus": "Status DNS",
       "actions": "Aksi"
+    },
+    "routingStatus": {
+      "enabled": "Aktif",
+      "disabled": "Nonaktif",
+      "loadError": "Tidak dapat memuat status."
+    },
+    "dnsStatus": {
+      "ready": "Terkunci",
+      "unconfigured": "Belum disiapkan",
+      "misconfigured": "Salah konfigurasi",
+      "misconfigured/locked": "Salah konfigurasi (terkunci)",
+      "unlocked": "Tidak terkunci",
+      "unknown": "Tidak dikenal"
+    },
+    "dnsStatusHint": {
+      "ready": "Record DNS dikunci dan terkonfigurasi dengan benar.",
+      "unconfigured": "Record DNS belum disiapkan untuk zone ini.",
+      "misconfigured": "Record DNS hilang atau tidak sesuai.",
+      "misconfigured/locked": "Record MX dikunci oleh Email Routing.",
+      "unlocked": "MX yang dikunci sudah dibuka; konfigurasi mungkin belum lengkap.",
+      "unknown": "Status tidak dikenal."
     },
     "empty": {
       "title": "Belum ada domain",
@@ -104,6 +126,28 @@
     },
     "validation": {
       "domainRequired": "Pilih domain terlebih dahulu"
+    },
+    "dnsRecords": {
+      "expand": "Lihat DNS",
+      "view": "Lihat DNS",
+      "hide": "Sembunyikan DNS",
+      "loading": "Memuat record DNS...",
+      "error": "Tidak dapat memuat record DNS.",
+      "retryAria": "Coba lagi verifikasi record DNS",
+      "valueFullAria": "Nilai DNS lengkap",
+      "required": "Diperlukan",
+      "detected": "Terdeteksi",
+      "group": {
+        "mx": { "label": "Record MX", "description": "Mengarahkan email masuk." },
+        "spf": { "label": "Record SPF", "description": "Otorisasi pengiriman." },
+        "dkim": { "label": "Record DKIM", "description": "Menandatangani email keluar." }
+      },
+      "status": {
+        "checking": "Memeriksa...",
+        "correct": "Benar",
+        "incorrect": "Salah",
+        "error": "Gagal"
+      }
     }
   },
   "mailboxes": {
