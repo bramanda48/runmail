@@ -342,9 +342,9 @@ export async function listDomains(
   return requestWithMeta<DomainList>("GET", `/domains${pageQuery(cursor, limit)}`);
 }
 
-export async function addDomain(domainName: string): Promise<{ domain: Domain }> {
+export async function addDomain(zoneId: string): Promise<{ domain: Domain }> {
   return request<{ domain: Domain }>("POST", "/domains", {
-    body: { domain_name: domainName },
+    body: { zone_id: zoneId },
   });
 }
 

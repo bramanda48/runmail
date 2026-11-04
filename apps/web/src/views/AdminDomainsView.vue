@@ -58,7 +58,7 @@ const {
 
 const {
   domains,
-  registeredNames,
+  registeredIds,
   page,
   start,
   end,
@@ -82,7 +82,7 @@ watch(
   },
 );
 
-const addDialog = useAvailableZones(() => registeredNames.value, handleOperationError);
+const addDialog = useAvailableZones(() => registeredIds.value, handleOperationError);
 const canAdd = computed(
   () =>
     canUseCloudflare.value && !addDialog.isLoadingZones.value && addDialog.selected.value !== "",

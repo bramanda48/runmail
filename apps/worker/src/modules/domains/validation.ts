@@ -1,6 +1,5 @@
-import { domainNameSchema } from "@runmail/shared";
 import z from "zod";
 
 export const createDomainBodySchema = z.object({
-  domain_name: domainNameSchema,
+  zone_id: z.string().trim().min(1),
 });

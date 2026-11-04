@@ -48,7 +48,7 @@ domainRoutes.post("/", async (c) => {
     return c.json(badRequest(fieldErrors), 400);
   }
 
-  const result = await service.addDomain(c, parsed.data.domain_name);
+  const result = await service.addDomain(c, parsed.data.zone_id);
   if ("error" in result) {
     if (result.error === "DOMAIN_EXISTS") {
       return c.json(
@@ -56,17 +56,29 @@ domainRoutes.post("/", async (c) => {
           error: {
             code: API_ERROR_CODES.DOMAIN_ALREADY_EXISTS,
             message: "Domain sudah terdaftar",
-            details: { field: "domain_name" },
+            details: { field: "zone_id" },
           },
         },
         409,
+      );
+    }
+    if (result.error === "OAUTH_NOT_CONFIGURED") {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
+            message:
+              "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu.",
+          },
+        },
+        400,
       );
     }
     return c.json(
       {
         error: {
           code: API_ERROR_CODES.DOMAIN_NOT_FOUND,
-          message: "Domain tidak ditemukan",
+          message: "Zone tidak ditemukan di Cloudflare",
         },
       },
       404,

@@ -11,7 +11,7 @@ export interface ZoneOption {
 const ZONE_PAGE_SIZE = 50;
 const MAX_ZONES = 500;
 export function useAvailableZones(
-  registeredNames: () => Set<string>,
+  registeredIds: () => Set<string>,
   onAuthReset?: (err: unknown) => boolean,
 ) {
   const { t } = useI18n();
@@ -29,10 +29,10 @@ export function useAvailableZones(
     options.value = [];
     isLoadingZones.value = true;
     try {
-      const taken = registeredNames();
+      const taken = registeredIds();
       const zones: ZoneOption[] = [];
       for await (const zone of cloudflareClient.zones.list({ per_page: ZONE_PAGE_SIZE })) {
-        if (!taken.has(zone.name)) zones.push({ value: zone.name, label: zone.name });
+        if (!taken.has(zone.id)) zones.push({ value: zone.id, label: zone.name });
         if (zones.length >= MAX_ZONES) break;
       }
       options.value = zones;

@@ -1,13 +1,13 @@
+import { CloudflareOAuthNotConfiguredError, getZone } from "@/lib/cloudflare";
 import { getDb } from "@/lib/db";
 import type { AppContext } from "@/lib/env";
-import { createId } from "@/lib/ids";
 import { isUniqueViolation } from "@/lib/sqlite";
 import { domains } from "@runmail/db";
 import type { Domain, PageMeta } from "@runmail/shared";
 import { buildIdCursor, buildPageMeta } from "@runmail/shared";
 import { desc } from "drizzle-orm";
 
-export type DomainErrorCode = "DOMAIN_EXISTS" | "NOT_FOUND";
+export type DomainErrorCode = "DOMAIN_EXISTS" | "NOT_FOUND" | "OAUTH_NOT_CONFIGURED";
 
 export type DomainError = { error: DomainErrorCode };
 
@@ -43,17 +43,22 @@ export async function listDomains(
 
 export async function addDomain(
   c: AppContext,
-  domainName: string,
+  zoneId: string,
 ): Promise<{ domain: Domain } | DomainError> {
   const db = getDb(c);
   const now = Date.now();
 
   try {
+    const zone = await getZone(c, zoneId);
+    if (!zone) {
+      return { error: "NOT_FOUND" };
+    }
+
     const [row] = await db
       .insert(domains)
       .values({
-        id: createId(),
-        domain_name: domainName,
+        id: zoneId,
+        domain_name: zone.name,
         created_at: now,
         updated_at: now,
       })
@@ -62,6 +67,9 @@ export async function addDomain(
   } catch (err) {
     if (isUniqueViolation(err)) {
       return { error: "DOMAIN_EXISTS" };
+    }
+    if (err instanceof CloudflareOAuthNotConfiguredError) {
+      return { error: "OAUTH_NOT_CONFIGURED" };
     }
     throw err;
   }

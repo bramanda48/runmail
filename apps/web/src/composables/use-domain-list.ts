@@ -14,11 +14,11 @@ export function useDomainList(onApiError?: (err: unknown) => boolean) {
     onApiError,
   );
 
-  const registeredNames = computed(() => new Set(pagination.items.value.map((d) => d.domain_name)));
+  const registeredIds = computed(() => new Set(pagination.items.value.map((d) => d.id)));
 
   return {
     domains: pagination.items,
-    registeredNames,
+    registeredIds,
     ...pagination,
   };
 }
