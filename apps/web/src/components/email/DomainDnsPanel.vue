@@ -87,12 +87,8 @@ function splitLines(value: string): string[] {
         </p>
       </div>
       <div class="flex shrink-0 items-center gap-2">
-        <Skeleton
-          v-if="group.status === 'checking' || group.status === 'pending'"
-          class="h-6 w-16"
-        />
         <span
-          v-else-if="group.status === 'correct'"
+          v-if="group.status === 'correct'"
           class="flex items-center gap-1 text-sm font-medium text-primary"
         >
           {{ t("admin.domains.dnsRecords.status.correct") }}
@@ -103,7 +99,7 @@ function splitLines(value: string): string[] {
         >
           {{ t("admin.domains.dnsRecords.status.incorrect") }}
         </span>
-        <span v-else class="flex items-center gap-2">
+        <span v-else-if="group.status === 'error'" class="flex items-center gap-2">
           <span class="flex items-center gap-1 text-sm font-medium text-destructive">
             {{ t("admin.domains.dnsRecords.status.error") }}
           </span>
@@ -116,6 +112,7 @@ function splitLines(value: string): string[] {
             <Icon icon="lucide:refresh-cw" class="size-4" aria-hidden="true" />
           </Button>
         </span>
+        <Skeleton v-else class="h-6 w-16" />
       </div>
     </li>
   </ul>

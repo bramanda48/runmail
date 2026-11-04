@@ -75,12 +75,9 @@ const {
 const routing = useDomainRoutingStatus(canUseCloudflare, handleOperationError);
 const dns = useDomainDnsRecords(canUseCloudflare, handleOperationError);
 
-watch(
-  () => domains.value.map((d) => d.id),
-  (ids) => {
-    void routing.refresh(ids);
-  },
-);
+watch([() => domains.value.map((d) => d.id), canUseCloudflare], ([ids, allowed]) => {
+  if (allowed) void routing.refresh(ids);
+});
 
 const addDialog = useAvailableZones(() => registeredIds.value, handleOperationError);
 const canAdd = computed(
@@ -209,7 +206,10 @@ onMounted(() => load());
                 <TableRow>
                   <TableCell class="font-medium">{{ domain.domain_name }}</TableCell>
                   <TableCell>
-                    <Skeleton v-if="routing.get(domain.id).status === 'loading'" class="h-6 w-24" />
+                    <Skeleton
+                      v-if="['loading', 'idle'].includes(routing.get(domain.id).status)"
+                      class="h-6 w-24"
+                    />
                     <span v-else-if="!canUseCloudflare" class="text-muted-foreground">-</span>
                     <Badge
                       v-else-if="routing.get(domain.id).status === 'ready'"
@@ -222,16 +222,19 @@ onMounted(() => load());
                       }}
                     </Badge>
                     <span v-else class="flex items-center gap-2">
-                      <span class="text-sm text-destructive">{{
-                        t("admin.domains.routingStatus.loadError")
-                      }}</span>
+                      <span class="text-sm text-destructive">
+                        {{ t("admin.domains.routingStatus.loadError") }}
+                      </span>
                       <Button variant="ghost" size="sm" @click="routing.retry(domain.id)">
                         {{ t("common.actions.retry") }}
                       </Button>
                     </span>
                   </TableCell>
                   <TableCell>
-                    <Skeleton v-if="routing.get(domain.id).status === 'loading'" class="h-6 w-24" />
+                    <Skeleton
+                      v-if="['loading', 'idle'].includes(routing.get(domain.id).status)"
+                      class="h-6 w-24"
+                    />
                     <span v-else-if="!canUseCloudflare" class="text-muted-foreground">-</span>
                     <TooltipProvider v-else-if="routing.get(domain.id).status === 'ready'">
                       <Tooltip>
@@ -256,9 +259,9 @@ onMounted(() => load());
                       </Tooltip>
                     </TooltipProvider>
                     <span v-else class="flex items-center gap-2">
-                      <span class="text-sm text-destructive">{{
-                        t("admin.domains.routingStatus.loadError")
-                      }}</span>
+                      <span class="text-sm text-destructive">
+                        {{ t("admin.domains.routingStatus.loadError") }}
+                      </span>
                       <Button variant="ghost" size="sm" @click="routing.retry(domain.id)">
                         {{ t("common.actions.retry") }}
                       </Button>
@@ -270,11 +273,13 @@ onMounted(() => load());
                       :disabled="!canUseCloudflare"
                       @click="() => dns.toggle(domain, domain.domain_name)"
                     >
-                      <span>{{
-                        dns.isExpanded(domain.id)
-                          ? t("admin.domains.dnsRecords.hide")
-                          : t("admin.domains.dnsRecords.expand")
-                      }}</span>
+                      <span>
+                        {{
+                          dns.isExpanded(domain.id)
+                            ? t("admin.domains.dnsRecords.hide")
+                            : t("admin.domains.dnsRecords.expand")
+                        }}
+                      </span>
                       <Icon
                         icon="lucide:chevron-down"
                         aria-hidden="true"
