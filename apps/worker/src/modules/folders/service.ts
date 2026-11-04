@@ -113,7 +113,7 @@ export async function deleteFolder(
   // emit) triples are chunked to <=25 messages per batch, run sequentially.
   // Partial-move semantics are accepted: the FINAL batch carries the
   // ruleset-disable + folder DELETE statements LAST, so the FK 'ON DELETE no
-  // action' on messages.folder_id acts as the completeness guard — if a
+  // action' on messages.folder_id acts as the completeness guard - if a
   // message was concurrently moved INTO the folder between SELECT and batch,
   // the folder DELETE fails loudly (500, retryable; an idempotent re-run
   // re-homes leftovers).

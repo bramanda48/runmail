@@ -3,7 +3,7 @@ import DOMPurify from "dompurify";
 /**
  * Matches remote `url(...)` references inside CSS: `http(s)://` or
  * protocol-relative `//`. `data:`, `cid:` and relative URLs are left alone.
- * Deliberately a simple global replace — no full CSS parsing.
+ * Deliberately a simple global replace - no full CSS parsing.
  */
 const REMOTE_CSS_URL_RE = /url\(\s*(['"]?)(?:https?:)?\/\/[^)'"]*\1\s*\)/gi;
 

@@ -2,7 +2,7 @@ import { bytesToHex, toBase64Url } from "@/lib/encoding";
 import { compare as bcryptCompare, hash as bcryptHash } from "bcrypt-ts";
 import { sign, verify } from "hono/jwt";
 
-// bcrypt cost factor — OWASP recommends 12+ for 2024+
+// bcrypt cost factor - OWASP recommends 12+ for 2024+
 const BCRYPT_COST = 12;
 
 export async function sha256Hex(input: string): Promise<string> {
@@ -32,7 +32,7 @@ export async function issueAccessToken(
 }
 
 // hono/jwt: claims (exp/nbf/iat) are validated before the signature, unlike jose.
-// The secret must be a raw string — a "PRIVATE"/"PUBLIC" substring would make
+// The secret must be a raw string - a "PRIVATE"/"PUBLIC" substring would make
 // hono/jwt treat it as an asymmetric PEM key and fail. All errors map to null.
 export async function verifyAccessToken(secret: string, token: string) {
   try {

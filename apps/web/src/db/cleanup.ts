@@ -15,7 +15,7 @@ import {
 export async function wipeLocalData(): Promise<void> {
   closeAllMailboxDbs();
   // indexedDB.databases() is not implemented in every browser (e.g. Firefox
-  // private mode or Safari <16.4 at the time of writing) — fall back to the
+  // private mode or Safari <16.4 at the time of writing) - fall back to the
   // known-DB registry for the Dexie part. Raw caches are still cleared below.
   if (typeof indexedDB !== "undefined" && typeof indexedDB.databases === "function") {
     const infos = await indexedDB.databases();

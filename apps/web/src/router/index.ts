@@ -137,7 +137,7 @@ router.beforeEach(async (to) => {
       return { path: "/login", query: { redirect: to.fullPath } };
     }
     if (to.name === "login" && !restored) {
-      // No session to restore — stay on the login page.
+      // No session to restore - stay on the login page.
       return true;
     }
   }

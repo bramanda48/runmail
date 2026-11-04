@@ -118,8 +118,14 @@ function applyCreateError(err: ApiError) {
     err,
     { username: ["username"], password: ["password"] },
     {
-      username: { value: createUsernameError.value, set: (message) => (createUsernameError.value = message) },
-      password: { value: createPasswordError.value, set: (message) => (createPasswordError.value = message) },
+      username: {
+        value: createUsernameError.value,
+        set: (message) => (createUsernameError.value = message),
+      },
+      password: {
+        value: createPasswordError.value,
+        set: (message) => (createPasswordError.value = message),
+      },
     },
     (fallbackErr) => {
       if (fallbackErr.code === "USERNAME_ALREADY_EXISTS") {
@@ -215,7 +221,10 @@ function applyEditError(err: ApiError) {
     { role: ["role"], password: ["password"] },
     {
       role: { value: editRoleError.value, set: (message) => (editRoleError.value = message) },
-      password: { value: editPasswordError.value, set: (message) => (editPasswordError.value = message) },
+      password: {
+        value: editPasswordError.value,
+        set: (message) => (editPasswordError.value = message),
+      },
     },
   );
   if (shouldClose) {
@@ -306,7 +315,7 @@ async function submitEdit() {
                 <TableHead>{{ t("admin.users.table.username") }}</TableHead>
                 <TableHead>{{ t("admin.users.table.role") }}</TableHead>
                 <TableHead>{{ t("admin.users.table.status") }}</TableHead>
-                <TableHead class="w-16">{{ t("admin.users.table.actions") }}</TableHead>
+                <TableHead class="w-32">{{ t("admin.users.table.actions") }}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

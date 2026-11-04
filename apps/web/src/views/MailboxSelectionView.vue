@@ -6,12 +6,12 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCursorPagination } from "@/composables/use-cursor-pagination";
 import { Icon } from "@/icons";
 import { listMailboxes } from "@/lib/api";
 import { groupMailboxesByTeam } from "@/lib/mailbox-groups";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
-import { useCursorPagination } from "@/composables/use-cursor-pagination";
 import type { Mailbox } from "@runmail/shared";
 import { computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
@@ -47,7 +47,7 @@ const {
 
 const groups = computed(() => groupMailboxesByTeam(mailboxes.value));
 
-/** Mailboxes with no team path — rendered in the direct section. */
+/** Mailboxes with no team path - rendered in the direct section. */
 const directMailboxes = computed(() => groups.value.directMailboxes);
 
 /**
