@@ -21,11 +21,16 @@ import Cloudflare from "cloudflare";
 export const CLOUDFLARE_PROXY_PREFIX = "/api/v1/integrations/cloudflare/proxy";
 
 type AccessTokenProvider = () => string | null;
+type RefreshHandler = () => Promise<string | null>;
 
 let accessTokenProvider: AccessTokenProvider = () => null;
+let refreshHandler: RefreshHandler = async () => null;
 
 export function setCloudflareAccessTokenProvider(fn: AccessTokenProvider): void {
   accessTokenProvider = fn;
+}
+export function setCloudflareRefreshHandler(fn: RefreshHandler): void {
+  refreshHandler = fn;
 }
 
 function stripCloudflareAuthHeaders(headers: Headers): void {
@@ -39,12 +44,30 @@ function stripCloudflareAuthHeaders(headers: Headers): void {
  * `fetch` implementation for the Cloudflare SDK. Rewrites absolute
  * `https://api.cloudflare.com/client/v4/...` URLs to the same-origin proxy
  * prefix, drops SDK auth headers, and attaches the Runmail JWT.
+ * On 401 with a stored token, refreshes once and retries (mirrors api.ts).
  */
-async function proxyFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+function buildProxyRequest(
+  input: RequestInfo | URL,
+  init: RequestInit | undefined,
+  token: string,
+): { url: string; init: RequestInit } {
   const url = new URL(typeof input === "string" ? input : input.toString());
   const upstreamPath = `${url.pathname.replace(/^\/client\/v4\/?/, "")}${url.search}`;
   const headers = new Headers(input instanceof Request ? input.headers : init?.headers);
   stripCloudflareAuthHeaders(headers);
+  headers.set("Authorization", `Bearer ${token}`);
+  headers.set("Content-Type", "application/json");
+  return {
+    url: `${CLOUDFLARE_PROXY_PREFIX}/${upstreamPath}`,
+    init: {
+      method: init?.method ?? (input instanceof Request ? input.method : "GET"),
+      headers,
+      body: init?.body ?? (input instanceof Request ? input.body : undefined),
+    },
+  };
+}
+
+async function proxyFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const token = accessTokenProvider();
   if (!token) {
     return Response.json(
@@ -52,13 +75,13 @@ async function proxyFetch(input: RequestInfo | URL, init?: RequestInit): Promise
       { status: 401 },
     );
   }
-  headers.set("Authorization", `Bearer ${token}`);
-  headers.set("Content-Type", "application/json");
-  return fetch(`${CLOUDFLARE_PROXY_PREFIX}/${upstreamPath}`, {
-    method: init?.method ?? (input instanceof Request ? input.method : "GET"),
-    headers,
-    body: init?.body ?? (input instanceof Request ? input.body : undefined),
-  });
+  const { url, init: reqInit } = buildProxyRequest(input, init, token);
+  const res = await fetch(url, reqInit);
+  if (res.status !== 401) return res;
+  const refreshed = await refreshHandler();
+  if (!refreshed) return res;
+  const retried = buildProxyRequest(input, init, refreshed);
+  return fetch(retried.url, retried.init);
 }
 
 export const cloudflareClient = new Cloudflare({
