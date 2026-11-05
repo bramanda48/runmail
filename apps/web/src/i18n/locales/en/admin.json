@@ -68,8 +68,8 @@
     "add": "Add domain",
     "table": {
       "domain": "Domain",
-      "routingStatus": "Routing Status",
-      "dnsStatus": "DNS Status",
+      "routingStatus": "Email Routing Status",
+      "dnsStatus": "DNS Records Status",
       "actions": "Actions"
     },
     "routingStatus": {
