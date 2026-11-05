@@ -5,6 +5,7 @@ import Pagination from "@/components/app/Pagination.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DialogContent,
   DialogDescription,

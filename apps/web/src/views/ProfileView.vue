@@ -117,18 +117,32 @@ async function handleChangePassword() {
           <CardDescription>{{ t("profile.account.description") }}</CardDescription>
         </CardHeader>
         <CardContent class="flex flex-col gap-4">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col gap-3">
             <div>
-              <p class="text-sm text-muted-foreground">{{ t("profile.account.username") }}</p>
-              <p class="font-medium text-foreground">{{ authStore.user?.username }}</p>
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-muted-foreground">{{ t("profile.account.username") }}</p>
+                  <p class="font-medium text-foreground">{{ authStore.user?.username }}</p>
+                </div>
+                <Badge :variant="authStore.isAdmin ? 'secondary' : 'outline'">
+                  {{
+                    authStore.isAdmin
+                      ? t("profile.account.role.admin")
+                      : t("profile.account.role.member")
+                  }}
+                </Badge>
+              </div>
             </div>
-            <Badge :variant="authStore.isAdmin ? 'secondary' : 'outline'">
-              {{
-                authStore.isAdmin
-                  ? t("profile.account.role.admin")
-                  : t("profile.account.role.member")
-              }}
-            </Badge>
+            <div v-if="authStore.user?.teams?.length">
+              <p class="text-sm text-muted-foreground">{{ t("profile.account.teams") }}</p>
+              <ul class="mt-2 flex flex-wrap gap-1.5">
+                <li v-for="team in authStore.user.teams" :key="team.id">
+                  <Badge variant="secondary">
+                    {{ team.name }}
+                  </Badge>
+                </li>
+              </ul>
+            </div>
           </div>
         </CardContent>
       </Card>
