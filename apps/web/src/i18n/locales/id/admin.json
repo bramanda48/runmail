@@ -75,7 +75,11 @@
     "routingStatus": {
       "enabled": "Aktif",
       "disabled": "Nonaktif",
-      "loadError": "Tidak dapat memuat status."
+      "enable": "Aktifkan email routing",
+      "enableError": "Tidak dapat mengaktifkan email routing. Coba lagi.",
+      "loadError": "Tidak dapat memuat status.",
+      "disable": "Nonaktifkan email routing",
+      "disableError": "Tidak dapat menonaktifkan email routing. Coba lagi."
     },
     "dnsStatus": {
       "ready": "Terkunci",
@@ -92,6 +96,11 @@
       "misconfigured/locked": "Record MX dikunci oleh Email Routing.",
       "unlocked": "MX yang dikunci sudah dibuka; konfigurasi mungkin belum lengkap.",
       "unknown": "Status tidak dikenal."
+    },
+    "enableDialog": {
+      "title": "Aktifkan email routing?",
+      "description": "Beberapa record DNS akan ditambahkan ke DNS Anda. Record yang berkonflik dapat dihapus.",
+      "submit": "Ya, Aktifkan"
     },
     "empty": {
       "title": "Belum ada domain",
@@ -138,9 +147,18 @@
       "required": "Diperlukan",
       "detected": "Terdeteksi",
       "group": {
-        "mx": { "label": "Record MX", "description": "Mengarahkan email masuk." },
-        "spf": { "label": "Record SPF", "description": "Otorisasi pengiriman." },
-        "dkim": { "label": "Record DKIM", "description": "Menandatangani email keluar." }
+        "mx": {
+          "label": "Record MX",
+          "description": "Mengarahkan email masuk."
+        },
+        "spf": {
+          "label": "Record SPF",
+          "description": "Otorisasi pengiriman."
+        },
+        "dkim": {
+          "label": "Record DKIM",
+          "description": "Menandatangani email keluar."
+        }
       },
       "status": {
         "checking": "Memeriksa...",
@@ -148,6 +166,11 @@
         "incorrect": "Salah",
         "error": "Gagal"
       }
+    },
+    "disableDialog": {
+      "title": "Nonaktifkan email routing?",
+      "description": "Ini akan menghapus record DNS yang dikelola Cloudflare dan menonaktifkan layanan. Record DNS pihak ketiga tidak akan dihapus. Tindakan ini tidak dapat dibatalkan.",
+      "submit": "Ya, Nonaktifkan"
     }
   },
   "mailboxes": {

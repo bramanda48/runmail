@@ -75,7 +75,10 @@
     "routingStatus": {
       "enabled": "Enabled",
       "disabled": "Disabled",
-      "loadError": "Could not load status."
+      "enable": "Enable email routing",
+      "enableError": "Could not enable email routing. Please try again.",
+      "disable": "Disable email routing",
+      "disableError": "Could not disable email routing. Please try again."
     },
     "dnsStatus": {
       "ready": "Locked",
@@ -93,16 +96,15 @@
       "unlocked": "Locked MX records were released; configuration may be incomplete.",
       "unknown": "Unknown status."
     },
+    "enableDialog": {
+      "title": "Enable email routing?",
+      "description": "Some DNS records will be added to your DNS. Conflicting records may be removed.",
+      "submit": "Yes, Activate"
+    },
     "empty": {
       "title": "No domains yet",
       "description": "Add an available Cloudflare domain."
     },
-    "verifyAria": "Verify {domain} again",
-    "closeNoticeAria": "Dismiss notification",
-    "loadError": "Could not load domains. Please try again.",
-    "verifyError": "Could not verify the domain. Please try again.",
-    "availableError": "Could not load available domains.",
-    "addError": "Could not add the domain. Please try again.",
     "cloudflare": {
       "checking": "Checking the Cloudflare connection…",
       "checkAgain": "Check again",
@@ -138,9 +140,18 @@
       "required": "Required",
       "detected": "Detected",
       "group": {
-        "mx": { "label": "MX record", "description": "Routes incoming email." },
-        "spf": { "label": "SPF record", "description": "Authorizes sending." },
-        "dkim": { "label": "DKIM record", "description": "Signs outgoing email." }
+        "mx": {
+          "label": "MX record",
+          "description": "Routes incoming email."
+        },
+        "spf": {
+          "label": "SPF record",
+          "description": "Authorizes sending."
+        },
+        "dkim": {
+          "label": "DKIM record",
+          "description": "Signs outgoing email."
+        }
       },
       "status": {
         "checking": "Checking…",
@@ -148,6 +159,11 @@
         "incorrect": "Incorrect",
         "error": "Error"
       }
+    },
+    "disableDialog": {
+      "title": "Disable email routing?",
+      "description": "This will remove DNS records managed by Cloudflare and disable the service. Third-party DNS records will not be removed. This action cannot be undone.",
+      "submit": "Yes, Disable"
     }
   },
   "mailboxes": {

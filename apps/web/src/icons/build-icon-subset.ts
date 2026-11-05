@@ -77,6 +77,8 @@ const USED_ICONS: Record<string, string[]> = {
     "pencil",
     "plus",
     "refresh-cw",
+    "route",
+    "route-off",
     "reply",
     "search",
     "send",

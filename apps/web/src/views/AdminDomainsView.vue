@@ -37,7 +37,7 @@ import { useDomainDnsRecords } from "@/composables/use-domain-dns-records";
 import { useDomainList } from "@/composables/use-domain-list";
 import { useDomainRoutingStatus } from "@/composables/use-domain-routing-status";
 import { Icon } from "@/icons";
-import { computed, onMounted, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
@@ -84,6 +84,50 @@ const canAdd = computed(
   () =>
     canUseCloudflare.value && !addDialog.isLoadingZones.value && addDialog.selected.value !== "",
 );
+
+const enableTarget = ref<{ id: string; name: string } | null>(null);
+const enableSubmitting = ref(false);
+const enableError = ref("");
+
+function openEnable(domain: { id: string; domain_name: string }): void {
+  enableTarget.value = { id: domain.id, name: domain.domain_name };
+  enableError.value = "";
+}
+
+async function confirmEnable(): Promise<void> {
+  if (!enableTarget.value || enableSubmitting.value) return;
+  enableSubmitting.value = true;
+  enableError.value = "";
+  const ok = await routing.enable(enableTarget.value.id);
+  enableSubmitting.value = false;
+  if (ok) {
+    enableTarget.value = null;
+  } else {
+    enableError.value = t("admin.domains.routingStatus.enableError");
+  }
+}
+
+const disableTarget = ref<{ id: string; name: string } | null>(null);
+const disableSubmitting = ref(false);
+const disableError = ref("");
+
+function openDisable(domain: { id: string; domain_name: string }): void {
+  disableTarget.value = { id: domain.id, name: domain.domain_name };
+  disableError.value = "";
+}
+
+async function confirmDisable(): Promise<void> {
+  if (!disableTarget.value || disableSubmitting.value) return;
+  disableSubmitting.value = true;
+  disableError.value = "";
+  const ok = await routing.disable(disableTarget.value.id);
+  disableSubmitting.value = false;
+  if (ok) {
+    disableTarget.value = null;
+  } else {
+    disableError.value = t("admin.domains.routingStatus.disableError");
+  }
+}
 
 onMounted(() => load());
 </script>
@@ -268,25 +312,47 @@ onMounted(() => load());
                     </span>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      :aria-expanded="dns.isExpanded(domain.id)"
-                      :disabled="!canUseCloudflare"
-                      @click="() => dns.toggle(domain, domain.domain_name)"
-                    >
-                      <span>
-                        {{
+                    <div class="flex items-center gap-2">
+                      <Button
+                        v-if="routing.get(domain.id).enabled === false"
+                        variant="outline"
+                        size="icon"
+                        :aria-label="t('admin.domains.routingStatus.enable')"
+                        :title="t('admin.domains.routingStatus.enable')"
+                        :disabled="!canUseCloudflare || routing.get(domain.id).status === 'loading'"
+                        @click="openEnable(domain)"
+                      >
+                        <Icon icon="lucide:route" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        v-if="routing.get(domain.id).enabled === true"
+                        variant="outline"
+                        size="icon"
+                        :aria-label="t('admin.domains.routingStatus.disable')"
+                        :title="t('admin.domains.routingStatus.disable')"
+                        :disabled="!canUseCloudflare || routing.get(domain.id).status === 'loading'"
+                        @click="openDisable(domain)"
+                      >
+                        <Icon icon="lucide:route-off" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        :aria-expanded="dns.isExpanded(domain.id)"
+                        :disabled="!canUseCloudflare"
+                        @click="() => dns.toggle(domain, domain.domain_name)"
+                      >
+                        <span>{{
                           dns.isExpanded(domain.id)
                             ? t("admin.domains.dnsRecords.hide")
                             : t("admin.domains.dnsRecords.expand")
-                        }}
-                      </span>
-                      <Icon
-                        icon="lucide:chevron-down"
-                        aria-hidden="true"
-                        class="transition-transform"
-                        :class="dns.isExpanded(domain.id) ? 'rotate-180' : ''"
-                      />
-                    </Button>
+                        }}</span>
+                        <Icon
+                          icon="lucide:chevron-down"
+                          aria-hidden="true"
+                          class="transition-transform"
+                          :class="dns.isExpanded(domain.id) ? 'rotate-180' : ''"
+                        />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
                 <TableRow v-if="dns.isExpanded(domain.id)" :key="`${domain.id}-dns`">
@@ -419,6 +485,74 @@ onMounted(() => load());
               class="animate-spin"
             />
             <span>{{ t("admin.domains.addDialog.submit") }}</span>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
+
+    <DialogRoot
+      :open="enableTarget !== null"
+      @update:open="
+        (v) => {
+          if (!v) enableTarget = null;
+        }
+      "
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{{ t("admin.domains.enableDialog.title") }}</DialogTitle>
+          <DialogDescription>
+            {{
+              enableTarget
+                ? t("admin.domains.enableDialog.description", { domain: enableTarget.name })
+                : ""
+            }}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Alert v-if="enableError" variant="destructive">{{ enableError }}</Alert>
+
+        <DialogFooter>
+          <Button variant="ghost" :disabled="enableSubmitting" @click="enableTarget = null">
+            {{ t("common.actions.cancel") }}
+          </Button>
+          <Button :disabled="enableSubmitting" @click="confirmEnable">
+            <Icon v-if="enableSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+            <span>{{ t("admin.domains.enableDialog.submit") }}</span>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
+
+    <DialogRoot
+      :open="disableTarget !== null"
+      @update:open="
+        (v) => {
+          if (!v) disableTarget = null;
+        }
+      "
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{{ t("admin.domains.disableDialog.title") }}</DialogTitle>
+          <DialogDescription>
+            {{
+              disableTarget
+                ? t("admin.domains.disableDialog.description", { domain: disableTarget.name })
+                : ""
+            }}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Alert v-if="disableError" variant="destructive">{{ disableError }}</Alert>
+
+        <DialogFooter>
+          <Button variant="ghost" :disabled="disableSubmitting" @click="disableTarget = null">
+            {{ t("common.actions.cancel") }}
+          </Button>
+          <Button variant="destructive" :disabled="disableSubmitting" @click="confirmDisable">
+            <Icon v-if="disableSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+            <span>{{ t("admin.domains.disableDialog.submit") }}</span>
           </Button>
         </DialogFooter>
       </DialogContent>

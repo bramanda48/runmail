@@ -73,5 +73,55 @@ export function useDomainRoutingStatus(
     void fetchOne(id, revision);
   }
 
-  return { states, get, refresh, retry };
+  async function enable(id: string): Promise<boolean> {
+    const allowed = typeof canFetch === "function" ? canFetch() : canFetch.value;
+    if (!allowed) return false;
+    states.value.set(id, { status: "loading", enabled: null, dns: null, error: "" });
+    try {
+      const settings = await cloudflareClient.emailRouting.dns.create({ zone_id: id });
+      states.value.set(id, {
+        status: "ready",
+        enabled: settings.enabled,
+        dns: (settings.status as DnsStatusKey | undefined) ?? null,
+        error: "",
+      });
+      return true;
+    } catch (err) {
+      if (onAuthReset?.(err)) return false;
+      states.value.set(id, {
+        status: "error",
+        enabled: null,
+        dns: null,
+        error: err instanceof ApiError ? err.message : t("admin.domains.routingStatus.loadError"),
+      });
+      return false;
+    }
+  }
+
+  async function disable(id: string): Promise<boolean> {
+    const allowed = typeof canFetch === "function" ? canFetch() : canFetch.value;
+    if (!allowed) return false;
+    states.value.set(id, { status: "loading", enabled: null, dns: null, error: "" });
+    try {
+      const settings = await cloudflareClient.emailRouting.dns.delete({ zone_id: id });
+      states.value.set(id, {
+        status: "ready",
+        enabled: settings.enabled,
+        dns: (settings.status as DnsStatusKey | undefined) ?? null,
+        error: "",
+      });
+      return true;
+    } catch (err) {
+      if (onAuthReset?.(err)) return false;
+      states.value.set(id, {
+        status: "error",
+        enabled: null,
+        dns: null,
+        error: err instanceof ApiError ? err.message : t("admin.domains.routingStatus.loadError"),
+      });
+      return false;
+    }
+  }
+
+  return { states, get, refresh, retry, enable, disable };
 }
