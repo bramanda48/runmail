@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import DomainDnsPanel from "@/components/email/DomainDnsPanel.vue";
 import EmptyState from "@/components/forms/EmptyState.vue";
 import Pagination from "@/components/forms/Pagination.vue";
 import AdminShell from "@/components/layouts/AdminShell.vue";
@@ -29,12 +30,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAvailableZones } from "@/composables/use-available-zones";
 import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
-import { translateApiError } from "@/i18n/api-errors";
+import { useDomainDnsRecords } from "@/composables/use-domain-dns-records";
+import { useDomainList } from "@/composables/use-domain-list";
+import { useDomainRoutingStatus } from "@/composables/use-domain-routing-status";
 import { Icon } from "@/icons";
-import { ApiError, addDomain, listAvailableDomains, listDomains, verifyDomain } from "@/lib/api";
-import type { ApiMeta, Domain, DomainVerificationStatus } from "@runmail/shared";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
@@ -53,161 +56,80 @@ const {
   handleOperationError,
 } = useCloudflareOAuth();
 
-const perPage = 10;
+const {
+  domains,
+  registeredIds,
+  page,
+  start,
+  end,
+  showPagination,
+  paginationTotal,
+  isLoading,
+  error,
+  load,
+  goNext,
+  goPrev,
+  reload,
+} = useDomainList(handleOperationError);
 
-const domains = ref<Domain[]>([]);
-const meta = ref<ApiMeta | null>(null);
-const cursors = ref<(string | undefined)[]>([undefined]);
-const pageIndex = ref(0);
-const isLoading = ref(false);
-const error = ref("");
-const verifyError = ref("");
-const verifyingId = ref<string | null>(null);
+const routing = useDomainRoutingStatus(canUseCloudflare, handleOperationError);
+const dns = useDomainDnsRecords(canUseCloudflare, handleOperationError);
 
-const page = computed(() => pageIndex.value + 1);
-const start = computed(() => pageIndex.value * perPage + 1);
-const end = computed(() => start.value + domains.value.length - 1);
-const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
-const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
+watch([() => domains.value.map((d) => d.id), canUseCloudflare], ([ids, allowed]) => {
+  if (allowed) void routing.refresh(ids);
+});
+
+const addDialog = useAvailableZones(() => registeredIds.value, handleOperationError);
+const canAdd = computed(
+  () =>
+    canUseCloudflare.value && !addDialog.isLoadingZones.value && addDialog.selected.value !== "",
 );
 
-async function load(cursor?: string) {
-  isLoading.value = true;
-  error.value = "";
-  try {
-    const { data, meta: responseMeta } = await listDomains(cursor, perPage);
-    domains.value = data.domains;
-    meta.value = responseMeta ?? null;
-    if (
-      meta.value?.has_more &&
-      meta.value.next_cursor &&
-      cursors.value.length === pageIndex.value + 1
-    ) {
-      cursors.value.push(meta.value.next_cursor);
-    }
-  } catch (err) {
-    handleOperationError(err);
-    if (err instanceof ApiError) {
-      error.value = translateApiError(err);
-    } else {
-      error.value = t("admin.domains.loadError");
-    }
-  } finally {
-    isLoading.value = false;
+const enableTarget = ref<{ id: string; name: string } | null>(null);
+const enableSubmitting = ref(false);
+const enableError = ref("");
+
+function openEnable(domain: { id: string; domain_name: string }): void {
+  enableTarget.value = { id: domain.id, name: domain.domain_name };
+  enableError.value = "";
+}
+
+async function confirmEnable(): Promise<void> {
+  if (!enableTarget.value || enableSubmitting.value) return;
+  enableSubmitting.value = true;
+  enableError.value = "";
+  const ok = await routing.enable(enableTarget.value.id);
+  enableSubmitting.value = false;
+  if (ok) {
+    enableTarget.value = null;
+  } else {
+    enableError.value = t("admin.domains.routingStatus.enableError");
   }
 }
 
-function goNext() {
-  if (!meta.value?.has_more || cursors.value.length <= pageIndex.value + 1) {
-    return;
-  }
-  pageIndex.value += 1;
-  load(cursors.value[pageIndex.value]);
+const disableTarget = ref<{ id: string; name: string } | null>(null);
+const disableSubmitting = ref(false);
+const disableError = ref("");
+
+function openDisable(domain: { id: string; domain_name: string }): void {
+  disableTarget.value = { id: domain.id, name: domain.domain_name };
+  disableError.value = "";
 }
 
-function goPrev() {
-  if (pageIndex.value <= 0) return;
-  pageIndex.value -= 1;
-  load(cursors.value[pageIndex.value]);
-}
-
-function retry() {
-  load(cursors.value[pageIndex.value]);
-}
-
-onMounted(() => load(undefined));
-
-function statusBadge(status: DomainVerificationStatus) {
-  return status === "active" ? "secondary" : "outline";
-}
-
-const statusLabels = computed<Record<DomainVerificationStatus, string>>(() => ({
-  active: t("admin.domainStatus.active"),
-  pending_verification: t("admin.domainStatus.pendingVerification"),
-}));
-
-async function handleVerify(domain: Domain) {
-  if (!canUseCloudflare.value || verifyingId.value) return;
-  verifyingId.value = domain.id;
-  verifyError.value = "";
-  try {
-    const result = await verifyDomain(domain.id);
-    const index = domains.value.findIndex((d) => d.id === domain.id);
-    if (index !== -1 && result.domain) {
-      domains.value[index] = result.domain;
-    }
-  } catch (err) {
-    if (handleOperationError(err)) return;
-    if (err instanceof ApiError) {
-      verifyError.value = translateApiError(err);
-    } else {
-      verifyError.value = t("admin.domains.verifyError");
-    }
-  } finally {
-    verifyingId.value = null;
+async function confirmDisable(): Promise<void> {
+  if (!disableTarget.value || disableSubmitting.value) return;
+  disableSubmitting.value = true;
+  disableError.value = "";
+  const ok = await routing.disable(disableTarget.value.id);
+  disableSubmitting.value = false;
+  if (ok) {
+    disableTarget.value = null;
+  } else {
+    disableError.value = t("admin.domains.routingStatus.disableError");
   }
 }
 
-// Add domain dialog
-const addOpen = ref(false);
-const availableDomains = ref<{ value: string; label: string }[]>([]);
-const selectedDomain = ref("");
-const loadingAvailable = ref(false);
-const addInlineError = ref("");
-const addSubmitting = ref(false);
-
-async function openAddDialog() {
-  if (!canUseCloudflare.value) return;
-  addOpen.value = true;
-  availableDomains.value = [];
-  selectedDomain.value = "";
-  addInlineError.value = "";
-  loadingAvailable.value = true;
-  try {
-    const { zones } = await listAvailableDomains();
-    availableDomains.value = zones.map((z) => ({ value: z.name, label: z.name }));
-  } catch (err) {
-    if (handleOperationError(err)) {
-      addOpen.value = false;
-      return;
-    }
-    if (err instanceof ApiError) {
-      addInlineError.value = translateApiError(err);
-    } else {
-      addInlineError.value = t("admin.domains.availableError");
-    }
-  } finally {
-    loadingAvailable.value = false;
-  }
-}
-
-async function submitAdd() {
-  if (!canUseCloudflare.value || addSubmitting.value) return;
-  addInlineError.value = "";
-  if (!selectedDomain.value) {
-    addInlineError.value = t("admin.domains.validation.domainRequired");
-    return;
-  }
-  addSubmitting.value = true;
-  try {
-    await addDomain(selectedDomain.value);
-    addOpen.value = false;
-    await load(cursors.value[pageIndex.value]);
-  } catch (err) {
-    if (handleOperationError(err)) {
-      addOpen.value = false;
-      return;
-    }
-    if (err instanceof ApiError) {
-      addInlineError.value = translateApiError(err);
-    } else {
-      addInlineError.value = t("admin.domains.addError");
-    }
-  } finally {
-    addSubmitting.value = false;
-  }
-}
+onMounted(() => load());
 </script>
 
 <template>
@@ -222,7 +144,7 @@ async function submitAdd() {
             {{ t("admin.domains.description") }}
           </p>
         </div>
-        <Button :disabled="!canUseCloudflare" @click="openAddDialog">
+        <Button :disabled="!canUseCloudflare" @click="addDialog.open">
           <Icon icon="lucide:plus" />
           <span>{{ t("admin.domains.add") }}</span>
         </Button>
@@ -295,7 +217,7 @@ async function submitAdd() {
 
       <div v-else-if="error" class="flex flex-col gap-4">
         <Alert variant="destructive">{{ error }}</Alert>
-        <Button variant="ghost" @click="retry">{{ t("common.actions.retry") }}</Button>
+        <Button variant="ghost" @click="reload">{{ t("common.actions.retry") }}</Button>
       </div>
 
       <EmptyState
@@ -305,7 +227,7 @@ async function submitAdd() {
         :description="t('admin.domains.empty.description')"
       >
         <template #action>
-          <Button class="mt-4" :disabled="!canUseCloudflare" @click="openAddDialog">
+          <Button class="mt-4" :disabled="!canUseCloudflare" @click="addDialog.open">
             <Icon icon="lucide:plus" />
             <span>{{ t("admin.domains.add") }}</span>
           </Button>
@@ -313,44 +235,135 @@ async function submitAdd() {
       </EmptyState>
 
       <div v-else class="flex flex-col gap-4">
-        <Alert v-if="verifyError" variant="destructive">{{ verifyError }}</Alert>
-
         <div class="rounded-lg border bg-card p-4">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>{{ t("admin.domains.table.domain") }}</TableHead>
-                <TableHead>{{ t("admin.domains.table.status") }}</TableHead>
-                <TableHead class="w-24">{{ t("admin.domains.table.actions") }}</TableHead>
+                <TableHead>{{ t("admin.domains.table.routingStatus") }}</TableHead>
+                <TableHead>{{ t("admin.domains.table.dnsStatus") }}</TableHead>
+                <TableHead class="w-32">{{ t("admin.domains.table.actions") }}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              <TableRow v-for="domain in domains" :key="domain.id">
-                <TableCell class="font-medium">{{ domain.domain_name }}</TableCell>
-                <TableCell>
-                  <Badge :variant="statusBadge(domain.verification_status)">
-                    {{ statusLabels[domain.verification_status] }}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    :aria-label="t('admin.domains.verifyAria', { domain: domain.domain_name })"
-                    variant="ghost"
-                    size="icon"
-                    :disabled="
-                      !canUseCloudflare ||
-                      domain.verification_status === 'active' ||
-                      verifyingId !== null
-                    "
-                    @click="handleVerify(domain)"
-                  >
-                    <Icon
-                      icon="lucide:refresh-cw"
-                      :class="verifyingId === domain.id ? 'animate-spin' : ''"
+              <template v-for="domain in domains" :key="domain.id">
+                <TableRow>
+                  <TableCell class="font-medium">{{ domain.domain_name }}</TableCell>
+                  <TableCell>
+                    <Skeleton
+                      v-if="['loading', 'idle'].includes(routing.get(domain.id).status)"
+                      class="h-6 w-24"
                     />
-                  </Button>
-                </TableCell>
-              </TableRow>
+                    <span v-else-if="!canUseCloudflare" class="text-muted-foreground">-</span>
+                    <Badge
+                      v-else-if="routing.get(domain.id).status === 'ready'"
+                      :variant="routing.get(domain.id).enabled ? 'secondary' : 'outline'"
+                    >
+                      {{
+                        routing.get(domain.id).enabled
+                          ? t("admin.domains.routingStatus.enabled")
+                          : t("admin.domains.routingStatus.disabled")
+                      }}
+                    </Badge>
+                    <span v-else class="flex items-center gap-2">
+                      <span class="text-sm text-destructive">
+                        {{ t("admin.domains.routingStatus.loadError") }}
+                      </span>
+                      <Button variant="ghost" size="sm" @click="routing.retry(domain.id)">
+                        {{ t("common.actions.retry") }}
+                      </Button>
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <Skeleton
+                      v-if="['loading', 'idle'].includes(routing.get(domain.id).status)"
+                      class="h-6 w-24"
+                    />
+                    <span v-else-if="!canUseCloudflare" class="text-muted-foreground">-</span>
+                    <TooltipProvider v-else-if="routing.get(domain.id).status === 'ready'">
+                      <Tooltip>
+                        <TooltipTrigger as-child>
+                          <Badge variant="secondary" class="cursor-help">
+                            {{
+                              routing.get(domain.id).dns
+                                ? t(`admin.domains.dnsStatus.${routing.get(domain.id).dns}`)
+                                : t("admin.domains.dnsStatus.unknown")
+                            }}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>
+                            {{
+                              routing.get(domain.id).dns
+                                ? t(`admin.domains.dnsStatusHint.${routing.get(domain.id).dns}`)
+                                : t("admin.domains.dnsStatusHint.unknown")
+                            }}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <span v-else class="flex items-center gap-2">
+                      <span class="text-sm text-destructive">
+                        {{ t("admin.domains.routingStatus.loadError") }}
+                      </span>
+                      <Button variant="ghost" size="sm" @click="routing.retry(domain.id)">
+                        {{ t("common.actions.retry") }}
+                      </Button>
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div class="flex items-center gap-2">
+                      <Button
+                        v-if="routing.get(domain.id).enabled === false"
+                        variant="outline"
+                        size="icon"
+                        :aria-label="t('admin.domains.routingStatus.enable')"
+                        :title="t('admin.domains.routingStatus.enable')"
+                        :disabled="!canUseCloudflare || routing.get(domain.id).status === 'loading'"
+                        @click="openEnable(domain)"
+                      >
+                        <Icon icon="lucide:route" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        v-if="routing.get(domain.id).enabled === true"
+                        variant="outline"
+                        size="icon"
+                        :aria-label="t('admin.domains.routingStatus.disable')"
+                        :title="t('admin.domains.routingStatus.disable')"
+                        :disabled="!canUseCloudflare || routing.get(domain.id).status === 'loading'"
+                        @click="openDisable(domain)"
+                      >
+                        <Icon icon="lucide:route-off" aria-hidden="true" />
+                      </Button>
+                      <Button
+                        :aria-expanded="dns.isExpanded(domain.id)"
+                        :disabled="!canUseCloudflare"
+                        @click="() => dns.toggle(domain, domain.domain_name)"
+                      >
+                        <span>{{
+                          dns.isExpanded(domain.id)
+                            ? t("admin.domains.dnsRecords.hide")
+                            : t("admin.domains.dnsRecords.expand")
+                        }}</span>
+                        <Icon
+                          icon="lucide:chevron-down"
+                          aria-hidden="true"
+                          class="transition-transform"
+                          :class="dns.isExpanded(domain.id) ? 'rotate-180' : ''"
+                        />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+                <TableRow v-if="dns.isExpanded(domain.id)" :key="`${domain.id}-dns`">
+                  <TableCell colspan="4" class="bg-muted/30 p-4">
+                    <DomainDnsPanel
+                      :state="dns.get(domain.id)"
+                      :on-retry-record="(i) => dns.retryRecord(domain.id, i)"
+                    />
+                  </TableCell>
+                </TableRow>
+              </template>
             </TableBody>
           </Table>
         </div>
@@ -358,7 +371,7 @@ async function submitAdd() {
         <Pagination
           v-if="showPagination"
           :page="page"
-          :per-page="perPage"
+          :per-page="10"
           :total="paginationTotal"
           :disabled="isLoading"
           @prev="goPrev"
@@ -412,7 +425,7 @@ async function submitAdd() {
     </div>
 
     <!-- Add domain dialog -->
-    <DialogRoot v-model:open="addOpen">
+    <DialogRoot v-model:open="addDialog.isOpen.value">
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{{ t("admin.domains.addDialog.title") }}</DialogTitle>
@@ -420,25 +433,33 @@ async function submitAdd() {
         </DialogHeader>
 
         <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="addInlineError" variant="destructive">{{ addInlineError }}</Alert>
-
-          <div v-if="loadingAvailable" class="text-sm text-muted-foreground">
-            {{ t("admin.domains.addDialog.loading") }}
-          </div>
-          <Alert v-else-if="availableDomains.length === 0 && !addInlineError">
-            {{ t("admin.domains.addDialog.none") }}
-          </Alert>
-          <div v-else class="flex flex-col gap-1.5">
+          <Alert v-if="addDialog.error.value" variant="destructive">{{
+            addDialog.error.value
+          }}</Alert>
+          <div class="flex flex-col gap-1.5">
             <label for="select-domain" class="text-sm font-medium text-foreground">{{
               t("admin.domains.addDialog.domainLabel")
             }}</label>
-            <Select v-model="selectedDomain">
-              <SelectTrigger id="select-domain" :disabled="loadingAvailable || addSubmitting">
+            <p
+              v-if="addDialog.isLoadingZones.value"
+              role="status"
+              class="text-sm text-muted-foreground"
+            >
+              {{ t("admin.domains.addDialog.loading") }}
+            </p>
+            <p
+              v-else-if="addDialog.options.value.length === 0"
+              class="text-sm text-muted-foreground"
+            >
+              {{ t("admin.domains.addDialog.none") }}
+            </p>
+            <Select v-else v-model="addDialog.selected.value">
+              <SelectTrigger id="select-domain" :disabled="addDialog.isSubmitting.value">
                 <SelectValue :placeholder="t('admin.domains.addDialog.domainPlaceholder')" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem
-                  v-for="option in availableDomains"
+                  v-for="option in addDialog.options.value"
                   :key="option.value"
                   :value="option.value"
                 >
@@ -450,15 +471,88 @@ async function submitAdd() {
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" :disabled="addSubmitting" @click="addOpen = false">
+          <Button
+            variant="ghost"
+            :disabled="addDialog.isSubmitting.value"
+            @click="addDialog.isOpen.value = false"
+          >
             {{ t("common.actions.cancel") }}
           </Button>
-          <Button
-            :disabled="addSubmitting || !selectedDomain || availableDomains.length === 0"
-            @click="submitAdd"
-          >
-            <Icon v-if="addSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+          <Button :disabled="!canAdd" @click="addDialog.submit(reload)">
+            <Icon
+              v-if="addDialog.isSubmitting.value"
+              icon="lucide:loader-circle"
+              class="animate-spin"
+            />
             <span>{{ t("admin.domains.addDialog.submit") }}</span>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
+
+    <DialogRoot
+      :open="enableTarget !== null"
+      @update:open="
+        (v) => {
+          if (!v) enableTarget = null;
+        }
+      "
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{{ t("admin.domains.enableDialog.title") }}</DialogTitle>
+          <DialogDescription>
+            {{
+              enableTarget
+                ? t("admin.domains.enableDialog.description", { domain: enableTarget.name })
+                : ""
+            }}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Alert v-if="enableError" variant="destructive">{{ enableError }}</Alert>
+
+        <DialogFooter>
+          <Button variant="ghost" :disabled="enableSubmitting" @click="enableTarget = null">
+            {{ t("common.actions.cancel") }}
+          </Button>
+          <Button :disabled="enableSubmitting" @click="confirmEnable">
+            <Icon v-if="enableSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+            <span>{{ t("admin.domains.enableDialog.submit") }}</span>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
+
+    <DialogRoot
+      :open="disableTarget !== null"
+      @update:open="
+        (v) => {
+          if (!v) disableTarget = null;
+        }
+      "
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{{ t("admin.domains.disableDialog.title") }}</DialogTitle>
+          <DialogDescription>
+            {{
+              disableTarget
+                ? t("admin.domains.disableDialog.description", { domain: disableTarget.name })
+                : ""
+            }}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Alert v-if="disableError" variant="destructive">{{ disableError }}</Alert>
+
+        <DialogFooter>
+          <Button variant="ghost" :disabled="disableSubmitting" @click="disableTarget = null">
+            {{ t("common.actions.cancel") }}
+          </Button>
+          <Button variant="destructive" :disabled="disableSubmitting" @click="confirmDisable">
+            <Icon v-if="disableSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+            <span>{{ t("admin.domains.disableDialog.submit") }}</span>
           </Button>
         </DialogFooter>
       </DialogContent>

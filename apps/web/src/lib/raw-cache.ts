@@ -2,7 +2,7 @@ const RAW_CACHE = "runmail-raw-v1";
 
 /**
  * Raw .eml storage uses the Browser Cache API (best-effort, no app TTL).
- * Keys are synthetic URLs — never fetched over the network; the Cache API
+ * Keys are synthetic URLs - never fetched over the network; the Cache API
  * just needs Request keys. Moves do NOT invalidate; tombstone/permanent
  * delete and logout clean the relevant entries.
  */

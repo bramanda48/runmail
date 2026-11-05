@@ -24,7 +24,6 @@
 - **Email Ingest:** Cloudflare Email Routing
 - **Password:** bcrypt-ts
 - **Validation:** Zod v4
-- **MIME Parsing:** postal-mime v3
 
 ### Frontend
 - **Framework:** Vue 3.5 + TypeScript
@@ -143,6 +142,11 @@ bun run seed:admin [--username] [--password] [--remote --yes]
 - **No v-html:** rule off karena sanitized email rendering memerlukan v-html dengan DOMPurify
 - **Import organization:** otomatis via prettier-plugin-organize-imports
 - **Indent:** 2 spaces untuk semua file
+
+### Cloudflare API
+- **SDK mutlak:** semua query ke Cloudflare API (worker maupun web) WAJIB via Cloudflare SDK (`cloudflare`); `fetch` mentah ke `api.cloudflare.com` DILARANG di code manapun.
+- **Worker tree-shakable:** import dari `cloudflare/resources` + `createClient` dari `cloudflare/tree-shakable` dengan `resources` eksplisit (mis. `[Zones, EmailRouting]`), `logLevel: "off"`, `timeout: 10_000`; helper reusable per-resource (mis. `getZone`) tinggal di `apps/worker/src/lib/cloudflare.ts`, return `null` bila tidak ditemukan (throw hanya untuk OAuth belum dikonfigurasi).
+- **Proxy hanya untuk web:** `/api/v1/integrations/cloudflare/proxy/*` hanya untuk meneruskan request SDK dari frontend (`apps/web/src/lib/cloudflare-client.ts`); code worker DILARANG memanggil proxy itu sendiri — pakai SDK langsung.
 
 ### Icon Usage
 - **Framework:** @iconify/vue mutlak; `lucide-vue-next` DILARANG di code manapun.

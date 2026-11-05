@@ -9,6 +9,7 @@ import {
   setupRequest,
   type SessionUser,
 } from "@/lib/api";
+import { setCloudflareAccessTokenProvider } from "@/lib/cloudflare-client";
 import { useMailboxStore } from "@/stores/mailbox";
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
@@ -31,6 +32,8 @@ export function clearStoredRefreshToken(): void {
 }
 
 export const useAuthStore = defineStore("auth", () => {
+  const mailboxStore = useMailboxStore();
+
   const accessToken = ref<string | null>(null);
   const user = ref<SessionUser | null>(null);
   const status = ref<AuthStatus>("idle");
@@ -151,7 +154,7 @@ export const useAuthStore = defineStore("auth", () => {
       }
     }
     clearSession();
-    useMailboxStore().closeMailbox();
+    mailboxStore.closeMailbox();
     try {
       // R6: logout wipes all per-mailbox Dexie DBs + cached raws on this device.
       await wipeLocalData();
@@ -168,7 +171,7 @@ export const useAuthStore = defineStore("auth", () => {
    */
   async function endSessionLocally(): Promise<void> {
     clearSession();
-    useMailboxStore().closeMailbox();
+    mailboxStore.closeMailbox();
     try {
       await wipeLocalData();
     } catch {
@@ -184,6 +187,7 @@ export const useAuthStore = defineStore("auth", () => {
   // Register this store as the token provider for the api client.
   // api.ts never imports the store, so there is no import cycle.
   setAccessTokenProvider(() => accessToken.value);
+  setCloudflareAccessTokenProvider(() => accessToken.value);
   setRefreshHandler(() => refresh());
 
   return {

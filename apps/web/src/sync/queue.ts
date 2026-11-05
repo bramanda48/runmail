@@ -81,7 +81,7 @@ export async function enqueueMutation(
 
 export async function countPendingMutations(mailboxId: string): Promise<number> {
   const db = getMailboxDb(mailboxId);
-  // status is not an index (queue table is keyed by ++id only) — filter instead.
+  // status is not an index (queue table is keyed by ++id only) - filter instead.
   return db.sync_queue.filter((row) => row.status === "pending").count();
 }
 
@@ -89,7 +89,7 @@ export async function countPendingMutations(mailboxId: string): Promise<number> 
  * Reconciles one definitively-rejected mutation with the authoritative
  * server row: rejected mutations emit no sync event, so without this fetch
  * the wrong optimistic write would persist forever. Rejection is definitive
- * — the queue row is already deleted by the caller.
+ * - the queue row is already deleted by the caller.
  */
 async function reconcileRejectedMessage(
   db: MailboxDb,
@@ -183,7 +183,7 @@ export async function flushQueue(mailboxId: string): Promise<FlushResult> {
     }
 
     // Defensive: the server contract guarantees 1:1 positional results.
-    // On mismatch we cannot safely map outcomes — treat as transient.
+    // On mismatch we cannot safely map outcomes - treat as transient.
     if (results.length !== rows.length) {
       const now = Date.now();
       for (const row of rows) {

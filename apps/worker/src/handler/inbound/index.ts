@@ -69,7 +69,6 @@ export async function handleInboundEmail(
       and(
         eq(domains.domain_name, recipient.domain),
         eq(mailboxes.local_part, recipient.local_part),
-        eq(domains.verification_status, "active"),
         eq(mailboxes.is_active, true),
       ),
     )

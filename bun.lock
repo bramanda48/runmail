@@ -27,6 +27,7 @@
         "@iconify/vue": "^5.0.0",
         "@runmail/shared": "workspace:*",
         "class-variance-authority": "^0.7.1",
+        "cloudflare": "^7.3.0",
         "clsx": "^2.1.1",
         "dexie": "^4.4.6",
         "dompurify": "^3.4.15",

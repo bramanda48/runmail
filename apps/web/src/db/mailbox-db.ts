@@ -42,7 +42,7 @@ export type QueueStatus = "pending" | "failed";
 export type QueueMutationType = "read" | "star" | "move";
 
 export interface QueueItem {
-  /** Local auto-increment PK — NOT the API idempotency key. */
+  /** Local auto-increment PK - NOT the API idempotency key. */
   id?: number;
   message_id: string;
   mutation_type: QueueMutationType;

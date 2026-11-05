@@ -83,15 +83,15 @@ mailboxRoutes.post("/", jwtAuth, requireAdmin, async (c) => {
 
   const result = await service.createMailbox(c, parsed.data);
   if ("error" in result) {
-    if (result.error === "DOMAIN_NOT_ACTIVE") {
+    if (result.error === "NOT_FOUND") {
       return c.json(
         {
           error: {
-            code: API_ERROR_CODES.DOMAIN_NOT_ACTIVE,
-            message: "Domain tidak aktif",
+            code: API_ERROR_CODES.DOMAIN_NOT_FOUND,
+            message: "Domain tidak ditemukan",
           },
         },
-        400,
+        404,
       );
     }
     if (result.error === "MAILBOX_ADDRESS_ALREADY_EXISTS") {

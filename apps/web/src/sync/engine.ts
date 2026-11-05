@@ -8,7 +8,7 @@ import { toLocalMessage } from "./mapping";
 export type SyncRunResult =
   { ok: true; last_sync_version: number } | { ok: false; error: "network" | "auth" };
 
-/** In-flight runs per mailbox — concurrent callers share one promise. */
+/** In-flight runs per mailbox - concurrent callers share one promise. */
 const inflightRuns = new Map<string, Promise<SyncRunResult>>();
 
 export async function runDeltaSync(mailboxId: string): Promise<SyncRunResult> {
@@ -100,8 +100,8 @@ async function doRunDeltaSync(mailboxId: string): Promise<SyncRunResult> {
       // Rebuild: clear messages, then re-fetch the full snapshot via the
       // message list (the delta history below min_version is pruned
       // server-side, so resetting the cursor to 0 would loop forever).
-      // Events in this branch are below the watermark — ignore them.
-      // The sync_queue is KEPT — queued mutations are replayed afterwards.
+      // Events in this branch are below the watermark - ignore them.
+      // The sync_queue is KEPT - queued mutations are replayed afterwards.
       // Folders are NOT cleared here: the unconditional replace-all folders
       // refresh after the loop already rebuilds that projection.
       await db.messages.clear();
@@ -128,7 +128,7 @@ async function doRunDeltaSync(mailboxId: string): Promise<SyncRunResult> {
     if (!delta.has_more) break;
   }
 
-  // Folders are NOT carried by sync events — refresh the local projection
+  // Folders are NOT carried by sync events - refresh the local projection
   // from GET listFolders on every sync run (replace-all semantics).
   try {
     const { folders } = await listFolders(mailboxId);

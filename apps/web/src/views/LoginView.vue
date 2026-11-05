@@ -7,7 +7,8 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
+import { translateApiError } from "@/i18n/api-errors";
+import { isConnectionError, mapValidationErrors, resetFieldErrors } from "@/composables/use-auth-form";
 import { Icon } from "@/icons";
 import { ApiError, listMailboxes } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
@@ -30,9 +31,7 @@ const isSubmitting = ref(false);
 const showRedirectInfo = computed(() => Boolean(route.query.redirect));
 
 async function handleSubmit() {
-  usernameError.value = "";
-  passwordError.value = "";
-  apiError.value = "";
+  resetFieldErrors(usernameError, passwordError, apiError);
 
   let hasError = false;
   if (!username.value.trim()) {
@@ -74,16 +73,19 @@ async function handleSubmit() {
     await router.push("/mailboxes");
   } catch (err) {
     isSubmitting.value = false;
-    if (!(err instanceof ApiError) || err.status === 0) {
+    if (isConnectionError(err)) {
       apiError.value = t("auth.errors.network");
       return;
     }
 
-    const fieldErrors = translateFieldErrors(err.details);
-    usernameError.value = fieldErrors.username?.[0] ?? "";
-    passwordError.value = fieldErrors.password?.[0] ?? "";
-    if (!usernameError.value && !passwordError.value) {
-      apiError.value = translateApiError(err);
+    if (err instanceof ApiError) {
+      const mapped = mapValidationErrors(err.details, {
+        username: usernameError,
+        password: passwordError,
+      });
+      if (!mapped) {
+        apiError.value = translateApiError(err);
+      }
     }
   }
 }

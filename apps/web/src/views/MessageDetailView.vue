@@ -1,22 +1,20 @@
 <script setup lang="ts">
 import MailboxWorkspace from "@/components/layouts/MailboxWorkspace.vue";
-import ComposeModal, { type ComposeDraft } from "@/components/email/compose/ComposeModal.vue";
-import EmailDetailBody, { type EmailBodyState } from "@/components/email/detail/EmailDetailBody.vue";
+import ComposeModal from "@/components/email/compose/ComposeModal.vue";
+import EmailDetailBody from "@/components/email/detail/EmailDetailBody.vue";
 import EmailDetailHeader from "@/components/email/detail/EmailDetailHeader.vue";
 import EmailDetailToolbar from "@/components/email/detail/EmailDetailToolbar.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useComposeDraft } from "@/composables/use-compose-draft";
+import { useEmailBody } from "@/composables/use-email-body";
 import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
+import { useMessageSiblings } from "@/composables/use-message-siblings";
 import { getMailboxDb, type LocalMessage } from "@/db/mailbox-db";
-import { translateApiError } from "@/i18n/api-errors";
-import { ApiError, fetchRawEmail } from "@/lib/api";
-import { getCachedRaw, putCachedRaw } from "@/lib/raw-cache";
-import { sanitizeEmailHtml } from "@/lib/sanitize";
 import { useMailboxFoldersStore } from "@/stores/mailbox-folders";
 import { storeToRefs } from "pinia";
-import PostalMime from "postal-mime";
-import { computed, onMounted, ref, shallowRef, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { route, router, mailboxStore, mailboxId, resolveMailbox } = useMailboxWorkspace();
@@ -31,72 +29,30 @@ const message = ref<LocalMessage | null>(null);
 const foldersStore = useMailboxFoldersStore();
 const { folders, unreadCounts } = storeToRefs(foldersStore);
 
-const bodyState = ref<EmailBodyState>("loading");
-const bodyHtml = ref("");
-const rawHtml = ref("");
-const bodyText = ref("");
-const headers = ref<{ key: string; value: string }[]>([]);
-const attachments = ref<{ filename?: string; mimeType?: string; size?: number }[]>([]);
+const {
+  bodyState,
+  bodyHtml,
+  bodyText,
+  headers,
+  attachments,
+  loadFailure,
+  fetchError,
+  remoteImagesBlocked,
+  imagesAllowed,
+  loadBody,
+  allowImages,
+  resetBody,
+} = useEmailBody(mailboxId, messageId);
 
-type LoadFailure = { kind: "not-found" } | { kind: "api"; error: ApiError };
+const { position, total, hasOlder, hasNewer, goSibling, loadSiblings, resetSiblings } =
+  useMessageSiblings(mailboxId, message, () => mailboxStore.mailboxId, router);
 
-const loadFailure = ref<LoadFailure | null>(null);
-const fetchError = computed(() => {
-  const failure = loadFailure.value;
-  if (!failure) return "";
-  return failure.kind === "not-found" ? t("message.notFound") : translateApiError(failure.error);
-});
-
-const remoteImagesBlocked = ref(false);
-const imagesAllowed = ref(false);
-
-const composeOpen = shallowRef(false);
-const composeDraft = ref<ComposeDraft | null>(null);
+const { composeOpen, composeDraft, openReply, openForward, openCompose } = useComposeDraft(
+  message,
+  bodyText,
+);
 
 const searchQuery = ref("");
-
-// Prev/next neighbors inside the current folder, newest-first.
-const siblingIds = ref<string[]>([]);
-
-const position = computed(() => {
-  if (!message.value) return null;
-  const idx = siblingIds.value.indexOf(message.value.id);
-  return idx === -1 ? null : idx + 1;
-});
-const total = computed(() => siblingIds.value.length);
-const hasOlder = computed(() => position.value !== null && position.value < total.value);
-const hasNewer = computed(() => position.value !== null && position.value > 1);
-
-function goSibling(direction: "older" | "newer") {
-  if (position.value === null) return;
-  const target =
-    direction === "older" ? siblingIds.value[position.value] : siblingIds.value[position.value - 2];
-  if (!target) return;
-  router.push(`/mailboxes/${mailboxId.value}/messages/${target}`);
-}
-
-async function loadSiblings() {
-  if (!message.value || mailboxStore.mailboxId !== mailboxId.value) return;
-  try {
-    const db = getMailboxDb(mailboxId.value);
-    // Newest-first, same ordering as the list view.
-    const all = await db.messages.where("folder_id").equals(message.value.folder_id).toArray();
-    all.sort((a, b) => b.email_date - a.email_date || b.received_at - a.received_at);
-    siblingIds.value = all.map((m) => m.id);
-  } catch {
-    siblingIds.value = message.value ? [message.value.id] : [];
-  }
-}
-
-function sanitizeWithImageBlock(html: string) {
-  const result = sanitizeEmailHtml(html, { allowRemoteContent: false });
-  remoteImagesBlocked.value = result.blocked;
-  return result.html;
-}
-
-function sanitizeWithoutImageBlock(html: string) {
-  return sanitizeEmailHtml(html, { allowRemoteContent: true }).html;
-}
 
 async function loadMessage(autoRead = false) {
   const db = getMailboxDb(mailboxId.value);
@@ -120,64 +76,6 @@ async function loadMessage(autoRead = false) {
   await loadBody();
 }
 
-async function loadBody() {
-  bodyState.value = "loading";
-  loadFailure.value = null;
-  try {
-    const cached = await getCachedRaw(mailboxId.value, messageId.value);
-    let blob: Blob;
-    if (cached) {
-      blob = await cached.blob();
-    } else {
-      blob = await fetchRawEmail(mailboxId.value, messageId.value);
-      await putCachedRaw(mailboxId.value, messageId.value, blob);
-    }
-    const parsed = await PostalMime.parse(await blob.arrayBuffer());
-    headers.value = parsed.headers ?? [];
-    attachments.value = (parsed.attachments || []).map((a) => {
-      const content = a.content;
-      let size: number | undefined;
-      if (content instanceof ArrayBuffer) {
-        size = content.byteLength;
-      } else if (content instanceof Uint8Array) {
-        size = content.byteLength;
-      } else if (typeof content === "string") {
-        size = new Blob([content]).size;
-      }
-      return {
-        filename: a.filename ?? undefined,
-        mimeType: a.mimeType ?? undefined,
-        size,
-      };
-    });
-
-    if (parsed.html) {
-      rawHtml.value = parsed.html;
-      bodyHtml.value = sanitizeWithImageBlock(parsed.html);
-      bodyState.value = "html";
-    } else if (parsed.text) {
-      bodyText.value = parsed.text;
-      bodyState.value = "text";
-    } else {
-      bodyState.value = "empty";
-    }
-  } catch (err) {
-    if (err instanceof ApiError) {
-      bodyState.value = "error";
-      loadFailure.value = { kind: "api", error: err };
-    } else {
-      bodyState.value = "parse-error";
-    }
-  }
-}
-
-function allowImages() {
-  if (!rawHtml.value) return;
-  bodyHtml.value = sanitizeWithoutImageBlock(rawHtml.value);
-  remoteImagesBlocked.value = false;
-  imagesAllowed.value = true;
-}
-
 async function toggleRead() {
   if (!message.value) return;
   await mailboxStore.enqueue({
@@ -198,45 +96,6 @@ async function moveSingle(folderId: string) {
   });
   foldersStore.invalidate();
   back();
-}
-
-function quoteBody(): string {
-  return bodyText.value ? `\n\n---\n${bodyText.value}` : `\n\n---\n${t("message.quote.htmlOnly")}`;
-}
-
-function openReply() {
-  if (!message.value) return;
-  const prefix = t("message.subjectPrefix.reply");
-  const subject = message.value.subject.startsWith(prefix)
-    ? message.value.subject
-    : `${prefix} ${message.value.subject}`;
-  composeDraft.value = {
-    to: message.value.from_address,
-    subject,
-    body: quoteBody(),
-    title: t("message.reply"),
-  };
-  composeOpen.value = true;
-}
-
-function openForward() {
-  if (!message.value) return;
-  const prefix = t("message.subjectPrefix.forward");
-  const subject = message.value.subject.startsWith(prefix)
-    ? message.value.subject
-    : `${prefix} ${message.value.subject}`;
-  composeDraft.value = {
-    to: "",
-    subject,
-    body: quoteBody(),
-    title: t("message.forward"),
-  };
-  composeOpen.value = true;
-}
-
-function openCompose() {
-  composeDraft.value = null;
-  composeOpen.value = true;
 }
 
 function onSearch(value: string) {
@@ -272,10 +131,8 @@ async function init() {
 onMounted(() => init());
 
 watch(messageId, async () => {
-  imagesAllowed.value = false;
-  remoteImagesBlocked.value = false;
-  siblingIds.value = [];
-  headers.value = [];
+  resetBody();
+  resetSiblings();
   await loadMessage(true);
 });
 

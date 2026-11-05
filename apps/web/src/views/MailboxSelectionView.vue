@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import EmptyState from "@/components/forms/EmptyState.vue";
-import MemberShell from "@/components/layouts/MemberShell.vue";
 import Pagination from "@/components/forms/Pagination.vue";
+import MemberShell from "@/components/layouts/MemberShell.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { translateApiError } from "@/i18n/api-errors";
+import { useCursorPagination } from "@/composables/use-cursor-pagination";
 import { Icon } from "@/icons";
-import { ApiError, listMailboxes } from "@/lib/api";
+import { listMailboxes } from "@/lib/api";
+import { groupMailboxesByTeam } from "@/lib/mailbox-groups";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
-import type { ApiMeta, Mailbox } from "@runmail/shared";
-import { computed, onMounted, ref } from "vue";
+import type { Mailbox } from "@runmail/shared";
+import { computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { RouterLink, useRouter } from "vue-router";
 
@@ -22,86 +23,41 @@ const router = useRouter();
 
 const perPage = 10;
 
-const mailboxes = ref<Mailbox[]>([]);
-const meta = ref<ApiMeta | null>(null);
-const cursors = ref<(string | undefined)[]>([undefined]);
-const pageIndex = ref(0);
-const isLoading = ref(false);
-const error = ref("");
-
-const page = computed(() => pageIndex.value + 1);
-const start = computed(() => pageIndex.value * perPage + 1);
-const end = computed(() => start.value + mailboxes.value.length - 1);
-
-const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
-
-const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
+const {
+  items: mailboxes,
+  page,
+  start,
+  end,
+  showPagination,
+  paginationTotal,
+  isLoading,
+  error,
+  load,
+  goNext,
+  goPrev,
+  reload,
+} = useCursorPagination<Mailbox>(
+  async (cursor, limit) => {
+    const { data, meta: responseMeta } = await listMailboxes(cursor, limit);
+    return { items: data.mailboxes, meta: responseMeta ?? null };
+  },
+  "mailbox.errors.load",
+  perPage,
 );
 
-/** Mailboxes with no team path — rendered in the direct section. */
-const directMailboxes = computed(() =>
-  mailboxes.value.filter((mailbox) => !mailbox.via_teams || mailbox.via_teams.length === 0),
-);
+const groups = computed(() => groupMailboxesByTeam(mailboxes.value));
+
+/** Mailboxes with no team path - rendered in the direct section. */
+const directMailboxes = computed(() => groups.value.directMailboxes);
 
 /**
  * One section per team granting access on this page.
  * A mailbox shared via two teams appears under both sections.
  */
-const teamSections = computed(() => {
-  const map = new Map<string, { team_id: string; name: string; mailboxes: Mailbox[] }>();
-  for (const mailbox of mailboxes.value) {
-    for (const team of mailbox.via_teams ?? []) {
-      const section = map.get(team.team_id) ?? { team_id: team.team_id, name: team.name, mailboxes: [] };
-      section.mailboxes.push(mailbox);
-      map.set(team.team_id, section);
-    }
-  }
-  return [...map.values()];
-});
-async function load(cursor?: string) {
-  isLoading.value = true;
-  error.value = "";
-
-  try {
-    const { data, meta: responseMeta } = await listMailboxes(cursor, perPage);
-    mailboxes.value = data.mailboxes;
-    meta.value = responseMeta ?? null;
-
-    if (
-      meta.value?.has_more &&
-      meta.value.next_cursor &&
-      cursors.value.length === pageIndex.value + 1
-    ) {
-      cursors.value.push(meta.value.next_cursor);
-    }
-  } catch (err) {
-    if (err instanceof ApiError && err.status !== 0) {
-      error.value = translateApiError(err);
-    } else {
-      error.value = t("mailbox.errors.load");
-    }
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-function goNext() {
-  if (!meta.value?.has_more || cursors.value.length <= pageIndex.value + 1) {
-    return;
-  }
-  pageIndex.value += 1;
-  load(cursors.value[pageIndex.value]);
-}
-
-function goPrev() {
-  if (pageIndex.value <= 0) return;
-  pageIndex.value -= 1;
-  load(cursors.value[pageIndex.value]);
-}
+const teamSections = computed(() => groups.value.teamSections);
 
 function retry() {
-  load(cursors.value[pageIndex.value]);
+  reload();
 }
 
 function selectMailbox(mailbox: Mailbox) {
@@ -109,7 +65,7 @@ function selectMailbox(mailbox: Mailbox) {
   router.push(`/mailboxes/${mailbox.id}/inbox`);
 }
 
-onMounted(() => load(undefined));
+onMounted(() => load());
 
 function rowClasses(isActive: boolean) {
   return cn(
@@ -158,8 +114,14 @@ function rowClasses(isActive: boolean) {
       </EmptyState>
 
       <div v-else class="flex flex-col gap-6">
-        <section v-if="directMailboxes.length > 0" class="flex flex-col gap-3" aria-label="Direct access">
-          <h2 class="text-sm font-semibold text-muted-foreground">{{ t("mailbox.direct.title") }}</h2>
+        <section
+          v-if="directMailboxes.length > 0"
+          class="flex flex-col gap-3"
+          aria-label="Direct access"
+        >
+          <h2 class="text-sm font-semibold text-muted-foreground">
+            {{ t("mailbox.direct.title") }}
+          </h2>
           <button
             v-for="mailbox in directMailboxes"
             :key="mailbox.id"
@@ -196,7 +158,9 @@ function rowClasses(isActive: boolean) {
           class="flex flex-col gap-3"
           :aria-label="t('mailbox.team.title', { name: section.name })"
         >
-          <h2 class="text-sm font-semibold text-muted-foreground">{{ t("mailbox.team.title", { name: section.name }) }}</h2>
+          <h2 class="text-sm font-semibold text-muted-foreground">
+            {{ t("mailbox.team.title", { name: section.name }) }}
+          </h2>
           <button
             v-for="mailbox in section.mailboxes"
             :key="mailbox.id"

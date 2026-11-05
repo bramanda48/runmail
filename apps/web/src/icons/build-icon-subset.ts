@@ -1,4 +1,4 @@
-// Generator for ./subset/<prefix>.json — the minimal offline Iconify collections
+// Generator for ./subset/<prefix>.json - the minimal offline Iconify collections
 // registered in ./index.ts.
 //
 // The full `@iconify-json/*` collections are only used here as build-time
@@ -37,8 +37,10 @@ const USED_ICONS: Record<string, string[]> = {
     "chevron-up",
     "chevrons-right",
     "circle-alert",
+    "circle-check",
     "circle-help",
     "circle-user-round",
+    "circle-x",
     "clock",
     "cloud-off",
     "ellipsis-vertical",
@@ -75,6 +77,8 @@ const USED_ICONS: Record<string, string[]> = {
     "pencil",
     "plus",
     "refresh-cw",
+    "route",
+    "route-off",
     "reply",
     "search",
     "send",

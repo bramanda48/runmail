@@ -44,7 +44,7 @@ export const useMailboxStore = defineStore("mailbox", () => {
         if (err.status === 403) return "forbidden";
       }
       // Transient failure (network/5xx/401): allow navigation optimistically
-      // and do NOT cache — the screen's own data loading surfaces the error.
+      // and do NOT cache - the screen's own data loading surfaces the error.
       return "ok";
     }
   }

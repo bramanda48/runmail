@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import AdminShell from "@/components/layouts/AdminShell.vue";
 import EmptyState from "@/components/forms/EmptyState.vue";
 import Pagination from "@/components/forms/Pagination.vue";
 import PasswordField from "@/components/forms/PasswordField.vue";
+import AdminShell from "@/components/layouts/AdminShell.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,86 +32,62 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
+import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
+import { useCursorPagination } from "@/composables/use-cursor-pagination";
+import { useFormSubmit } from "@/composables/use-form-submit";
+import { translateApiError } from "@/i18n/api-errors";
 import { Icon } from "@/icons";
 import { ApiError, createUser, listUsers, updateUser } from "@/lib/api";
-import type { ApiMeta, Role, User } from "@runmail/shared";
+import type { Role, User } from "@runmail/shared";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
-
 const perPage = 10;
 
-const users = ref<User[]>([]);
-const meta = ref<ApiMeta | null>(null);
-const cursors = ref<(string | undefined)[]>([undefined]);
-const pageIndex = ref(0);
-const isLoading = ref(false);
-const error = ref("");
+const { handleOperationError } = useCloudflareOAuth();
 
-const page = computed(() => pageIndex.value + 1);
-const start = computed(() => pageIndex.value * perPage + 1);
-const end = computed(() => start.value + users.value.length - 1);
-const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
-const paginationTotal = computed(() =>
-  meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
+const {
+  items: users,
+  page,
+  start,
+  end,
+  showPagination,
+  paginationTotal,
+  isLoading,
+  error,
+  load,
+  goNext,
+  goPrev,
+  reload,
+} = useCursorPagination<User>(
+  async (cursor, limit) => {
+    const { data, meta } = await listUsers(cursor, limit);
+    return { items: data.users, meta: meta ?? null };
+  },
+  "admin.users.loadError",
+  perPage,
+  handleOperationError,
 );
 
-async function load(cursor?: string) {
-  isLoading.value = true;
-  error.value = "";
-  try {
-    const { data, meta: responseMeta } = await listUsers(cursor, perPage);
-    users.value = data.users;
-    meta.value = responseMeta ?? null;
-    if (
-      meta.value?.has_more &&
-      meta.value.next_cursor &&
-      cursors.value.length === pageIndex.value + 1
-    ) {
-      cursors.value.push(meta.value.next_cursor);
-    }
-  } catch (err) {
-    if (err instanceof ApiError) {
-      error.value = translateApiError(err);
-    } else {
-      error.value = t("admin.users.loadError");
-    }
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-function goNext() {
-  if (!meta.value?.has_more || cursors.value.length <= pageIndex.value + 1) {
-    return;
-  }
-  pageIndex.value += 1;
-  load(cursors.value[pageIndex.value]);
-}
-
-function goPrev() {
-  if (pageIndex.value <= 0) return;
-  pageIndex.value -= 1;
-  load(cursors.value[pageIndex.value]);
-}
-
 function retry() {
-  load(cursors.value[pageIndex.value]);
+  reload();
 }
 
-onMounted(() => load(undefined));
+onMounted(() => {
+  void load();
+});
 
 // Create dialog
+const createForm = useFormSubmit("admin.connectionError", handleOperationError);
+const createInlineError = createForm.inlineError;
+const createSubmitting = createForm.isSubmitting;
 const createOpen = ref(false);
 const createUsername = ref("");
 const createPassword = ref("");
 const createRole = ref<Role>("member");
 const createUsernameError = ref("");
 const createPasswordError = ref("");
-const createInlineError = ref("");
-const createSubmitting = ref(false);
 
 const roleLabels = computed<Record<Role, string>>(() => ({
   admin: t("admin.role.admin"),
@@ -138,27 +114,37 @@ function openCreate() {
 }
 
 function applyCreateError(err: ApiError) {
-  if (err.code === "USERNAME_ALREADY_EXISTS") {
-    createUsernameError.value = translateApiError(err);
-    return;
+  const closed = createForm.applyApiError(
+    err,
+    { username: ["username"], password: ["password"] },
+    {
+      username: {
+        value: createUsernameError.value,
+        set: (message) => (createUsernameError.value = message),
+      },
+      password: {
+        value: createPasswordError.value,
+        set: (message) => (createPasswordError.value = message),
+      },
+    },
+    (fallbackErr) => {
+      if (fallbackErr.code === "USERNAME_ALREADY_EXISTS") {
+        createUsernameError.value = translateApiError(fallbackErr);
+        return true;
+      }
+      return false;
+    },
+  );
+  if (closed) {
+    createOpen.value = false;
   }
-  if (err.code === "VALIDATION_ERROR") {
-    const details = translateFieldErrors(err.details);
-    if (details.username?.length) {
-      createUsernameError.value = details.username[0];
-    }
-    if (details.password?.length) {
-      createPasswordError.value = details.password[0];
-    }
-    return;
-  }
-  createInlineError.value = translateApiError(err);
 }
 
 async function submitCreate() {
-  createUsernameError.value = "";
-  createPasswordError.value = "";
-  createInlineError.value = "";
+  createForm.resetErrors([
+    { value: createUsernameError.value, set: (message) => (createUsernameError.value = message) },
+    { value: createPasswordError.value, set: (message) => (createPasswordError.value = message) },
+  ]);
 
   let hasError = false;
   if (!createUsername.value.trim()) {
@@ -179,7 +165,7 @@ async function submitCreate() {
       role: createRole.value,
     });
     createOpen.value = false;
-    await load(cursors.value[pageIndex.value]);
+    reload();
   } catch (err) {
     if (err instanceof ApiError) {
       applyCreateError(err);
@@ -192,6 +178,9 @@ async function submitCreate() {
 }
 
 // Edit dialog
+const editForm = useFormSubmit("admin.connectionError", handleOperationError);
+const editInlineError = editForm.inlineError;
+const editSubmitting = editForm.isSubmitting;
 const editOpen = ref(false);
 const deactivateOpen = ref(false);
 const editingUser = ref<User | null>(null);
@@ -200,8 +189,6 @@ const editIsActive = ref(true);
 const editNewPassword = ref("");
 const editRoleError = ref("");
 const editPasswordError = ref("");
-const editInlineError = ref("");
-const editSubmitting = ref(false);
 
 function openEdit(user: User) {
   editingUser.value = user;
@@ -229,24 +216,28 @@ async function confirmDeactivate() {
 }
 
 function applyEditError(err: ApiError) {
-  if (err.code === "VALIDATION_ERROR") {
-    const details = translateFieldErrors(err.details);
-    if (details.role?.length) {
-      editRoleError.value = details.role[0];
-    }
-    if (details.password?.length) {
-      editPasswordError.value = details.password[0];
-    }
-    return;
+  const shouldClose = editForm.applyApiError(
+    err,
+    { role: ["role"], password: ["password"] },
+    {
+      role: { value: editRoleError.value, set: (message) => (editRoleError.value = message) },
+      password: {
+        value: editPasswordError.value,
+        set: (message) => (editPasswordError.value = message),
+      },
+    },
+  );
+  if (shouldClose) {
+    editOpen.value = false;
   }
-  editInlineError.value = translateApiError(err);
 }
 
 async function submitEdit() {
   if (!editingUser.value) return;
-  editRoleError.value = "";
-  editPasswordError.value = "";
-  editInlineError.value = "";
+  editForm.resetErrors([
+    { value: editRoleError.value, set: (message) => (editRoleError.value = message) },
+    { value: editPasswordError.value, set: (message) => (editPasswordError.value = message) },
+  ]);
 
   if (editNewPassword.value && editNewPassword.value.length < 8) {
     editPasswordError.value = t("validation.password.min");
@@ -264,7 +255,7 @@ async function submitEdit() {
     }
     await updateUser(editingUser.value.id, body);
     editOpen.value = false;
-    await load(cursors.value[pageIndex.value]);
+    reload();
   } catch (err) {
     if (err instanceof ApiError) {
       applyEditError(err);
@@ -324,7 +315,7 @@ async function submitEdit() {
                 <TableHead>{{ t("admin.users.table.username") }}</TableHead>
                 <TableHead>{{ t("admin.users.table.role") }}</TableHead>
                 <TableHead>{{ t("admin.users.table.status") }}</TableHead>
-                <TableHead class="w-16">{{ t("admin.users.table.actions") }}</TableHead>
+                <TableHead class="w-32">{{ t("admin.users.table.actions") }}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

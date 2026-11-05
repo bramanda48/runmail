@@ -30,7 +30,7 @@
   },
   "headerInfo": {
     "toMe": "to me",
-    "emptyValue": "—",
+    "emptyValue": "-",
     "from": "from:",
     "to": "to:",
     "date": "date:",
