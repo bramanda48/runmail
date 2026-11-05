@@ -1,18 +1,26 @@
+import type { AppEnv } from "@/lib/env";
+import { badRequest } from "@/lib/http-error";
+import { jwtAuth } from "@/middleware/auth";
+import * as service from "@/modules/auth/service";
+import {
+  changePasswordBodySchema,
+  logoutBodySchema,
+  refreshBodySchema,
+  setupBodySchema,
+} from "@/modules/auth/validation";
 import type { ApiErrorCode } from "@runmail/shared";
-import { API_ERROR_CODES, loginSchema, passwordSchema } from "@runmail/shared";
+import { API_ERROR_CODES, loginSchema } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest } from "../../lib/http-error";
-import { jwtAuth } from "../../middleware/auth";
-import * as service from "./service";
 
 export const authRoutes = new Hono<AppEnv>();
 
 authRoutes.post("/login", async (c) => {
-  const parsed = loginSchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = loginSchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.login(c, parsed.data.username, parsed.data.password);
@@ -31,14 +39,47 @@ authRoutes.post("/login", async (c) => {
   return c.json({ data: result }, 200);
 });
 
-const refreshBodySchema = z.object({
-  refresh_token: z.string().min(1),
+authRoutes.post("/setup", async (c) => {
+  const body = await c.req.json();
+  const parsed = setupBodySchema.safeParse(body);
+  if (!parsed.success) {
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
+  }
+
+  const result = await service.setup(c, parsed.data);
+  if ("error" in result) {
+    if (result.error === "SETUP_COMPLETE") {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.FORBIDDEN,
+            message: "Setup sudah selesai",
+          },
+        },
+        403,
+      );
+    }
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.USERNAME_ALREADY_EXISTS,
+          message: "Username sudah digunakan",
+        },
+      },
+      409,
+    );
+  }
+
+  return c.json({ data: result }, 201);
 });
 
 authRoutes.post("/refresh", async (c) => {
-  const parsed = refreshBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = refreshBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.refresh(c, parsed.data.refresh_token);
@@ -60,14 +101,12 @@ authRoutes.post("/refresh", async (c) => {
   return c.json({ data: result }, 200);
 });
 
-const logoutBodySchema = z.object({
-  refresh_token: z.string().min(1),
-});
-
 authRoutes.post("/logout", jwtAuth, async (c) => {
-  const parsed = logoutBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = logoutBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const authUser = c.get("auth");
@@ -75,15 +114,12 @@ authRoutes.post("/logout", jwtAuth, async (c) => {
   return c.json({ data: { ok: true } }, 200);
 });
 
-const changePasswordBodySchema = z.object({
-  current_password: z.string().min(1),
-  new_password: passwordSchema,
-});
-
 authRoutes.post("/change-password", jwtAuth, async (c) => {
-  const parsed = changePasswordBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = changePasswordBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const authUser = c.get("auth");

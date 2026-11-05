@@ -1,4 +1,20 @@
 import {
+  buildRecipientRows,
+  findHeader,
+  MAX_EMAIL_BYTES,
+  normalizeSnippet,
+  parseEmailAddress,
+  resolveEmailDate,
+  serializeHeaders,
+} from "@/handler/inbound/helpers";
+import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "@/lib/allocate";
+import { getDb } from "@/lib/db";
+import { createId } from "@/lib/ids";
+import { createExecutionLogger } from "@/lib/logger";
+import { deleteRawEmail, putRawEmail, rawObjectKey } from "@/lib/r2";
+import type { EvaluableRuleset } from "@/lib/rules-engine";
+import { evaluateRulesets } from "@/lib/rules-engine";
+import {
   domains,
   folders,
   mailboxes,
@@ -10,22 +26,6 @@ import {
 } from "@runmail/db";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import PostalMime from "postal-mime";
-import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/allocate";
-import { getDb } from "../../lib/db";
-import { uuidv7 } from "../../lib/ids";
-import { createExecutionLogger } from "../../lib/logger";
-import { deleteRawEmail, putRawEmail, rawObjectKey } from "../../lib/r2";
-import type { EvaluableRuleset } from "../../lib/rules-engine";
-import { evaluateRulesets } from "../../lib/rules-engine";
-import {
-  buildRecipientRows,
-  findHeader,
-  MAX_EMAIL_BYTES,
-  normalizeSnippet,
-  parseEmailAddress,
-  resolveEmailDate,
-  serializeHeaders,
-} from "./helpers";
 
 export async function handleInboundEmail(
   message: ForwardableEmailMessage,
@@ -194,7 +194,7 @@ export async function handleInboundEmail(
       ? now
       : null;
 
-  const messageId = uuidv7();
+  const messageId = createId();
   const internetMessageId = findHeader(headers, "message-id");
   const fromName = parsed.from?.name ?? null;
   const fromAddress = parsed.from?.address ?? "";
@@ -263,7 +263,7 @@ export async function handleInboundEmail(
       }),
       ...recipientRows.map((row) =>
         db.insert(messageRecipients).values({
-          id: uuidv7(),
+          id: createId(),
           message_id: messageId,
           recipient_type: row.recipient_type,
           display_name: row.name,

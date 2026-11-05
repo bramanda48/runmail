@@ -1,3 +1,8 @@
+import type { AppEnv } from "@/lib/env";
+import { badRequest } from "@/lib/http-error";
+import { jwtAuth, requireAdmin } from "@/middleware/auth";
+import * as service from "@/modules/teams/service";
+import { addMemberBodySchema, createTeamBodySchema } from "@/modules/teams/validation";
 import type { IdCursorPayload } from "@runmail/shared";
 import {
   API_ERROR_CODES,
@@ -7,17 +12,16 @@ import {
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest } from "../../lib/http-error";
-import { jwtAuth, requireAdmin } from "../../middleware/auth";
-import * as service from "./service";
 
 export const teamRoutes = new Hono<AppEnv>();
 
 teamRoutes.get("/", jwtAuth, requireAdmin, async (c) => {
-  const parsed = cursorQuerySchema.safeParse(c.req.query());
+  const query = c.req.query();
+  const parsed = cursorQuerySchema.safeParse(query);
+
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -34,14 +38,12 @@ teamRoutes.get("/", jwtAuth, requireAdmin, async (c) => {
   return c.json({ data: { teams: result.teams }, meta: result.meta }, 200);
 });
 
-const createTeamBodySchema = z.object({
-  name: z.string().trim().min(1, "Team name is required").max(100),
-});
-
 teamRoutes.post("/", jwtAuth, requireAdmin, async (c) => {
-  const parsed = createTeamBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = createTeamBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.createTeam(c, { name: parsed.data.name });
@@ -60,9 +62,11 @@ teamRoutes.post("/", jwtAuth, requireAdmin, async (c) => {
 });
 
 teamRoutes.patch("/:team_id", jwtAuth, requireAdmin, async (c) => {
-  const parsed = createTeamBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = createTeamBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.updateTeam(c, c.req.param("team_id") ?? "", {
@@ -109,14 +113,13 @@ teamRoutes.delete("/:team_id", jwtAuth, requireAdmin, async (c) => {
   return c.json({ data: { ok: true } }, 200);
 });
 
-const addMemberBodySchema = z.object({
-  user_id: z.string().min(1),
-});
-
 teamRoutes.get("/:team_id/users", jwtAuth, requireAdmin, async (c) => {
-  const parsed = cursorQuerySchema.safeParse(c.req.query());
+  const query = c.req.query();
+  const parsed = cursorQuerySchema.safeParse(query);
+
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -145,9 +148,11 @@ teamRoutes.get("/:team_id/users", jwtAuth, requireAdmin, async (c) => {
 });
 
 teamRoutes.post("/:team_id/users", jwtAuth, requireAdmin, async (c) => {
-  const parsed = addMemberBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = addMemberBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.addTeamMember(c, c.req.param("team_id") ?? "", parsed.data.user_id);

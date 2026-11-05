@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import MailboxWorkspace from "@/components/app/MailboxWorkspace.vue";
-import ComposeModal from "@/components/email/ComposeModal.vue";
-import EmailListContainer from "@/components/email/EmailListContainer.vue";
+import MailboxWorkspace from "@/components/layouts/MailboxWorkspace.vue";
+import ComposeModal from "@/components/email/compose/ComposeModal.vue";
+import EmailListContainer from "@/components/email/list/EmailListContainer.vue";
 import { useMailboxWorkspace } from "@/composables/use-mailbox-workspace";
 import { getMailboxDb, type LocalMessage } from "@/db/mailbox-db";
 import { translateApiError } from "@/i18n/api-errors";

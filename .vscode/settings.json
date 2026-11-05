@@ -5,6 +5,8 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
+  "files.eol": "\n",
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
   "[javascript][typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },

@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import type { Ref } from "vue";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 
 export const THEMES = ["light", "dark", "system"] as const;
 export type Theme = (typeof THEMES)[number];
@@ -73,6 +73,10 @@ export const useThemeStore = defineStore("theme", () => {
   const theme = ref<Theme>("system");
   const resolved = ref<ResolvedTheme>("light");
 
+  const backgroundImage = computed(
+    () => `url(/background/${resolved.value === "dark" ? "dark" : "light"}.png)`,
+  );
+
   function setTheme(next: Theme): void {
     if (!isTheme(next) || next === theme.value) return;
     theme.value = next;
@@ -97,5 +101,5 @@ export const useThemeStore = defineStore("theme", () => {
     if (next === "system") attachMediaListener(theme, resolved);
   }
 
-  return { theme, resolved, setTheme, init };
+  return { theme, resolved, backgroundImage, setTheme, init };
 });

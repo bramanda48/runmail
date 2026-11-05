@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import LocaleSwitcher from "@/components/app/LocaleSwitcher.vue";
-import PasswordField from "@/components/app/PasswordField.vue";
-import ThemeSwitcher from "@/components/app/ThemeSwitcher.vue";
-import Wordmark from "@/components/app/Wordmark.vue";
+import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
+import PasswordField from "@/components/forms/PasswordField.vue";
+import ThemeSwitcher from "@/components/topbar/ThemeSwitcher.vue";
+import Wordmark from "@/components/topbar/Wordmark.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";

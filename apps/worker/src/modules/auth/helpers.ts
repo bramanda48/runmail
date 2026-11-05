@@ -1,9 +1,6 @@
+import { bytesToHex, toBase64Url } from "@/lib/encoding";
 import { compare as bcryptCompare, hash as bcryptHash } from "bcrypt-ts";
 import { sign, verify } from "hono/jwt";
-import { bytesToHex, toBase64Url } from "../../lib/encoding";
-import { uuidv7 } from "../../lib/ids";
-
-export { uuidv7 };
 
 // bcrypt cost factor — OWASP recommends 12+ for 2024+
 const BCRYPT_COST = 12;

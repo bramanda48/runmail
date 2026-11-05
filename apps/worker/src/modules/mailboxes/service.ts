@@ -1,3 +1,7 @@
+import { getDb } from "@/lib/db";
+import type { AppContext } from "@/lib/env";
+import { createId } from "@/lib/ids";
+import { isUniqueViolation } from "@/lib/sqlite";
 import {
   domains,
   folders,
@@ -11,10 +15,6 @@ import {
 import type { Mailbox, MailboxLinkedTeam, MailboxLinkedUser, PageMeta } from "@runmail/shared";
 import { buildIdCursor, buildPageMeta, SYSTEM_FOLDER_KEYS } from "@runmail/shared";
 import { and, asc, desc, eq } from "drizzle-orm";
-import { getDb } from "../../lib/db";
-import type { AppContext } from "../../lib/env";
-import { uuidv7 } from "../../lib/ids";
-import { isUniqueViolation } from "../../lib/sqlite";
 
 export type MailboxErrorCode =
   "DOMAIN_NOT_ACTIVE" | "MAILBOX_ADDRESS_ALREADY_EXISTS" | "NOT_FOUND" | "ALREADY_LINKED";
@@ -165,12 +165,12 @@ export async function createMailbox(
   }
 
   const now = Date.now();
-  const id = uuidv7();
+  const mailboxId = createId();
 
   try {
     await db.batch([
       db.insert(mailboxes).values({
-        id,
+        id: mailboxId,
         domain_id: input.domain_id,
         local_part: input.local_part,
         is_active: true,
@@ -179,8 +179,8 @@ export async function createMailbox(
       }),
       ...SYSTEM_FOLDER_KEYS.map((name) =>
         db.insert(folders).values({
-          id: uuidv7(),
-          mailbox_id: id,
+          id: createId(),
+          mailbox_id: mailboxId,
           name,
           folder_type: "system",
           created_at: now,
@@ -197,7 +197,7 @@ export async function createMailbox(
 
   return {
     mailbox: {
-      id,
+      id: mailboxId,
       domain_id: input.domain_id,
       local_part: input.local_part,
       is_active: true,
@@ -285,7 +285,7 @@ export async function linkUser(
 
   try {
     await db.insert(mailboxUsers).values({
-      id: uuidv7(),
+      id: createId(),
       mailbox_id: mailboxId,
       user_id: userId,
       created_at: Date.now(),
@@ -331,7 +331,7 @@ export async function linkTeam(
   if (!team) return { error: "NOT_FOUND" };
   try {
     await db.insert(mailboxTeams).values({
-      id: uuidv7(),
+      id: createId(),
       mailbox_id: mailboxId,
       team_id: teamId,
       created_at: Date.now(),

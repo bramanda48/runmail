@@ -1,25 +1,33 @@
+import type { AppEnv } from "@/lib/env";
+import { badRequest } from "@/lib/http-error";
+import { jwtAuth, requireAdmin } from "@/middleware/auth";
+import { requireMailboxAccess } from "@/middleware/mailbox";
+import * as service from "@/modules/mailboxes/service";
+import {
+  createMailboxBodySchema,
+  linkTeamBodySchema,
+  linkUserBodySchema,
+  patchMailboxBodySchema,
+} from "@/modules/mailboxes/validation";
 import type { IdCursorPayload } from "@runmail/shared";
 import {
   API_ERROR_CODES,
   cursorQuerySchema,
   decodeCursor,
-  localPartSchema,
   PAGINATION_DEFAULT_LIMIT,
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest } from "../../lib/http-error";
-import { jwtAuth, requireAdmin } from "../../middleware/auth";
-import { requireMailboxAccess } from "../../middleware/mailbox";
-import * as service from "./service";
 
 export const mailboxRoutes = new Hono<AppEnv>();
 
 mailboxRoutes.get("/all", jwtAuth, requireAdmin, async (c) => {
-  const parsed = cursorQuerySchema.safeParse(c.req.query());
+  const query = c.req.query();
+  const parsed = cursorQuerySchema.safeParse(query);
+
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -37,9 +45,12 @@ mailboxRoutes.get("/all", jwtAuth, requireAdmin, async (c) => {
 });
 
 mailboxRoutes.get("/", jwtAuth, async (c) => {
-  const parsed = cursorQuerySchema.safeParse(c.req.query());
+  const query = c.req.query();
+  const parsed = cursorQuerySchema.safeParse(query);
+
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -62,15 +73,12 @@ mailboxRoutes.get("/", jwtAuth, async (c) => {
   return c.json({ data: { mailboxes }, meta }, 200);
 });
 
-const createMailboxBodySchema = z.object({
-  domain_id: z.string().min(1),
-  local_part: localPartSchema,
-});
-
 mailboxRoutes.post("/", jwtAuth, requireAdmin, async (c) => {
-  const parsed = createMailboxBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = createMailboxBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.createMailbox(c, parsed.data);
@@ -128,19 +136,11 @@ mailboxRoutes.get("/:mailbox_id", jwtAuth, requireMailboxAccess, async (c) => {
   return c.json({ data: { mailbox } }, 200);
 });
 
-const patchMailboxBodySchema = z
-  .object({
-    local_part: localPartSchema.optional(),
-    is_active: z.boolean().optional(),
-  })
-  .refine((v) => v.local_part !== undefined || v.is_active !== undefined, {
-    message: "At least one field is required",
-  });
-
 mailboxRoutes.patch("/:mailbox_id", jwtAuth, requireAdmin, async (c) => {
-  const parsed = patchMailboxBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = patchMailboxBodySchema.safeParse(body);
   if (!parsed.success) {
-    const flat = parsed.error.flatten();
+    const flat = z.flattenError(parsed.error);
     return c.json(
       badRequest({
         ...flat.fieldErrors,
@@ -177,50 +177,12 @@ mailboxRoutes.patch("/:mailbox_id", jwtAuth, requireAdmin, async (c) => {
   return c.json({ data: { mailbox: result.mailbox } }, 200);
 });
 
-const linkUserBodySchema = z.object({
-  user_id: z.string().min(1),
-});
-
-mailboxRoutes.get("/:mailbox_id/users", jwtAuth, requireAdmin, async (c) => {
-  const parsed = cursorQuerySchema.safeParse(c.req.query());
-  if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
-  }
-  const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
-
-  let cursorId: string | undefined;
-  if (parsed.data.cursor) {
-    const payload = decodeCursor<IdCursorPayload>(parsed.data.cursor);
-    if (!payload) {
-      return c.json(badRequest({ cursor: ["Invalid cursor"] }), 400);
-    }
-    cursorId = payload.id;
-  }
-
-  const result = await service.listMailboxUsers(
-    c,
-    c.req.param("mailbox_id") ?? "",
-    limit,
-    cursorId,
-  );
-  if ("error" in result) {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan",
-        },
-      },
-      404,
-    );
-  }
-  return c.json({ data: { users: result.users }, meta: result.meta }, 200);
-});
-
 mailboxRoutes.post("/:mailbox_id/users", jwtAuth, requireAdmin, async (c) => {
-  const parsed = linkUserBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = linkUserBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.linkUser(c, c.req.param("mailbox_id") ?? "", parsed.data.user_id);
@@ -269,50 +231,12 @@ mailboxRoutes.delete("/:mailbox_id/users/:user_id", jwtAuth, requireAdmin, async
   return c.json({ data: { ok: true } }, 200);
 });
 
-const linkTeamBodySchema = z.object({
-  team_id: z.string().min(1),
-});
-
-mailboxRoutes.get("/:mailbox_id/teams", jwtAuth, requireAdmin, async (c) => {
-  const parsed = cursorQuerySchema.safeParse(c.req.query());
-  if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
-  }
-  const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
-
-  let cursorId: string | undefined;
-  if (parsed.data.cursor) {
-    const payload = decodeCursor<IdCursorPayload>(parsed.data.cursor);
-    if (!payload) {
-      return c.json(badRequest({ cursor: ["Invalid cursor"] }), 400);
-    }
-    cursorId = payload.id;
-  }
-
-  const result = await service.listMailboxTeams(
-    c,
-    c.req.param("mailbox_id") ?? "",
-    limit,
-    cursorId,
-  );
-  if ("error" in result) {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan",
-        },
-      },
-      404,
-    );
-  }
-  return c.json({ data: { teams: result.teams }, meta: result.meta }, 200);
-});
-
 mailboxRoutes.post("/:mailbox_id/teams", jwtAuth, requireAdmin, async (c) => {
-  const parsed = linkTeamBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = linkTeamBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.linkTeam(c, c.req.param("mailbox_id") ?? "", parsed.data.team_id);

@@ -1,17 +1,18 @@
+import { CloudflareOAuthNotConfiguredError } from "@/lib/cloudflare";
+import type { AppEnv } from "@/lib/env";
+import { badRequest } from "@/lib/http-error";
+import { jwtAuth, requireAdmin } from "@/middleware/auth";
+import * as service from "@/modules/domains/service";
+import { createDomainBodySchema } from "@/modules/domains/validation";
 import type { IdCursorPayload } from "@runmail/shared";
 import {
   API_ERROR_CODES,
   cursorQuerySchema,
   decodeCursor,
-  domainNameSchema,
   PAGINATION_DEFAULT_LIMIT,
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest } from "../../lib/http-error";
-import { jwtAuth, requireAdmin } from "../../middleware/auth";
-import * as service from "./service";
 
 function cloudflareUnavailable() {
   return {
@@ -25,7 +26,6 @@ function cloudflareUnavailable() {
 function isCloudflareError(err: unknown): boolean {
   return err instanceof Error && err.message === "CLOUDFLARE_API_ERROR";
 }
-
 export const domainRoutes = new Hono<AppEnv>();
 
 domainRoutes.use("*", jwtAuth, requireAdmin);
@@ -35,7 +35,7 @@ domainRoutes.get("/available", async (c) => {
     const { zones } = await service.listAvailableZones(c);
     return c.json({ data: { zones } }, 200);
   } catch (err) {
-    if (err instanceof service.CloudflareOAuthNotConfiguredError) {
+    if (err instanceof CloudflareOAuthNotConfiguredError) {
       return c.json(
         {
           error: {
@@ -55,9 +55,12 @@ domainRoutes.get("/available", async (c) => {
 });
 
 domainRoutes.get("/", async (c) => {
-  const parsed = cursorQuerySchema.safeParse(c.req.query());
+  const query = c.req.query();
+  const parsed = cursorQuerySchema.safeParse(query);
+
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -74,14 +77,12 @@ domainRoutes.get("/", async (c) => {
   return c.json({ data: { domains }, meta }, 200);
 });
 
-const createDomainBodySchema = z.object({
-  domain_name: domainNameSchema,
-});
-
 domainRoutes.post("/", async (c) => {
-  const parsed = createDomainBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = createDomainBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.addDomain(c, parsed.data.domain_name);

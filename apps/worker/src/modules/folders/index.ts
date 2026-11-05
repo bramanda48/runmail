@@ -1,2 +1,2 @@
-export { folderRoutes } from "./routes";
-export * from "./service";
+export { folderRoutes } from "@/modules/folders/routes";
+export * from "@/modules/folders/service";

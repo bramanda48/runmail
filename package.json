@@ -10,15 +10,14 @@
     "prepare": "simple-git-hooks",
     "dev": "portless",
     "build": "cd apps/web && bun run build",
-    "migrate": "cd apps/worker && bun run migrate",
+    "db:migrate": "cd apps/worker && bun run migrate",
+    "db:generate": "cd packages/db && bun run generate",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "cd apps/web && bun run typecheck && cd ../../apps/worker && bun run typecheck && cd ../../packages/shared && bun run typecheck && cd ../db && bun run typecheck",
-    "test": "bun test",
-    "test:integration": "bun scripts/validate-migrations.ts",
-    "seed:admin": "bun scripts/seed-admin.ts"
+    "test": "bun test"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,8 +1,8 @@
+import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "@/lib/allocate";
+import { getDb } from "@/lib/db";
+import { deleteRawEmail } from "@/lib/r2";
 import { folders, messageRecipients, messages, syncEvents } from "@runmail/db";
 import { and, eq, isNotNull, lt, sql } from "drizzle-orm";
-import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "../../lib/allocate";
-import { getDb } from "../../lib/db";
-import { deleteRawEmail } from "../../lib/r2";
 
 export function retentionDaysFromEnv(raw: string | undefined): number {
   const parsed = parseInt(raw ?? "", 10);

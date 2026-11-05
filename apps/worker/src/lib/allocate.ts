@@ -1,6 +1,6 @@
+import type { Db } from "@/lib/db";
 import { mailboxSyncCounters, syncEvents, type SyncEventType } from "@runmail/db";
 import { type SQL, sql } from "drizzle-orm";
-import type { Db } from "./db";
 
 /**
  * Single allocation path for per-mailbox sync_version.

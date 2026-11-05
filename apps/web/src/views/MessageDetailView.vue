@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import MailboxWorkspace from "@/components/app/MailboxWorkspace.vue";
-import ComposeModal, { type ComposeDraft } from "@/components/email/ComposeModal.vue";
-import EmailDetailBody, { type EmailBodyState } from "@/components/email/EmailDetailBody.vue";
-import EmailDetailHeader from "@/components/email/EmailDetailHeader.vue";
-import EmailDetailToolbar from "@/components/email/EmailDetailToolbar.vue";
+import MailboxWorkspace from "@/components/layouts/MailboxWorkspace.vue";
+import ComposeModal, { type ComposeDraft } from "@/components/email/compose/ComposeModal.vue";
+import EmailDetailBody, { type EmailBodyState } from "@/components/email/detail/EmailDetailBody.vue";
+import EmailDetailHeader from "@/components/email/detail/EmailDetailHeader.vue";
+import EmailDetailToolbar from "@/components/email/detail/EmailDetailToolbar.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";

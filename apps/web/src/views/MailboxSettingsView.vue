@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import MailboxWorkspace from "@/components/app/MailboxWorkspace.vue";
-import ComposeModal from "@/components/email/ComposeModal.vue";
+import MailboxWorkspace from "@/components/layouts/MailboxWorkspace.vue";
+import ComposeModal from "@/components/email/compose/ComposeModal.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";

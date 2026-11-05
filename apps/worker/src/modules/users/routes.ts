@@ -1,27 +1,29 @@
+import type { AppEnv } from "@/lib/env";
+import { badRequest } from "@/lib/http-error";
+import { jwtAuth, requireAdmin } from "@/middleware/auth";
+import * as service from "@/modules/users/service";
+import { createUserBodySchema, patchUserBodySchema } from "@/modules/users/validation";
 import type { IdCursorPayload } from "@runmail/shared";
 import {
   API_ERROR_CODES,
   cursorQuerySchema,
   decodeCursor,
   PAGINATION_DEFAULT_LIMIT,
-  passwordSchema,
-  usernameSchema,
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest } from "../../lib/http-error";
-import { jwtAuth, requireAdmin } from "../../middleware/auth";
-import * as service from "./service";
 
 export const userRoutes = new Hono<AppEnv>();
 
 userRoutes.use("*", jwtAuth, requireAdmin);
 
 userRoutes.get("/", async (c) => {
-  const parsed = cursorQuerySchema.safeParse(c.req.query());
+  const query = c.req.query();
+  const parsed = cursorQuerySchema.safeParse(query);
+
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -38,16 +40,12 @@ userRoutes.get("/", async (c) => {
   return c.json({ data: { users }, meta }, 200);
 });
 
-const createUserBodySchema = z.object({
-  username: usernameSchema,
-  password: passwordSchema,
-  role: z.enum(["admin", "member"]),
-});
-
 userRoutes.post("/", async (c) => {
-  const parsed = createUserBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = createUserBodySchema.safeParse(body);
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
 
   const result = await service.createUser(c, parsed.data);
@@ -82,20 +80,11 @@ userRoutes.get("/:user_id", async (c) => {
   return c.json({ data: { user } }, 200);
 });
 
-const patchUserBodySchema = z
-  .object({
-    role: z.enum(["admin", "member"]).optional(),
-    is_active: z.boolean().optional(),
-    password: passwordSchema.optional(),
-  })
-  .refine((v) => v.role !== undefined || v.is_active !== undefined || v.password !== undefined, {
-    message: "At least one field is required",
-  });
-
 userRoutes.patch("/:user_id", async (c) => {
-  const parsed = patchUserBodySchema.safeParse(await c.req.json().catch(() => null));
+  const body = await c.req.json();
+  const parsed = patchUserBodySchema.safeParse(body);
   if (!parsed.success) {
-    const flat = parsed.error.flatten();
+    const flat = z.flattenError(parsed.error);
     return c.json(
       badRequest({
         ...flat.fieldErrors,

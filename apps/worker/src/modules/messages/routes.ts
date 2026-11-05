@@ -1,3 +1,9 @@
+import type { AppEnv } from "@/lib/env";
+import { badRequest, notFound } from "@/lib/http-error";
+import { jwtAuth } from "@/middleware/auth";
+import { requireMailboxAccess } from "@/middleware/mailbox";
+import * as service from "@/modules/messages/service";
+import { moveBodySchema, readBodySchema, starBodySchema } from "@/modules/messages/validation";
 import type { MessageCursorPayload } from "@runmail/shared";
 import {
   API_ERROR_CODES,
@@ -7,18 +13,16 @@ import {
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-import type { AppEnv } from "../../lib/env";
-import { badRequest, notFound } from "../../lib/http-error";
-import { jwtAuth } from "../../middleware/auth";
-import { requireMailboxAccess } from "../../middleware/mailbox";
-import * as service from "./service";
 
 export const messageRoutes = new Hono<AppEnv>();
 
 messageRoutes.get("/:mailbox_id/messages", jwtAuth, requireMailboxAccess, async (c) => {
-  const parsed = cursorQuerySchema.safeParse(c.req.query());
+  const query = c.req.query();
+  const parsed = cursorQuerySchema.safeParse(query);
+
   if (!parsed.success) {
-    return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -69,18 +73,16 @@ messageRoutes.get(
   },
 );
 
-const readBodySchema = z.object({
-  is_read: z.boolean(),
-});
-
 messageRoutes.patch(
   "/:mailbox_id/messages/:message_id/read",
   jwtAuth,
   requireMailboxAccess,
   async (c) => {
-    const parsed = readBodySchema.safeParse(await c.req.json().catch(() => null));
+    const body = await c.req.json();
+    const parsed = readBodySchema.safeParse(body);
     if (!parsed.success) {
-      return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+      const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+      return c.json(badRequest(fieldErrors), 400);
     }
     const result = await service.setMessageRead(
       c,
@@ -95,18 +97,16 @@ messageRoutes.patch(
   },
 );
 
-const starBodySchema = z.object({
-  is_starred: z.boolean(),
-});
-
 messageRoutes.patch(
   "/:mailbox_id/messages/:message_id/star",
   jwtAuth,
   requireMailboxAccess,
   async (c) => {
-    const parsed = starBodySchema.safeParse(await c.req.json().catch(() => null));
+    const body = await c.req.json();
+    const parsed = starBodySchema.safeParse(body);
     if (!parsed.success) {
-      return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+      const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+      return c.json(badRequest(fieldErrors), 400);
     }
     const result = await service.setMessageStarred(
       c,
@@ -121,18 +121,16 @@ messageRoutes.patch(
   },
 );
 
-const moveBodySchema = z.object({
-  folder_id: z.string().min(1),
-});
-
 messageRoutes.patch(
   "/:mailbox_id/messages/:message_id/move",
   jwtAuth,
   requireMailboxAccess,
   async (c) => {
-    const parsed = moveBodySchema.safeParse(await c.req.json().catch(() => null));
+    const body = await c.req.json();
+    const parsed = moveBodySchema.safeParse(body);
     if (!parsed.success) {
-      return c.json(badRequest(parsed.error.flatten().fieldErrors), 400);
+      const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+      return c.json(badRequest(fieldErrors), 400);
     }
     const result = await service.moveMessage(
       c,
