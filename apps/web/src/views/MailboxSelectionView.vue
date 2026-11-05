@@ -39,6 +39,26 @@ const paginationTotal = computed(() =>
   meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
 );
 
+/** Mailboxes with no team path — rendered in the direct section. */
+const directMailboxes = computed(() =>
+  mailboxes.value.filter((mailbox) => !mailbox.via_teams || mailbox.via_teams.length === 0),
+);
+
+/**
+ * One section per team granting access on this page.
+ * A mailbox shared via two teams appears under both sections.
+ */
+const teamSections = computed(() => {
+  const map = new Map<string, { team_id: string; name: string; mailboxes: Mailbox[] }>();
+  for (const mailbox of mailboxes.value) {
+    for (const team of mailbox.via_teams ?? []) {
+      const section = map.get(team.team_id) ?? { team_id: team.team_id, name: team.name, mailboxes: [] };
+      section.mailboxes.push(mailbox);
+      map.set(team.team_id, section);
+    }
+  }
+  return [...map.values()];
+});
 async function load(cursor?: string) {
   isLoading.value = true;
   error.value = "";
@@ -137,35 +157,75 @@ function rowClasses(isActive: boolean) {
         </template>
       </EmptyState>
 
-      <div v-else class="flex flex-col gap-3">
-        <button
-          v-for="mailbox in mailboxes"
-          :key="mailbox.id"
-          type="button"
-          :disabled="!mailbox.is_active"
-          :aria-disabled="mailbox.is_active ? undefined : 'true'"
-          :class="rowClasses(mailbox.is_active)"
-          @click="selectMailbox(mailbox)"
-        >
-          <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+      <div v-else class="flex flex-col gap-6">
+        <section v-if="directMailboxes.length > 0" class="flex flex-col gap-3" aria-label="Direct access">
+          <h2 class="text-sm font-semibold text-muted-foreground">{{ t("mailbox.direct.title") }}</h2>
+          <button
+            v-for="mailbox in directMailboxes"
+            :key="mailbox.id"
+            type="button"
+            :disabled="!mailbox.is_active"
+            :aria-disabled="mailbox.is_active ? undefined : 'true'"
+            :class="rowClasses(mailbox.is_active)"
+            @click="selectMailbox(mailbox)"
           >
-            <Icon icon="lucide:mail" class="size-5" />
-          </div>
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+            >
+              <Icon icon="lucide:mail" class="size-5" />
+            </div>
 
-          <div class="min-w-0 flex-1">
-            <p :class="cn('truncate font-medium', !mailbox.is_active && 'text-muted-foreground')">
-              {{ mailbox.address }}
-            </p>
-            <p v-if="!mailbox.is_active" class="text-xs text-muted-foreground">
-              {{ t("mailbox.inactive") }}
-            </p>
-          </div>
+            <div class="min-w-0 flex-1">
+              <p :class="cn('truncate font-medium', !mailbox.is_active && 'text-muted-foreground')">
+                {{ mailbox.address }}
+              </p>
+              <p v-if="!mailbox.is_active" class="text-xs text-muted-foreground">
+                {{ t("mailbox.inactive") }}
+              </p>
+            </div>
 
-          <Badge :variant="mailbox.is_active ? 'secondary' : 'outline'">
-            {{ mailbox.is_active ? t("mailbox.status.active") : t("mailbox.status.inactive") }}
-          </Badge>
-        </button>
+            <Badge :variant="mailbox.is_active ? 'secondary' : 'outline'">
+              {{ mailbox.is_active ? t("mailbox.status.active") : t("mailbox.status.inactive") }}
+            </Badge>
+          </button>
+        </section>
+
+        <section
+          v-for="section in teamSections"
+          :key="section.team_id"
+          class="flex flex-col gap-3"
+          :aria-label="t('mailbox.team.title', { name: section.name })"
+        >
+          <h2 class="text-sm font-semibold text-muted-foreground">{{ t("mailbox.team.title", { name: section.name }) }}</h2>
+          <button
+            v-for="mailbox in section.mailboxes"
+            :key="mailbox.id"
+            type="button"
+            :disabled="!mailbox.is_active"
+            :aria-disabled="mailbox.is_active ? undefined : 'true'"
+            :class="rowClasses(mailbox.is_active)"
+            @click="selectMailbox(mailbox)"
+          >
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary"
+            >
+              <Icon icon="lucide:mail" class="size-5" />
+            </div>
+
+            <div class="min-w-0 flex-1">
+              <p :class="cn('truncate font-medium', !mailbox.is_active && 'text-muted-foreground')">
+                {{ mailbox.address }}
+              </p>
+              <p v-if="!mailbox.is_active" class="text-xs text-muted-foreground">
+                {{ t("mailbox.inactive") }}
+              </p>
+            </div>
+
+            <Badge :variant="mailbox.is_active ? 'secondary' : 'outline'">
+              {{ mailbox.is_active ? t("mailbox.status.active") : t("mailbox.status.inactive") }}
+            </Badge>
+          </button>
+        </section>
 
         <Pagination
           v-if="showPagination"

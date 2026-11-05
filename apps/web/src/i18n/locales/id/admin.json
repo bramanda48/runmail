@@ -163,9 +163,76 @@
       "linkError": "Gagal menambahkan user.",
       "unlinkError": "Gagal menghapus kaitan user."
     },
+    "teamDialog": {
+      "title": "Bagikan ke tim",
+      "description": "Tim yang memiliki akses ke mailbox ini. Anggotanya dapat membukanya.",
+      "teamLabel": "Pilih tim",
+      "teamPlaceholder": "Pilih tim",
+      "add": "Tambahkan",
+      "linkedTeams": "Tim yang dibagikan ({count})",
+      "empty": "Mailbox ini belum dibagikan ke tim mana pun.",
+      "loadTeamsError": "Tidak dapat memuat daftar tim.",
+      "loadLinkedError": "Gagal memuat tim yang dibagikan.",
+      "linkError": "Gagal membagikan ke tim.",
+      "unlinkError": "Gagal menghapus bagikan tim."
+    },
     "validation": {
       "domainRequired": "Pilih domain aktif terlebih dahulu",
       "localPartRequired": "Bagian lokal alamat wajib diisi"
+    }
+  },
+  "teams": {
+    "title": "Tim",
+    "description": "Buat dan kelola tim serta keanggotaannya.",
+    "create": "Buat tim",
+    "table": {
+      "name": "Nama",
+      "users": "Pengguna",
+      "actions": "Aksi"
+    },
+    "empty": {
+      "title": "Belum ada tim",
+      "description": "Belum ada tim yang dibuat."
+    },
+    "renameAria": "Ubah nama {name}",
+    "deleteAria": "Hapus {name}",
+    "membersAria": "Kelola anggota {name}",
+    "loadError": "Tidak dapat memuat tim. Coba lagi.",
+    "createDialog": {
+      "title": "Buat tim",
+      "description": "Masukkan nama untuk tim baru.",
+      "nameLabel": "Nama tim",
+      "namePlaceholder": "Support",
+      "submit": "Buat"
+    },
+    "renameDialog": {
+      "title": "Ubah nama tim",
+      "description": "Masukkan nama baru untuk tim ini.",
+      "nameLabel": "Nama tim",
+      "namePlaceholder": "Support",
+      "submit": "Simpan"
+    },
+    "deleteDialog": {
+      "title": "Hapus tim",
+      "description": "Hapus tim {name}? Akses mailbox yang diberikan melalui tim ini ikut terhapus.",
+      "submit": "Hapus"
+    },
+    "manageDialog": {
+      "title": "Kelola anggota tim",
+      "description": "Tambahkan atau hapus anggota {name}.",
+      "loading": "Memuat daftar user...",
+      "userLabel": "Pilih User",
+      "userPlaceholder": "Pilih user",
+      "add": "Tambahkan",
+      "linkedUsers": "Anggota ({count})",
+      "empty": "Belum ada anggota di tim ini.",
+      "loadUsersError": "Tidak dapat memuat daftar user.",
+      "loadLinkedError": "Gagal memuat anggota tim.",
+      "addError": "Gagal menambahkan anggota.",
+      "removeError": "Gagal menghapus anggota."
+    },
+    "validation": {
+      "nameRequired": "Nama tim wajib diisi"
     }
   },
   "integration": {

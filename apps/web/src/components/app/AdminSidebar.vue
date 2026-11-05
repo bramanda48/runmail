@@ -10,7 +10,8 @@ const { t } = useI18n();
 const adminNav = computed(() => [
   { label: t("shell.adminSidebar.domains"), to: "/admin/domains", icon: "lucide:globe" },
   { label: t("shell.adminSidebar.mailboxes"), to: "/admin/mailboxes", icon: "lucide:mail" },
-  { label: t("shell.adminSidebar.users"), to: "/admin/users", icon: "lucide:users" },
+  { label: t("shell.adminSidebar.teams"), to: "/admin/teams", icon: "lucide:users" },
+  { label: t("shell.adminSidebar.users"), to: "/admin/users", icon: "lucide:user" },
 ]);
 </script>
 

@@ -1,4 +1,5 @@
 import type { Domain } from "./domain";
+import type { MailboxLinkedTeam } from "./team";
 
 /**
  * Mirrors the `mailboxes` D1 table for API payloads. A mailbox is the tenant
@@ -10,6 +11,8 @@ export interface Mailbox {
   local_part: string;
   is_active: boolean;
   address: string;
+  /** Teams granting this user access to the mailbox; empty or absent = direct access only. */
+  via_teams?: MailboxLinkedTeam[];
   created_at: number;
   updated_at: number;
 }

@@ -15,6 +15,7 @@
     "navLabel": "Admin navigation",
     "domains": "Domain",
     "mailboxes": "Mailbox",
+    "teams": "Teams",
     "users": "User",
     "backToMailboxes": "Back to Mailbox"
   },

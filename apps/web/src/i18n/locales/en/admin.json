@@ -163,9 +163,76 @@
       "linkError": "Could not add the user.",
       "unlinkError": "Could not remove the user link."
     },
+    "teamDialog": {
+      "title": "Share to teams",
+      "description": "Teams with access to this mailbox. Members of these teams can open it.",
+      "teamLabel": "Select team",
+      "teamPlaceholder": "Select a team",
+      "add": "Add",
+      "linkedTeams": "Shared teams ({count})",
+      "empty": "This mailbox is not shared to any team yet.",
+      "loadTeamsError": "Could not load the team list.",
+      "loadLinkedError": "Could not load shared teams.",
+      "linkError": "Could not share to the team.",
+      "unlinkError": "Could not remove the team share."
+    },
     "validation": {
       "domainRequired": "Select an active domain first",
       "localPartRequired": "The local part of the address is required"
+    }
+  },
+  "teams": {
+    "title": "Teams",
+    "description": "Create and manage teams and team membership.",
+    "create": "Create team",
+    "table": {
+      "name": "Name",
+      "users": "Users",
+      "actions": "Actions"
+    },
+    "empty": {
+      "title": "No teams yet",
+      "description": "No teams have been created yet."
+    },
+    "renameAria": "Rename {name}",
+    "deleteAria": "Delete {name}",
+    "membersAria": "Manage members of {name}",
+    "loadError": "Could not load teams. Please try again.",
+    "createDialog": {
+      "title": "Create team",
+      "description": "Enter a name for the new team.",
+      "nameLabel": "Team name",
+      "namePlaceholder": "Support",
+      "submit": "Create"
+    },
+    "renameDialog": {
+      "title": "Rename team",
+      "description": "Enter a new name for this team.",
+      "nameLabel": "Team name",
+      "namePlaceholder": "Support",
+      "submit": "Save"
+    },
+    "deleteDialog": {
+      "title": "Delete team",
+      "description": "Delete team {name}? Mailbox access granted through this team will be removed as well.",
+      "submit": "Delete"
+    },
+    "manageDialog": {
+      "title": "Manage team members",
+      "description": "Add or remove members of {name}.",
+      "loading": "Loading users…",
+      "userLabel": "Select user",
+      "userPlaceholder": "Select a user",
+      "add": "Add",
+      "linkedUsers": "Members ({count})",
+      "empty": "No members in this team yet.",
+      "loadUsersError": "Could not load the user list.",
+      "loadLinkedError": "Could not load team members.",
+      "addError": "Could not add the member.",
+      "removeError": "Could not remove the member."
+    },
+    "validation": {
+      "nameRequired": "The team name is required"
     }
   },
   "integration": {

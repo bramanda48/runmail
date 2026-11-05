@@ -2,6 +2,12 @@
   "title": "Mailbox",
   "subtitle": "Pilih mailbox yang ingin Anda akses.",
   "inactive": "Mailbox nonaktif",
+  "direct": {
+    "title": "Akses langsung"
+  },
+  "team": {
+    "title": "Dibagikan ke tim {name}"
+  },
   "status": {
     "active": "Aktif",
     "inactive": "Nonaktif"

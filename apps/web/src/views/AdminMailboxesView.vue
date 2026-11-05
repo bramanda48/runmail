@@ -35,15 +35,19 @@ import { Icon } from "@/icons";
 import {
   ApiError,
   createMailbox,
+  getMailboxTeams,
   getMailboxUsers,
+  linkMailboxTeam,
   linkMailboxUser,
   listAllMailboxes,
   listDomains,
+  listTeams,
   listUsers,
+  unlinkMailboxTeam,
   unlinkMailboxUser,
   updateMailbox,
 } from "@/lib/api";
-import type { ApiMeta, Domain, Mailbox, MailboxLinkedUser, Role, User } from "@runmail/shared";
+import type { ApiMeta, Domain, Mailbox, MailboxLinkedTeam, MailboxLinkedUser, Role, Team, User } from "@runmail/shared";
 import { computed, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 
@@ -312,25 +316,42 @@ async function openManageUsers(mailbox: Mailbox) {
   managingMailbox.value = mailbox;
   manageOpen.value = true;
   manageLoading.value = true;
-  manageInlineError.value = "";
   selectedUserId.value = "";
+  selectedTeamId.value = "";
   linkedUsers.value = [];
-  const [usersResult, linkedResult] = await Promise.allSettled([
+  linkedTeams.value = [];
+  const [usersResult, linkedResult, teamsResult, linkedTeamsResult] = await Promise.allSettled([
     fetchAllUsers(),
     loadLinkedUsers(mailbox.id),
+    fetchAllTeams(),
+    loadLinkedTeams(mailbox.id),
   ]);
   if (usersResult.status === "fulfilled") {
-    allUsers.value = usersResult.value;
-  } else if (usersResult.reason instanceof ApiError) {
-    manageInlineError.value = usersResult.reason.message;
+     allUsers.value = usersResult.value;
+   } else if (usersResult.reason instanceof ApiError) {
+     manageInlineError.value = usersResult.reason.message;
+   } else {
+     manageInlineError.value = t("admin.mailboxes.manageDialog.loadUsersError");
+   }
+  if (teamsResult.status === "fulfilled") {
+    allTeams.value = teamsResult.value;
+  } else if (teamsResult.reason instanceof ApiError) {
+    manageInlineError.value = teamsResult.reason.message;
   } else {
-    manageInlineError.value = t("admin.mailboxes.manageDialog.loadUsersError");
+    manageInlineError.value = t("admin.mailboxes.teamDialog.loadTeamsError");
   }
   if (linkedResult.status === "rejected") {
-    const err = linkedResult.reason;
+     const err = linkedResult.reason;
+     manageInlineError.value =
+       err instanceof ApiError
+         ? err.message || t("admin.mailboxes.manageDialog.loadLinkedError")
+         : t("admin.connectionError");
+   }
+  if (linkedTeamsResult.status === "rejected") {
+    const err = linkedTeamsResult.reason;
     manageInlineError.value =
       err instanceof ApiError
-        ? err.message || t("admin.mailboxes.manageDialog.loadLinkedError")
+        ? err.message || t("admin.mailboxes.teamDialog.loadLinkedError")
         : t("admin.connectionError");
   }
   manageLoading.value = false;
@@ -378,6 +399,90 @@ async function unlinkUser(user: MailboxLinkedUser) {
   } catch (err) {
     if (err instanceof ApiError) {
       manageInlineError.value = err.message || t("admin.mailboxes.manageDialog.unlinkError");
+    } else {
+      manageInlineError.value = t("admin.connectionError");
+    }
+  } finally {
+    manageSubmitting.value = false;
+  }
+}
+// Manage teams section (same dialog, stacked below users)
+const allTeams = ref<Team[]>([]);
+const linkedTeams = ref<MailboxLinkedTeam[]>([]);
+const selectedTeamId = ref("");
+
+const teamOptions = computed(() =>
+  allTeams.value
+    .filter((team) => !linkedTeams.value.some((linked) => linked.team_id === team.id))
+    .map((team) => ({ value: team.id, label: team.name })),
+);
+
+async function fetchAllTeams(): Promise<Team[]> {
+  const acc: Team[] = [];
+  let cursor: string | undefined;
+  do {
+    const { data, meta } = await listTeams(cursor, 100);
+    acc.push(...data.teams);
+    cursor = meta?.has_more && meta.next_cursor ? meta.next_cursor : undefined;
+    if (!meta?.has_more) break;
+  } while (cursor);
+  return acc;
+}
+
+async function loadLinkedTeams(mailboxId: string): Promise<void> {
+  const acc: MailboxLinkedTeam[] = [];
+  let cursor: string | undefined;
+  do {
+    const { data, meta } = await getMailboxTeams(mailboxId, cursor, 100);
+    acc.push(...data.teams);
+    cursor = meta?.has_more && meta.next_cursor ? meta.next_cursor : undefined;
+    if (!meta?.has_more) break;
+  } while (cursor);
+  linkedTeams.value = acc;
+}
+
+async function refreshLinkedTeams(): Promise<void> {
+  if (!managingMailbox.value) return;
+  try {
+    await loadLinkedTeams(managingMailbox.value.id);
+  } catch (err) {
+    if (err instanceof ApiError) {
+      manageInlineError.value = err.message || t("admin.mailboxes.teamDialog.loadLinkedError");
+    } else {
+      manageInlineError.value = t("admin.connectionError");
+    }
+  }
+}
+
+async function linkTeam() {
+  if (!managingMailbox.value || !selectedTeamId.value) return;
+  manageSubmitting.value = true;
+  manageInlineError.value = "";
+  try {
+    await linkMailboxTeam(managingMailbox.value.id, selectedTeamId.value);
+    selectedTeamId.value = "";
+    await refreshLinkedTeams();
+  } catch (err) {
+    if (err instanceof ApiError) {
+      manageInlineError.value = err.message || t("admin.mailboxes.teamDialog.linkError");
+    } else {
+      manageInlineError.value = t("admin.connectionError");
+    }
+  } finally {
+    manageSubmitting.value = false;
+  }
+}
+
+async function unlinkTeam(team: MailboxLinkedTeam) {
+  if (!managingMailbox.value) return;
+  manageSubmitting.value = true;
+  manageInlineError.value = "";
+  try {
+    await unlinkMailboxTeam(managingMailbox.value.id, team.team_id);
+    await refreshLinkedTeams();
+  } catch (err) {
+    if (err instanceof ApiError) {
+      manageInlineError.value = err.message || t("admin.mailboxes.teamDialog.unlinkError");
     } else {
       manageInlineError.value = t("admin.connectionError");
     }
@@ -681,6 +786,64 @@ async function unlinkUser(user: MailboxLinkedUser) {
             {{ t("admin.mailboxes.manageDialog.empty") }}
           </p>
         </div>
+
+          <div class="border-t pt-4">
+            <p class="text-sm font-medium text-foreground">
+              {{ t("admin.mailboxes.teamDialog.title") }}
+            </p>
+            <p class="text-xs text-muted-foreground">
+              {{ t("admin.mailboxes.teamDialog.description") }}
+            </p>
+
+            <div v-if="!manageLoading" class="mt-3 flex items-end gap-2">
+              <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+                <label for="select-team" class="text-sm font-medium text-foreground">{{
+                  t("admin.mailboxes.teamDialog.teamLabel")
+                }}</label>
+                <Select v-model="selectedTeamId">
+                  <SelectTrigger id="select-team" :disabled="manageSubmitting">
+                    <SelectValue :placeholder="t('admin.mailboxes.teamDialog.teamPlaceholder')" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="option in teamOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button :disabled="!selectedTeamId || manageSubmitting" @click="linkTeam">
+                <Icon v-if="manageSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+                <span>{{ t("admin.mailboxes.teamDialog.add") }}</span>
+              </Button>
+            </div>
+            <div v-if="linkedTeams.length > 0" class="mt-3 flex flex-col gap-2">
+              <p class="text-sm font-medium text-foreground">
+                {{ t("admin.mailboxes.teamDialog.linkedTeams", { count: linkedTeams.length }) }}
+              </p>
+              <div
+                v-for="team in linkedTeams"
+                :key="team.team_id"
+                class="flex items-center justify-between rounded-lg border p-3"
+              >
+                <p class="font-medium text-foreground">{{ team.name }}</p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  :disabled="manageSubmitting"
+                  @click="unlinkTeam(team)"
+                >
+                  {{ t("common.actions.delete") }}
+                </Button>
+              </div>
+            </div>
+            <p v-else-if="!manageLoading" class="mt-3 text-sm text-muted-foreground">
+              {{ t("admin.mailboxes.teamDialog.empty") }}
+            </p>
+          </div>
 
         <DialogFooter>
           <Button variant="ghost" @click="manageOpen = false">{{ t("common.actions.close") }}</Button>

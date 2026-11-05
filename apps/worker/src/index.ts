@@ -15,6 +15,7 @@ import { oauthRoutes } from "./modules/oauth";
 import { runRetentionCleanup } from "./modules/retention";
 import { rulesetRoutes } from "./modules/rulesets";
 import { syncRoutes } from "./modules/sync";
+import { teamRoutes } from "./modules/teams";
 import { userRoutes } from "./modules/users";
 
 const app = new Hono<AppEnv>();
@@ -39,6 +40,7 @@ app.get("/api/v1/health", (c) => c.json({ data: { status: "ok" } }));
 app.route("/api/v1/auth", authRoutes);
 app.route("/api/v1/users", userRoutes);
 app.route("/api/v1/domains", domainRoutes);
+app.route("/api/v1/teams", teamRoutes);
 app.route("/api/v1/mailboxes", mailboxRoutes);
 app.route("/api/v1/mailboxes", folderRoutes);
 app.route("/api/v1/mailboxes", rulesetRoutes);

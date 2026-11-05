@@ -32,6 +32,7 @@ export type {
   SyncEventPayload,
   SyncEventType,
 } from "./types/sync-event";
+export type { MailboxLinkedTeam, Team, TeamLinkedUser } from "./types/team";
 export type { User } from "./types/user";
 export { cursorQuerySchema } from "./validation/cursor";
 export type { CursorQuery } from "./validation/cursor";
