@@ -164,6 +164,47 @@
       "title": "Disable email routing?",
       "description": "This will remove DNS records managed by Cloudflare and disable the service. Third-party DNS records will not be removed. This action cannot be undone.",
       "submit": "Yes, Disable"
+    },
+    "settings": {
+      "open": "Domain settings",
+      "title": "Settings",
+      "description": "Manage routing rules for {domain}.",
+      "close": "Close",
+      "loading": "Loading settings…",
+      "loadError": "Could not load settings. Please try again.",
+      "updateError": "Could not save settings. Please try again.",
+      "catchAll": {
+        "title": "Catch-all Rule",
+        "description": "Choose the worker that handles unmatched addresses.",
+        "label": "Worker",
+        "placeholder": "Select a worker",
+        "loading": "Loading workers…",
+        "none": "No email workers available.",
+        "updating": "Saving…"
+      },
+      "subaddress": {
+        "title": "Subaddressing",
+        "description": "Enable or disable subaddressing routing (username+folder{'@'}example.com).",
+        "toggle": "Subaddressing",
+        "updating": "Saving…"
+      },
+      "subdomains": {
+        "title": "Subdomains",
+        "description": "Manage email routing subdomains for this zone.",
+        "name": "Subdomain",
+        "actions": "Actions",
+        "inputPlaceholder": "sub",
+        "add": "Add",
+        "hint": "Subdomains are dependent on the domain. If the domain is disabled, subdomains will be disabled too.",
+        "loading": "Loading subdomains…",
+        "empty": "No subdomains yet.",
+        "delete": "Delete subdomain {name}",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "unknown": "Unknown",
+        "adding": "Adding…",
+        "removing": "Removing…"
+      }
     }
   },
   "mailboxes": {

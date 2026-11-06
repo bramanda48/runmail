@@ -171,6 +171,47 @@
       "title": "Nonaktifkan email routing?",
       "description": "Ini akan menghapus record DNS yang dikelola Cloudflare dan menonaktifkan layanan. Record DNS pihak ketiga tidak akan dihapus. Tindakan ini tidak dapat dibatalkan.",
       "submit": "Ya, Nonaktifkan"
+    },
+    "settings": {
+      "open": "Pengaturan domain",
+      "title": "Pengaturan",
+      "description": "Kelola aturan routing untuk {domain}.",
+      "close": "Tutup",
+      "loading": "Memuat pengaturan…",
+      "loadError": "Tidak dapat memuat pengaturan. Coba lagi.",
+      "updateError": "Tidak dapat menyimpan pengaturan. Coba lagi.",
+      "catchAll": {
+        "title": "Aturan Catch-all",
+        "description": "Pilih worker yang menangani alamat yang tidak cocok.",
+        "label": "Worker",
+        "placeholder": "Pilih worker",
+        "loading": "Memuat worker…",
+        "none": "Tidak ada email worker yang tersedia.",
+        "updating": "Menyimpan…"
+      },
+      "subaddress": {
+        "title": "Subaddressing",
+        "description": "Aktifkan atau nonaktifkan routing subaddressing (username+folder{'@'}contoh.com).",
+        "toggle": "Subaddressing",
+        "updating": "Menyimpan…"
+      },
+      "subdomains": {
+        "title": "Subdomain",
+        "description": "Kelola subdomain email routing untuk zona ini.",
+        "name": "Subdomain",
+        "actions": "Aksi",
+        "inputPlaceholder": "sub",
+        "add": "Tambah",
+        "hint": "Subdomain bergantung pada domain. Jika domain dinonaktifkan, subdomain ikut dinonaktifkan.",
+        "loading": "Memuat subdomain…",
+        "empty": "Belum ada subdomain.",
+        "delete": "Hapus subdomain {name}",
+        "enabled": "Aktif",
+        "disabled": "Nonaktif",
+        "unknown": "Tidak diketahui",
+        "adding": "Menambahkan…",
+        "removing": "Menghapus…"
+      }
     }
   },
   "mailboxes": {

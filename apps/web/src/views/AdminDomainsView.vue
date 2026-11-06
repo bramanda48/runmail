@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import DomainDnsPanel from "@/components/email/DomainDnsPanel.vue";
+import DomainSettingsDialog from "@/components/email/DomainSettingsDialog.vue";
 import EmptyState from "@/components/forms/EmptyState.vue";
 import Pagination from "@/components/forms/Pagination.vue";
 import AdminShell from "@/components/layouts/AdminShell.vue";
@@ -36,6 +37,7 @@ import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
 import { useDomainDnsRecords } from "@/composables/use-domain-dns-records";
 import { useDomainList } from "@/composables/use-domain-list";
 import { useDomainRoutingStatus } from "@/composables/use-domain-routing-status";
+import { useDomainSettings } from "@/composables/use-domain-settings";
 import { Icon } from "@/icons";
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
@@ -73,6 +75,7 @@ const {
 } = useDomainList(handleOperationError);
 
 const routing = useDomainRoutingStatus(canUseCloudflare, handleOperationError);
+const settings = useDomainSettings(canUseCloudflare, handleOperationError);
 const dns = useDomainDnsRecords(canUseCloudflare, handleOperationError);
 
 watch([() => domains.value.map((d) => d.id), canUseCloudflare], ([ids, allowed]) => {
@@ -110,6 +113,14 @@ async function confirmEnable(): Promise<void> {
 const disableTarget = ref<{ id: string; name: string } | null>(null);
 const disableSubmitting = ref(false);
 const disableError = ref("");
+
+const settingsTarget = ref<{ id: string; name: string } | null>(null);
+
+function openSettings(domain: { id: string; domain_name: string }): void {
+  if (!canUseCloudflare.value) return;
+  settingsTarget.value = { id: domain.id, name: domain.domain_name };
+  void settings.loadSettings(domain.id);
+}
 
 function openDisable(domain: { id: string; domain_name: string }): void {
   disableTarget.value = { id: domain.id, name: domain.domain_name };
@@ -242,7 +253,9 @@ onMounted(() => load());
                 <TableHead>{{ t("admin.domains.table.domain") }}</TableHead>
                 <TableHead>{{ t("admin.domains.table.routingStatus") }}</TableHead>
                 <TableHead>{{ t("admin.domains.table.dnsStatus") }}</TableHead>
-                <TableHead class="w-32">{{ t("admin.domains.table.actions") }}</TableHead>
+                <TableHead colspan="2">
+                  {{ t("admin.domains.table.actions") }}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -311,7 +324,7 @@ onMounted(() => load());
                       </Button>
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell class="w-px">
                     <div class="flex items-center gap-2">
                       <Button
                         v-if="routing.get(domain.id).enabled === false"
@@ -336,6 +349,21 @@ onMounted(() => load());
                         <Icon icon="lucide:route-off" aria-hidden="true" />
                       </Button>
                       <Button
+                        v-if="routing.get(domain.id).enabled === true"
+                        variant="outline"
+                        size="icon"
+                        :aria-label="t('admin.domains.settings.open')"
+                        :title="t('admin.domains.settings.open')"
+                        :disabled="!canUseCloudflare || settingsTarget?.id === domain.id"
+                        @click="openSettings(domain)"
+                      >
+                        <Icon icon="lucide:settings" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell class="w-px">
+                    <div class="flex items-center gap-2">
+                      <Button
                         :aria-expanded="dns.isExpanded(domain.id)"
                         :disabled="!canUseCloudflare"
                         @click="() => dns.toggle(domain, domain.domain_name)"
@@ -356,7 +384,7 @@ onMounted(() => load());
                   </TableCell>
                 </TableRow>
                 <TableRow v-if="dns.isExpanded(domain.id)" :key="`${domain.id}-dns`">
-                  <TableCell colspan="4" class="bg-muted/30 p-4">
+                  <TableCell colspan="5" class="bg-muted/30 p-4">
                     <DomainDnsPanel
                       :state="dns.get(domain.id)"
                       :on-retry-record="(i) => dns.retryRecord(domain.id, i)"
@@ -556,6 +584,35 @@ onMounted(() => load());
           </Button>
         </DialogFooter>
       </DialogContent>
+    </DialogRoot>
+
+    <DialogRoot
+      :open="settingsTarget !== null"
+      @update:open="
+        (v) => {
+          if (!v) settingsTarget = null;
+        }
+      "
+    >
+      <DomainSettingsDialog
+        v-if="settingsTarget"
+        :domain-id="settingsTarget.id"
+        :domain-name="settingsTarget.name"
+        :state="settings.get(settingsTarget.id)"
+        :on-retry="() => settingsTarget && settings.retry(settingsTarget.id)"
+        :on-select-worker="
+          (name) => settingsTarget && settings.updateCatchAll(settingsTarget.id, name)
+        "
+        :on-toggle-subaddress="
+          (v) => settingsTarget && settings.updateSubaddress(settingsTarget.id, v)
+        "
+        :on-add-subdomain="
+          (name) => settingsTarget && settings.addSubdomain(settingsTarget.id, name)
+        "
+        :on-remove-subdomain="
+          (name) => settingsTarget && settings.removeSubdomain(settingsTarget.id, name)
+        "
+      />
     </DialogRoot>
   </AdminShell>
 </template>
