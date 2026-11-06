@@ -29,6 +29,7 @@ interface ProxyRecord {
   type?: string;
   name?: string;
   content?: string;
+  priority?: string;
 }
 
 function buildGroups(records: ProxyRecord[], domainName: string): DnsGroupItem[] {
@@ -47,7 +48,7 @@ function buildGroups(records: ProxyRecord[], domainName: string): DnsGroupItem[]
     const rawName = rec.name ?? "";
     const queryName = rawName === "@" ? domainName : rawName;
     if (type === "MX") {
-      mxContents.push(content);
+      mxContents.push([rec.priority, content].join(" "));
       pushUnique(mxNames, queryName);
     } else if (type === "TXT") {
       if (content.includes("v=spf1")) {
