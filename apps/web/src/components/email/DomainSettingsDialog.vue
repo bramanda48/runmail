@@ -2,6 +2,7 @@
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DialogContent,
   DialogDescription,
@@ -85,7 +86,7 @@ function handleRemove(name: string): void {
 </script>
 
 <template>
-  <DialogContent class="max-h-[85vh] overflow-y-auto sm:max-w-xl">
+  <DialogContent class="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
     <DialogHeader>
       <DialogTitle>{{ t("admin.domains.settings.title") }}</DialogTitle>
       <DialogDescription>{{
@@ -109,147 +110,155 @@ function handleRemove(name: string): void {
       </span>
     </Alert>
 
-    <div v-else class="flex flex-col gap-6 py-2">
-      <section class="flex flex-col gap-2" aria-labelledby="settings-catchall">
-        <h3 id="settings-catchall" class="text-sm font-medium text-foreground">
-          {{ t("admin.domains.settings.catchAll.title") }}
-        </h3>
-        <p class="text-sm text-muted-foreground">
-          {{ t("admin.domains.settings.catchAll.description") }}
-        </p>
-        <label class="text-sm font-medium text-foreground" for="settings-worker-select">
-          {{ t("admin.domains.settings.catchAll.label") }}
-        </label>
-        <Select
-          :model-value="props.state.catchAllWorker || undefined"
-          :disabled="!ready || props.state.catchAllBusy"
-          @update:model-value="handleSelectWorker"
-        >
-          <SelectTrigger id="settings-worker-select">
-            <SelectValue :placeholder="t('admin.domains.settings.catchAll.placeholder')" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem v-for="worker in props.state.workers" :key="worker.id" :value="worker.name">
-              {{ worker.name }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        <p v-if="props.state.catchAllBusy" role="status" class="text-sm text-muted-foreground">
-          {{ t("admin.domains.settings.catchAll.updating") }}
-        </p>
-        <p
-          v-else-if="ready && props.state.workers.length === 0"
-          class="text-sm text-muted-foreground"
-        >
-          {{ t("admin.domains.settings.catchAll.none") }}
-        </p>
-      </section>
+    <div v-else class="flex flex-col gap-4 py-2">
+      <Card aria-labelledby="settings-catchall">
+        <CardHeader>
+          <CardTitle>{{ t("admin.domains.settings.catchAll.title") }}</CardTitle>
+          <CardDescription>{{ t("admin.domains.settings.catchAll.description") }}</CardDescription>
+        </CardHeader>
+        <CardContent class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-foreground" for="settings-worker-select">
+            {{ t("admin.domains.settings.catchAll.label") }}
+          </label>
+          <Select
+            :model-value="props.state.catchAllWorker || undefined"
+            :disabled="!ready || props.state.catchAllBusy"
+            @update:model-value="handleSelectWorker"
+          >
+            <SelectTrigger id="settings-worker-select">
+              <SelectValue :placeholder="t('admin.domains.settings.catchAll.placeholder')" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="worker in props.state.workers"
+                :key="worker.id"
+                :value="worker.name"
+              >
+                {{ worker.name }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <p v-if="props.state.catchAllBusy" role="status" class="text-sm text-muted-foreground">
+            {{ t("admin.domains.settings.catchAll.updating") }}
+          </p>
+          <p
+            v-else-if="ready && props.state.workers.length === 0"
+            class="text-sm text-muted-foreground"
+          >
+            {{ t("admin.domains.settings.catchAll.none") }}
+          </p>
+        </CardContent>
+      </Card>
 
-      <section class="flex flex-col gap-2" aria-labelledby="settings-subaddress">
-        <h3 id="settings-subaddress" class="text-sm font-medium text-foreground">
-          {{ t("admin.domains.settings.subaddress.title") }}
-        </h3>
-        <p class="text-sm text-muted-foreground">
-          {{ t("admin.domains.settings.subaddress.description") }}
-        </p>
-        <div class="flex items-center justify-between gap-4">
-          <span class="text-sm text-foreground">{{
-            t("admin.domains.settings.subaddress.toggle")
-          }}</span>
-          <Switch
-            :model-value="props.state.subaddressEnabled ?? false"
-            :ariaLabel="t('admin.domains.settings.subaddress.toggle')"
-            :disabled="!ready || props.state.subaddressBusy"
-            @update:model-value="(v) => props.onToggleSubaddress(Boolean(v))"
-          />
-        </div>
-        <p v-if="props.state.subaddressBusy" role="status" class="text-sm text-muted-foreground">
-          {{ t("admin.domains.settings.subaddress.updating") }}
-        </p>
-      </section>
+      <Card aria-labelledby="settings-subaddress">
+        <CardHeader>
+          <CardTitle>{{ t("admin.domains.settings.subaddress.title") }}</CardTitle>
+          <CardDescription>{{
+            t("admin.domains.settings.subaddress.description")
+          }}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="flex items-center justify-between gap-4">
+            <span class="text-sm text-foreground">{{
+              t("admin.domains.settings.subaddress.toggle")
+            }}</span>
+            <Switch
+              :model-value="props.state.subaddressEnabled ?? false"
+              :ariaLabel="t('admin.domains.settings.subaddress.toggle')"
+              :disabled="!ready || props.state.subaddressBusy"
+              @update:model-value="(v) => props.onToggleSubaddress(Boolean(v))"
+            />
+          </div>
+          <p v-if="props.state.subaddressBusy" role="status" class="text-sm text-muted-foreground">
+            {{ t("admin.domains.settings.subaddress.updating") }}
+          </p>
+        </CardContent>
+      </Card>
 
-      <section class="flex flex-col gap-2" aria-labelledby="settings-subdomains">
-        <h3 id="settings-subdomains" class="text-sm font-medium text-foreground">
-          {{ t("admin.domains.settings.subdomains.title") }}
-        </h3>
-        <p class="text-sm text-muted-foreground">
-          {{ t("admin.domains.settings.subdomains.description") }}
-        </p>
-        <div v-if="props.state.subdomainsBusy" class="flex flex-col gap-2">
-          <Skeleton v-for="n in 2" :key="n" class="h-10 w-full" />
-        </div>
-        <Table v-else-if="props.state.subdomains.length > 0">
-          <TableHeader>
-            <TableRow>
-              <TableHead>{{ t("admin.domains.settings.subdomains.name") }}</TableHead>
-              <TableHead>{{ t("admin.domains.table.routingStatus") }}</TableHead>
-              <TableHead>{{ t("admin.domains.table.dnsStatus") }}</TableHead>
-              <TableHead class="w-16">
-                <span class="sr-only">{{ t("admin.domains.settings.subdomains.actions") }}</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow v-for="sub in props.state.subdomains" :key="sub.id">
-              <TableCell class="font-medium">{{ sub.name }}</TableCell>
-              <TableCell>
-                <Badge :variant="sub.enabled ? 'secondary' : 'outline'">
-                  {{
-                    sub.enabled
-                      ? t("admin.domains.routingStatus.enabled")
-                      : t("admin.domains.routingStatus.disabled")
-                  }}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant="secondary">
-                  {{ t(`admin.domains.dnsStatus.${dnsStatusKey(sub.status)}`) }}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  :aria-label="t('admin.domains.settings.subdomains.delete', { name: sub.name })"
-                  :disabled="updating"
-                  @click="handleRemove(sub.name)"
-                >
-                  <Icon
-                    v-if="removingName === sub.name && props.state.subdomainsBusy"
-                    icon="lucide:loader-circle"
-                    class="animate-spin"
-                    aria-hidden="true"
-                  />
-                  <Icon v-else icon="lucide:trash-2" aria-hidden="true" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-        <p v-else class="text-sm text-muted-foreground">
-          {{ t("admin.domains.settings.subdomains.empty") }}
-        </p>
-        <div class="flex items-center gap-2">
-          <Input
-            v-model="newSubdomain"
-            :placeholder="t('admin.domains.settings.subdomains.inputPlaceholder')"
-            class="flex-1"
-            :disabled="!ready || updating"
-            :aria-label="t('admin.domains.settings.subdomains.name')"
-            @keyup.enter="handleAdd"
-          />
-          <span class="whitespace-nowrap text-sm text-muted-foreground">
-            .{{ props.domainName }}
-          </span>
-          <Button :disabled="!ready || updating || !newSubdomain.trim()" @click="handleAdd">
-            <Icon icon="lucide:plus" aria-hidden="true" />
-            <span>{{ t("admin.domains.settings.subdomains.add") }}</span>
-          </Button>
-        </div>
-        <p class="text-sm text-muted-foreground">
-          {{ t("admin.domains.settings.subdomains.hint") }}
-        </p>
-      </section>
+      <Card aria-labelledby="settings-subdomains">
+        <CardHeader>
+          <CardTitle>{{ t("admin.domains.settings.subdomains.title") }}</CardTitle>
+          <CardDescription>{{
+            t("admin.domains.settings.subdomains.description")
+          }}</CardDescription>
+        </CardHeader>
+        <CardContent class="flex flex-col gap-2">
+          <div v-if="props.state.subdomainsBusy" class="flex flex-col gap-2">
+            <Skeleton v-for="n in 2" :key="n" class="h-10 w-full" />
+          </div>
+          <Table v-else-if="props.state.subdomains.length > 0">
+            <TableHeader>
+              <TableRow>
+                <TableHead>{{ t("admin.domains.settings.subdomains.name") }}</TableHead>
+                <TableHead>{{ t("admin.domains.table.routingStatus") }}</TableHead>
+                <TableHead>{{ t("admin.domains.table.dnsStatus") }}</TableHead>
+                <TableHead class="w-16">
+                  <span class="sr-only">{{ t("admin.domains.settings.subdomains.actions") }}</span>
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow v-for="sub in props.state.subdomains" :key="sub.id">
+                <TableCell class="font-medium">{{ sub.name }}</TableCell>
+                <TableCell>
+                  <Badge :variant="sub.enabled ? 'secondary' : 'outline'">
+                    {{
+                      sub.enabled
+                        ? t("admin.domains.routingStatus.enabled")
+                        : t("admin.domains.routingStatus.disabled")
+                    }}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">
+                    {{ t(`admin.domains.dnsStatus.${dnsStatusKey(sub.status)}`) }}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    :aria-label="t('admin.domains.settings.subdomains.delete', { name: sub.name })"
+                    :disabled="updating"
+                    @click="handleRemove(sub.name)"
+                  >
+                    <Icon
+                      v-if="removingName === sub.name && props.state.subdomainsBusy"
+                      icon="lucide:loader-circle"
+                      class="animate-spin"
+                      aria-hidden="true"
+                    />
+                    <Icon v-else icon="lucide:trash-2" aria-hidden="true" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+          <p v-else class="text-sm text-muted-foreground">
+            {{ t("admin.domains.settings.subdomains.empty") }}
+          </p>
+          <div class="flex items-center gap-2">
+            <Input
+              v-model="newSubdomain"
+              :placeholder="t('admin.domains.settings.subdomains.inputPlaceholder')"
+              class="flex-1"
+              :disabled="!ready || updating"
+              :aria-label="t('admin.domains.settings.subdomains.name')"
+              @keyup.enter="handleAdd"
+            />
+            <span class="whitespace-nowrap text-sm text-muted-foreground">
+              .{{ props.domainName }}
+            </span>
+            <Button :disabled="!ready || updating || !newSubdomain.trim()" @click="handleAdd">
+              <Icon icon="lucide:plus" aria-hidden="true" />
+              <span>{{ t("admin.domains.settings.subdomains.add") }}</span>
+            </Button>
+          </div>
+          <p class="text-sm text-muted-foreground">
+            {{ t("admin.domains.settings.subdomains.hint") }}
+          </p>
+        </CardContent>
+      </Card>
     </div>
   </DialogContent>
 </template>

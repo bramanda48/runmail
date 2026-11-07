@@ -176,7 +176,7 @@
       "catchAll": {
         "title": "Catch-all Rule",
         "description": "Choose the worker that handles unmatched addresses.",
-        "label": "Worker",
+        "label": "Send to Worker",
         "placeholder": "Select a worker",
         "loading": "Loading workers…",
         "none": "No email workers available.",
