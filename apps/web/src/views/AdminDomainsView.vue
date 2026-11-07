@@ -4,7 +4,7 @@ import DomainSettingsDialog from "@/components/email/DomainSettingsDialog.vue";
 import EmptyState from "@/components/forms/EmptyState.vue";
 import Pagination from "@/components/forms/Pagination.vue";
 import AdminShell from "@/components/layouts/AdminShell.vue";
-import { Alert } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -106,9 +106,15 @@ async function confirmEnable(): Promise<void> {
   if (ok) {
     enableTarget.value = null;
   } else {
-    enableError.value = t("admin.domains.routingStatus.enableError");
+    enableError.value = routing.get(enableTarget.value.id).error;
   }
 }
+
+const enableConflict = computed(() => {
+  if (!enableTarget.value) return false;
+  const state = routing.get(enableTarget.value.id);
+  return state.status === "error" && state.error_kind === "mx_conflict";
+});
 
 const disableTarget = ref<{ id: string; name: string } | null>(null);
 const disableSubmitting = ref(false);
@@ -136,7 +142,7 @@ async function confirmDisable(): Promise<void> {
   if (ok) {
     disableTarget.value = null;
   } else {
-    disableError.value = t("admin.domains.routingStatus.disableError");
+    disableError.value = routing.get(disableTarget.value.id).error;
   }
 }
 
@@ -538,7 +544,15 @@ onMounted(() => load());
           </DialogDescription>
         </DialogHeader>
 
-        <Alert v-if="enableError" variant="destructive">{{ enableError }}</Alert>
+        <Alert v-if="enableConflict && enableTarget" variant="destructive">
+          <AlertDescription class="flex flex-col gap-2">
+            <p class="font-medium">{{ t("admin.domains.enableDialog.mxConflictTitle") }}</p>
+            <p>
+              {{ t("admin.domains.enableDialog.mxConflictMessage", { domain: enableTarget.name }) }}
+            </p>
+          </AlertDescription>
+        </Alert>
+        <Alert v-else-if="enableError" variant="destructive">{{ enableError }}</Alert>
 
         <DialogFooter>
           <Button variant="ghost" :disabled="enableSubmitting" @click="enableTarget = null">

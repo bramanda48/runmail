@@ -66,6 +66,7 @@
     "title": "Domains",
     "description": "Add Cloudflare domains and track their verification status.",
     "add": "Add domain",
+    "loadError": "Could not load domains. Please try again.",
     "table": {
       "domain": "Domain",
       "routingStatus": "Email Routing Status",
@@ -77,6 +78,7 @@
       "disabled": "Disabled",
       "enable": "Enable email routing",
       "enableError": "Could not enable email routing. Please try again.",
+      "loadError": "Unable to load status.",
       "disable": "Disable email routing",
       "disableError": "Could not disable email routing. Please try again."
     },
@@ -99,12 +101,16 @@
     "enableDialog": {
       "title": "Enable email routing?",
       "description": "Some DNS records will be added to your DNS. Conflicting records may be removed.",
-      "submit": "Yes, Activate"
+      "submit": "Yes, Activate",
+      "mxConflictTitle": "Conflicting MX records found",
+      "mxConflictMessage": "Email routing could not be enabled for {domain} because conflicting MX records exist. Delete the existing MX records manually in the DNS manager, then try again."
     },
     "empty": {
       "title": "No domains yet",
       "description": "Add an available Cloudflare domain."
     },
+    "closeNoticeAria": "Dismiss notification",
+    "addError": "Could not add the domain. Please try again.",
     "cloudflare": {
       "checking": "Checking the Cloudflare connection…",
       "checkAgain": "Check again",

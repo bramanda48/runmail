@@ -100,17 +100,16 @@
     "enableDialog": {
       "title": "Aktifkan email routing?",
       "description": "Beberapa record DNS akan ditambahkan ke DNS Anda. Record yang berkonflik dapat dihapus.",
-      "submit": "Ya, Aktifkan"
+      "submit": "Ya, Aktifkan",
+      "mxConflictTitle": "Ditemukan record MX yang berkonflik",
+      "mxConflictMessage": "Email routing tidak dapat diaktifkan untuk {domain} karena ada record MX yang berkonflik. Hapus record MX yang ada secara manual di DNS manager, lalu coba lagi."
     },
     "empty": {
       "title": "Belum ada domain",
       "description": "Tambahkan domain Cloudflare yang tersedia."
     },
-    "verifyAria": "Verifikasi ulang {domain}",
     "closeNoticeAria": "Tutup notifikasi",
     "loadError": "Tidak dapat memuat domain. Coba lagi.",
-    "verifyError": "Tidak dapat memverifikasi domain. Coba lagi.",
-    "availableError": "Tidak dapat memuat domain yang tersedia.",
     "addError": "Tidak dapat menambahkan domain. Coba lagi.",
     "cloudflare": {
       "checking": "Memeriksa koneksi Cloudflare...",
