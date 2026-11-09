@@ -510,32 +510,39 @@ async function removeMember(user: TeamLinkedUser) {
           <DialogDescription>{{ t("admin.teams.createDialog.description") }}</DialogDescription>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
+        <form @submit.prevent="submitCreate">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
 
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{
-              t("admin.teams.createDialog.nameLabel")
-            }}</span>
-            <Input
-              v-model="createName"
-              :placeholder="t('admin.teams.createDialog.namePlaceholder')"
+            <label class="flex flex-col gap-1.5">
+              <span class="text-sm font-medium text-foreground">{{
+                t("admin.teams.createDialog.nameLabel")
+              }}</span>
+              <Input
+                v-model="createName"
+                :placeholder="t('admin.teams.createDialog.namePlaceholder')"
+                :disabled="createSubmitting"
+                :aria-invalid="Boolean(createNameError)"
+              />
+              <p v-if="createNameError" class="text-sm text-destructive">{{ createNameError }}</p>
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
               :disabled="createSubmitting"
-              :aria-invalid="Boolean(createNameError)"
-            />
-            <p v-if="createNameError" class="text-sm text-destructive">{{ createNameError }}</p>
-          </label>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" :disabled="createSubmitting" @click="createOpen = false">
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="createSubmitting" @click="submitCreate">
-            <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>{{ t("admin.teams.createDialog.submit") }}</span>
-          </Button>
-        </DialogFooter>
+              @click="createOpen = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="createSubmitting">
+              <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("admin.teams.createDialog.submit") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 
@@ -547,32 +554,39 @@ async function removeMember(user: TeamLinkedUser) {
           <DialogDescription>{{ t("admin.teams.renameDialog.description") }}</DialogDescription>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="renameInlineError" variant="destructive">{{ renameInlineError }}</Alert>
+        <form @submit.prevent="submitRename">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="renameInlineError" variant="destructive">{{ renameInlineError }}</Alert>
 
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{
-              t("admin.teams.renameDialog.nameLabel")
-            }}</span>
-            <Input
-              v-model="renameName"
-              :placeholder="t('admin.teams.renameDialog.namePlaceholder')"
+            <label class="flex flex-col gap-1.5">
+              <span class="text-sm font-medium text-foreground">{{
+                t("admin.teams.renameDialog.nameLabel")
+              }}</span>
+              <Input
+                v-model="renameName"
+                :placeholder="t('admin.teams.renameDialog.namePlaceholder')"
+                :disabled="renameSubmitting"
+                :aria-invalid="Boolean(renameNameError)"
+              />
+              <p v-if="renameNameError" class="text-sm text-destructive">{{ renameNameError }}</p>
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
               :disabled="renameSubmitting"
-              :aria-invalid="Boolean(renameNameError)"
-            />
-            <p v-if="renameNameError" class="text-sm text-destructive">{{ renameNameError }}</p>
-          </label>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" :disabled="renameSubmitting" @click="renameOpen = false">
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="renameSubmitting" @click="submitRename">
-            <Icon v-if="renameSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>{{ t("admin.teams.renameDialog.submit") }}</span>
-          </Button>
-        </DialogFooter>
+              @click="renameOpen = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="renameSubmitting">
+              <Icon v-if="renameSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("admin.teams.renameDialog.submit") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 
@@ -619,7 +633,7 @@ async function removeMember(user: TeamLinkedUser) {
             {{ t("admin.teams.manageDialog.loading") }}
           </div>
 
-          <div v-else class="flex items-end gap-2">
+          <form v-else class="flex items-end gap-2" @submit.prevent="addMember">
             <div class="flex min-w-0 flex-1 flex-col gap-1.5">
               <label for="select-member" class="text-sm font-medium text-foreground">{{
                 t("admin.teams.manageDialog.userLabel")
@@ -639,11 +653,11 @@ async function removeMember(user: TeamLinkedUser) {
                 </SelectContent>
               </Select>
             </div>
-            <Button :disabled="!selectedUserId || manageSubmitting" @click="addMember">
+            <Button type="submit" :disabled="!selectedUserId || manageSubmitting">
               <Icon v-if="manageSubmitting" icon="lucide:loader-circle" class="animate-spin" />
               <span>{{ t("admin.teams.manageDialog.add") }}</span>
             </Button>
-          </div>
+          </form>
           <div v-if="linkedUsers.length > 0" class="flex flex-col gap-2">
             <p class="text-sm font-medium text-foreground">
               {{ t("admin.teams.manageDialog.linkedUsers", { count: linkedUsers.length }) }}
