@@ -364,64 +364,75 @@ async function submitEdit() {
           <DialogDescription>{{ t("admin.users.createDialog.description") }}</DialogDescription>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
+        <form class="flex flex-col gap-4" @submit.prevent="submitCreate">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
 
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{
-              t("admin.users.createDialog.usernameLabel")
-            }}</span>
-            <Input
-              v-model="createUsername"
-              :placeholder="t('admin.users.createDialog.usernamePlaceholder')"
-              :disabled="createSubmitting"
-              :aria-invalid="Boolean(createUsernameError)"
-            />
-            <p v-if="createUsernameError" class="text-sm text-destructive">
-              {{ createUsernameError }}
-            </p>
-          </label>
+            <label class="flex flex-col gap-1.5">
+              <span class="text-sm font-medium text-foreground">{{
+                t("admin.users.createDialog.usernameLabel")
+              }}</span>
+              <Input
+                v-model="createUsername"
+                :placeholder="t('admin.users.createDialog.usernamePlaceholder')"
+                :disabled="createSubmitting"
+                :aria-invalid="Boolean(createUsernameError)"
+              />
+              <p v-if="createUsernameError" class="text-sm text-destructive">
+                {{ createUsernameError }}
+              </p>
+            </label>
 
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{
-              t("admin.users.createDialog.passwordLabel")
-            }}</span>
-            <PasswordField
-              v-model="createPassword"
-              :placeholder="t('admin.users.createDialog.passwordPlaceholder')"
-              :disabled="createSubmitting"
-            />
-            <p v-if="createPasswordError" class="text-sm text-destructive">
-              {{ createPasswordError }}
-            </p>
-          </label>
+            <label class="flex flex-col gap-1.5">
+              <span class="text-sm font-medium text-foreground">{{
+                t("admin.users.createDialog.passwordLabel")
+              }}</span>
+              <PasswordField
+                v-model="createPassword"
+                :placeholder="t('admin.users.createDialog.passwordPlaceholder')"
+                :disabled="createSubmitting"
+              />
+              <p v-if="createPasswordError" class="text-sm text-destructive">
+                {{ createPasswordError }}
+              </p>
+            </label>
 
-          <div class="flex flex-col gap-1.5">
-            <label for="select-create-role" class="text-sm font-medium text-foreground">{{
-              t("admin.users.createDialog.roleLabel")
-            }}</label>
-            <Select v-model="createRole">
-              <SelectTrigger id="select-create-role" :disabled="createSubmitting">
-                <SelectValue :placeholder="t('admin.users.createDialog.rolePlaceholder')" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="option in roleOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <div class="flex flex-col gap-1.5">
+              <label for="select-create-role" class="text-sm font-medium text-foreground">{{
+                t("admin.users.createDialog.roleLabel")
+              }}</label>
+              <Select v-model="createRole">
+                <SelectTrigger id="select-create-role" :disabled="createSubmitting">
+                  <SelectValue :placeholder="t('admin.users.createDialog.rolePlaceholder')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in roleOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="ghost" :disabled="createSubmitting" @click="createOpen = false">
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="createSubmitting" @click="submitCreate">
-            <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>{{ t("common.actions.save") }}</span>
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              :disabled="createSubmitting"
+              @click="createOpen = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="createSubmitting">
+              <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("common.actions.save") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 
@@ -433,76 +444,87 @@ async function submitEdit() {
           <DialogDescription>{{ t("admin.users.editDialog.description") }}</DialogDescription>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
+        <form class="flex flex-col gap-4" @submit.prevent="submitEdit">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
 
-          <div>
-            <p class="text-sm text-muted-foreground">{{ t("admin.users.table.username") }}</p>
-            <p class="font-medium text-foreground">{{ editingUser?.username }}</p>
-          </div>
-
-          <div class="flex flex-col gap-1.5">
-            <label for="select-edit-role" class="text-sm font-medium text-foreground">{{
-              t("admin.users.editDialog.roleLabel")
-            }}</label>
-            <Select v-model="editRole">
-              <SelectTrigger
-                id="select-edit-role"
-                :disabled="editSubmitting"
-                :aria-invalid="Boolean(editRoleError)"
-              >
-                <SelectValue :placeholder="t('admin.users.editDialog.rolePlaceholder')" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="option in roleOptions" :key="option.value" :value="option.value">
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <p v-if="editRoleError" class="text-sm text-destructive">{{ editRoleError }}</p>
-
-          <div class="flex items-center justify-between rounded-lg border p-3">
             <div>
-              <p class="text-sm font-medium text-foreground">
-                {{ t("admin.users.editDialog.activeLabel") }}
-              </p>
-              <p class="text-xs text-muted-foreground">
-                {{ t("admin.users.editDialog.activeHint") }}
-              </p>
+              <p class="text-sm text-muted-foreground">{{ t("admin.users.table.username") }}</p>
+              <p class="font-medium text-foreground">{{ editingUser?.username }}</p>
             </div>
-            <Switch
-              :model-value="editIsActive"
-              :ariaLabel="t('admin.users.activeSwitchAria')"
-              :disabled="editSubmitting"
-              @update:model-value="onActiveToggle"
-            />
+
+            <div class="flex flex-col gap-1.5">
+              <label for="select-edit-role" class="text-sm font-medium text-foreground">{{
+                t("admin.users.editDialog.roleLabel")
+              }}</label>
+              <Select v-model="editRole">
+                <SelectTrigger
+                  id="select-edit-role"
+                  :disabled="editSubmitting"
+                  :aria-invalid="Boolean(editRoleError)"
+                >
+                  <SelectValue :placeholder="t('admin.users.editDialog.rolePlaceholder')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in roleOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <p v-if="editRoleError" class="text-sm text-destructive">{{ editRoleError }}</p>
+
+            <div class="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p class="text-sm font-medium text-foreground">
+                  {{ t("admin.users.editDialog.activeLabel") }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  {{ t("admin.users.editDialog.activeHint") }}
+                </p>
+              </div>
+              <Switch
+                :model-value="editIsActive"
+                :ariaLabel="t('admin.users.activeSwitchAria')"
+                :disabled="editSubmitting"
+                @update:model-value="onActiveToggle"
+              />
+            </div>
+
+            <label class="flex flex-col gap-1.5">
+              <span class="text-sm font-medium text-foreground">{{
+                t("admin.users.editDialog.passwordLabel")
+              }}</span>
+              <PasswordField
+                v-model="editNewPassword"
+                :placeholder="t('admin.users.editDialog.passwordPlaceholder')"
+                :disabled="editSubmitting"
+              />
+              <p v-if="editPasswordError" class="text-sm text-destructive">
+                {{ editPasswordError }}
+              </p>
+            </label>
           </div>
 
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{
-              t("admin.users.editDialog.passwordLabel")
-            }}</span>
-            <PasswordField
-              v-model="editNewPassword"
-              :placeholder="t('admin.users.editDialog.passwordPlaceholder')"
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
               :disabled="editSubmitting"
-            />
-            <p v-if="editPasswordError" class="text-sm text-destructive">
-              {{ editPasswordError }}
-            </p>
-          </label>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" :disabled="editSubmitting" @click="editOpen = false">
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="editSubmitting" @click="submitEdit">
-            <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>{{ t("admin.users.editDialog.submit") }}</span>
-          </Button>
-        </DialogFooter>
+              @click="editOpen = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="editSubmitting">
+              <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("admin.users.editDialog.submit") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 

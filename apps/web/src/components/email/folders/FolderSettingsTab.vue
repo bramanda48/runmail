@@ -374,31 +374,40 @@ watch(
           <DialogTitle>{{ t("folders.create.title") }}</DialogTitle>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
+        <form class="flex flex-col gap-4" @submit.prevent="submitCreate">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
 
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{ t("folders.fields.name") }}</span>
-            <Input
-              v-model="newFolderName"
-              :placeholder="t('folders.fields.namePlaceholder')"
+            <label class="flex flex-col gap-1.5">
+              <span class="text-sm font-medium text-foreground">{{
+                t("folders.fields.name")
+              }}</span>
+              <Input
+                v-model="newFolderName"
+                :placeholder="t('folders.fields.namePlaceholder')"
+                :disabled="createSubmitting"
+                :aria-invalid="nameError ? 'true' : undefined"
+                maxlength="64"
+              />
+              <p v-if="nameError" class="text-sm text-destructive">{{ nameError }}</p>
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
               :disabled="createSubmitting"
-              :aria-invalid="nameError ? 'true' : undefined"
-              maxlength="64"
-            />
-            <p v-if="nameError" class="text-sm text-destructive">{{ nameError }}</p>
-          </label>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" :disabled="createSubmitting" @click="createOpen = false">
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="createSubmitting" @click="submitCreate">
-            <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>{{ t("folders.create.submit") }}</span>
-          </Button>
-        </DialogFooter>
+              @click="createOpen = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="createSubmitting">
+              <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("folders.create.submit") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 
@@ -409,31 +418,40 @@ watch(
           <DialogTitle>{{ t("folders.edit.title") }}</DialogTitle>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
+        <form class="flex flex-col gap-4" @submit.prevent="submitEdit">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
 
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{ t("folders.fields.name") }}</span>
-            <Input
-              v-model="editFolderName"
-              :placeholder="t('folders.fields.namePlaceholder')"
+            <label class="flex flex-col gap-1.5">
+              <span class="text-sm font-medium text-foreground">{{
+                t("folders.fields.name")
+              }}</span>
+              <Input
+                v-model="editFolderName"
+                :placeholder="t('folders.fields.namePlaceholder')"
+                :disabled="editSubmitting"
+                :aria-invalid="editNameError ? 'true' : undefined"
+                maxlength="64"
+              />
+              <p v-if="editNameError" class="text-sm text-destructive">{{ editNameError }}</p>
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
               :disabled="editSubmitting"
-              :aria-invalid="editNameError ? 'true' : undefined"
-              maxlength="64"
-            />
-            <p v-if="editNameError" class="text-sm text-destructive">{{ editNameError }}</p>
-          </label>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" :disabled="editSubmitting" @click="editOpen = false">
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="editSubmitting" @click="submitEdit">
-            <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>{{ t("folders.edit.submit") }}</span>
-          </Button>
-        </DialogFooter>
+              @click="editOpen = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="editSubmitting">
+              <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("folders.edit.submit") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 
@@ -444,7 +462,8 @@ watch(
           <DialogTitle>{{ t("folders.delete.title") }}</DialogTitle>
         </DialogHeader>
         <p class="text-sm text-foreground">
-          {{ deletePrefix }}<strong>{{ folderToDelete?.name }}</strong>{{ deleteSuffix }}
+          {{ deletePrefix }}<strong>{{ folderToDelete?.name }}</strong
+          >{{ deleteSuffix }}
         </p>
         <DialogFooter>
           <Button variant="ghost" :disabled="deleteSubmitting" @click="deleteOpen = false">

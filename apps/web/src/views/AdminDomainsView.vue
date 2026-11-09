@@ -466,61 +466,64 @@ onMounted(() => load());
           <DialogDescription>{{ t("admin.domains.addDialog.description") }}</DialogDescription>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="addDialog.error.value" variant="destructive">{{
-            addDialog.error.value
-          }}</Alert>
-          <div class="flex flex-col gap-1.5">
-            <label for="select-domain" class="text-sm font-medium text-foreground">{{
-              t("admin.domains.addDialog.domainLabel")
-            }}</label>
-            <p
-              v-if="addDialog.isLoadingZones.value"
-              role="status"
-              class="text-sm text-muted-foreground"
-            >
-              {{ t("admin.domains.addDialog.loading") }}
-            </p>
-            <p
-              v-else-if="addDialog.options.value.length === 0"
-              class="text-sm text-muted-foreground"
-            >
-              {{ t("admin.domains.addDialog.none") }}
-            </p>
-            <Select v-else v-model="addDialog.selected.value">
-              <SelectTrigger id="select-domain" :disabled="addDialog.isSubmitting.value">
-                <SelectValue :placeholder="t('admin.domains.addDialog.domainPlaceholder')" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="option in addDialog.options.value"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+        <form class="flex flex-col gap-4" @submit.prevent="addDialog.submit(reload)">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="addDialog.error.value" variant="destructive">{{
+              addDialog.error.value
+            }}</Alert>
+            <div class="flex flex-col gap-1.5">
+              <label for="select-domain" class="text-sm font-medium text-foreground">{{
+                t("admin.domains.addDialog.domainLabel")
+              }}</label>
+              <p
+                v-if="addDialog.isLoadingZones.value"
+                role="status"
+                class="text-sm text-muted-foreground"
+              >
+                {{ t("admin.domains.addDialog.loading") }}
+              </p>
+              <p
+                v-else-if="addDialog.options.value.length === 0"
+                class="text-sm text-muted-foreground"
+              >
+                {{ t("admin.domains.addDialog.none") }}
+              </p>
+              <Select v-else v-model="addDialog.selected.value">
+                <SelectTrigger id="select-domain" :disabled="addDialog.isSubmitting.value">
+                  <SelectValue :placeholder="t('admin.domains.addDialog.domainPlaceholder')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in addDialog.options.value"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button
-            variant="ghost"
-            :disabled="addDialog.isSubmitting.value"
-            @click="addDialog.isOpen.value = false"
-          >
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="!canAdd" @click="addDialog.submit(reload)">
-            <Icon
-              v-if="addDialog.isSubmitting.value"
-              icon="lucide:loader-circle"
-              class="animate-spin"
-            />
-            <span>{{ t("admin.domains.addDialog.submit") }}</span>
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              :disabled="addDialog.isSubmitting.value"
+              @click="addDialog.isOpen.value = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="!canAdd">
+              <Icon
+                v-if="addDialog.isSubmitting.value"
+                icon="lucide:loader-circle"
+                class="animate-spin"
+              />
+              <span>{{ t("admin.domains.addDialog.submit") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 

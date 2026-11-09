@@ -34,8 +34,8 @@ import {
 import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
 import { useCursorPagination } from "@/composables/use-cursor-pagination";
 import { useFormSubmit } from "@/composables/use-form-submit";
-import { Icon } from "@/icons";
 import { translateApiError } from "@/i18n/api-errors";
+import { Icon } from "@/icons";
 import {
   ApiError,
   createMailbox,
@@ -116,17 +116,14 @@ const domainOptions = computed(() =>
 const selectedDomain = computed(() => domains.value.find((d) => d.id === selectedDomainId.value));
 
 async function fetchAllDomains(): Promise<Domain[]> {
-  return paginateAll(
-    async (cursor, limit) => {
-      const { data, meta } = await listDomains(cursor, limit);
-      return {
-        items: data.domains,
-        hasMore: meta?.has_more ?? false,
-        nextCursor: meta?.next_cursor,
-      };
-    },
-    100,
-  );
+  return paginateAll(async (cursor, limit) => {
+    const { data, meta } = await listDomains(cursor, limit);
+    return {
+      items: data.domains,
+      hasMore: meta?.has_more ?? false,
+      nextCursor: meta?.next_cursor,
+    };
+  }, 100);
 }
 
 async function openCreateDialog() {
@@ -155,7 +152,10 @@ function applyCreateError(err: ApiError) {
     err,
     { localPart: ["local_part"] },
     {
-      localPart: { value: localPartError.value, set: (message) => (localPartError.value = message) },
+      localPart: {
+        value: localPartError.value,
+        set: (message) => (localPartError.value = message),
+      },
     },
     (fallbackErr) => {
       if (fallbackErr.code === "MAILBOX_ADDRESS_ALREADY_EXISTS") {
@@ -285,31 +285,25 @@ const userOptions = computed(() =>
 );
 
 async function fetchAllUsers(): Promise<User[]> {
-  return paginateAll(
-    async (cursor, limit) => {
-      const { data, meta } = await listUsers(cursor, limit);
-      return {
-        items: data.users,
-        hasMore: meta?.has_more ?? false,
-        nextCursor: meta?.next_cursor,
-      };
-    },
-    100,
-  );
+  return paginateAll(async (cursor, limit) => {
+    const { data, meta } = await listUsers(cursor, limit);
+    return {
+      items: data.users,
+      hasMore: meta?.has_more ?? false,
+      nextCursor: meta?.next_cursor,
+    };
+  }, 100);
 }
 
 async function loadLinkedUsers(mailboxId: string): Promise<void> {
-  linkedUsers.value = await paginateAll(
-    async (cursor, limit) => {
-      const { data, meta } = await getMailboxUsers(mailboxId, cursor, limit);
-      return {
-        items: data.users,
-        hasMore: meta?.has_more ?? false,
-        nextCursor: meta?.next_cursor,
-      };
-    },
-    100,
-  );
+  linkedUsers.value = await paginateAll(async (cursor, limit) => {
+    const { data, meta } = await getMailboxUsers(mailboxId, cursor, limit);
+    return {
+      items: data.users,
+      hasMore: meta?.has_more ?? false,
+      nextCursor: meta?.next_cursor,
+    };
+  }, 100);
 }
 
 async function openManageUsers(mailbox: Mailbox) {
@@ -418,31 +412,25 @@ const teamOptions = computed(() =>
 );
 
 async function fetchAllTeams(): Promise<Team[]> {
-  return paginateAll(
-    async (cursor, limit) => {
-      const { data, meta } = await listTeams(cursor, limit);
-      return {
-        items: data.teams,
-        hasMore: meta?.has_more ?? false,
-        nextCursor: meta?.next_cursor,
-      };
-    },
-    100,
-  );
+  return paginateAll(async (cursor, limit) => {
+    const { data, meta } = await listTeams(cursor, limit);
+    return {
+      items: data.teams,
+      hasMore: meta?.has_more ?? false,
+      nextCursor: meta?.next_cursor,
+    };
+  }, 100);
 }
 
 async function loadLinkedTeams(mailboxId: string): Promise<void> {
-  linkedTeams.value = await paginateAll(
-    async (cursor, limit) => {
-      const { data, meta } = await getMailboxTeams(mailboxId, cursor, limit);
-      return {
-        items: data.teams,
-        hasMore: meta?.has_more ?? false,
-        nextCursor: meta?.next_cursor,
-      };
-    },
-    100,
-  );
+  linkedTeams.value = await paginateAll(async (cursor, limit) => {
+    const { data, meta } = await getMailboxTeams(mailboxId, cursor, limit);
+    return {
+      items: data.teams,
+      hasMore: meta?.has_more ?? false,
+      nextCursor: meta?.next_cursor,
+    };
+  }, 100);
 }
 
 async function refreshLinkedTeams(): Promise<void> {
@@ -600,66 +588,73 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
           <DialogDescription>{{ t("admin.mailboxes.createDialog.description") }}</DialogDescription>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
-          <Alert v-if="!loadingDomains && domains.length === 0">
-            {{ t("admin.mailboxes.createDialog.noActiveDomains") }}
-          </Alert>
+        <form @submit.prevent="submitCreate">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
+            <Alert v-if="!loadingDomains && domains.length === 0">
+              {{ t("admin.mailboxes.createDialog.noActiveDomains") }}
+            </Alert>
 
-          <div class="flex flex-col gap-1.5">
-            <label for="select-domain" class="text-sm font-medium text-foreground">{{
-              t("admin.mailboxes.createDialog.domainLabel")
-            }}</label>
-            <Select v-model="selectedDomainId">
-              <SelectTrigger
-                id="select-domain"
-                :disabled="loadingDomains || createSubmitting || domains.length === 0"
-              >
-                <SelectValue :placeholder="t('admin.mailboxes.createDialog.domainPlaceholder')" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="option in domainOptions"
-                  :key="option.value"
-                  :value="option.value"
+            <div class="flex flex-col gap-1.5">
+              <label for="select-domain" class="text-sm font-medium text-foreground">{{
+                t("admin.mailboxes.createDialog.domainLabel")
+              }}</label>
+              <Select v-model="selectedDomainId">
+                <SelectTrigger
+                  id="select-domain"
+                  :disabled="loadingDomains || createSubmitting || domains.length === 0"
                 >
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+                  <SelectValue :placeholder="t('admin.mailboxes.createDialog.domainPlaceholder')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in domainOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <label class="flex flex-col gap-1.5">
+              <span class="text-sm font-medium text-foreground">{{
+                t("admin.mailboxes.createDialog.addressLabel")
+              }}</span>
+              <div class="flex items-center gap-2">
+                <Input
+                  v-model="localPart"
+                  :placeholder="t('admin.mailboxes.createDialog.localPartPlaceholder')"
+                  class="flex-1"
+                  :disabled="createSubmitting || domains.length === 0"
+                  :aria-invalid="Boolean(localPartError)"
+                />
+                <span class="whitespace-nowrap text-sm text-muted-foreground">
+                  @{{
+                    selectedDomain?.domain_name || t("admin.mailboxes.createDialog.domainFallback")
+                  }}
+                </span>
+              </div>
+              <p v-if="localPartError" class="text-sm text-destructive">{{ localPartError }}</p>
+            </label>
           </div>
 
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{
-              t("admin.mailboxes.createDialog.addressLabel")
-            }}</span>
-            <div class="flex items-center gap-2">
-              <Input
-                v-model="localPart"
-                :placeholder="t('admin.mailboxes.createDialog.localPartPlaceholder')"
-                class="flex-1"
-                :disabled="createSubmitting || domains.length === 0"
-                :aria-invalid="Boolean(localPartError)"
-              />
-              <span class="whitespace-nowrap text-sm text-muted-foreground">
-                @{{
-                  selectedDomain?.domain_name || t("admin.mailboxes.createDialog.domainFallback")
-                }}
-              </span>
-            </div>
-            <p v-if="localPartError" class="text-sm text-destructive">{{ localPartError }}</p>
-          </label>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" :disabled="createSubmitting" @click="createOpen = false">
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="createSubmitting || domains.length === 0" @click="submitCreate">
-            <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>{{ t("admin.mailboxes.createDialog.submit") }}</span>
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              :disabled="createSubmitting"
+              @click="createOpen = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="createSubmitting || domains.length === 0">
+              <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("admin.mailboxes.createDialog.submit") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 
@@ -671,43 +666,50 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
           <DialogDescription>{{ t("admin.mailboxes.editDialog.description") }}</DialogDescription>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
+        <form @submit.prevent="submitEdit">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
 
-          <div>
-            <p class="text-sm text-muted-foreground">
-              {{ t("admin.mailboxes.editDialog.addressLabel") }}
-            </p>
-            <p class="font-medium text-foreground">{{ editingMailbox?.address }}</p>
-          </div>
-
-          <div class="flex items-center justify-between rounded-lg border p-3">
             <div>
-              <p class="text-sm font-medium text-foreground">
-                {{ t("admin.mailboxes.editDialog.activeLabel") }}
+              <p class="text-sm text-muted-foreground">
+                {{ t("admin.mailboxes.editDialog.addressLabel") }}
               </p>
-              <p class="text-xs text-muted-foreground">
-                {{ t("admin.mailboxes.editDialog.activeHint") }}
-              </p>
+              <p class="font-medium text-foreground">{{ editingMailbox?.address }}</p>
             </div>
-            <Switch
-              :model-value="editIsActive"
-              :ariaLabel="t('admin.mailboxes.activeSwitchAria')"
-              :disabled="editSubmitting"
-              @update:model-value="onActiveToggle"
-            />
-          </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="ghost" :disabled="editSubmitting" @click="editOpen = false">
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="editSubmitting" @click="submitEdit">
-            <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>{{ t("common.actions.save") }}</span>
-          </Button>
-        </DialogFooter>
+            <div class="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p class="text-sm font-medium text-foreground">
+                  {{ t("admin.mailboxes.editDialog.activeLabel") }}
+                </p>
+                <p class="text-xs text-muted-foreground">
+                  {{ t("admin.mailboxes.editDialog.activeHint") }}
+                </p>
+              </div>
+              <Switch
+                :model-value="editIsActive"
+                :ariaLabel="t('admin.mailboxes.activeSwitchAria')"
+                :disabled="editSubmitting"
+                @update:model-value="onActiveToggle"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              :disabled="editSubmitting"
+              @click="editOpen = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="editSubmitting">
+              <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("common.actions.save") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 
@@ -751,7 +753,7 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
             {{ t("admin.mailboxes.manageDialog.loading") }}
           </div>
 
-          <div v-else class="flex items-end gap-2">
+          <form v-else class="flex items-end gap-2" @submit.prevent="linkUser">
             <div class="flex min-w-0 flex-1 flex-col gap-1.5">
               <label for="select-user" class="text-sm font-medium text-foreground">{{
                 t("admin.mailboxes.manageDialog.userLabel")
@@ -771,11 +773,11 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
                 </SelectContent>
               </Select>
             </div>
-            <Button :disabled="!selectedUserId || manageSubmitting" @click="linkUser">
+            <Button type="submit" :disabled="!selectedUserId || manageSubmitting">
               <Icon v-if="manageSubmitting" icon="lucide:loader-circle" class="animate-spin" />
               <span>{{ t("admin.mailboxes.manageDialog.add") }}</span>
             </Button>
-          </div>
+          </form>
           <div v-if="linkedUsers.length > 0" class="flex flex-col gap-2">
             <p class="text-sm font-medium text-foreground">
               {{ t("admin.mailboxes.manageDialog.linkedUsers", { count: linkedUsers.length }) }}
@@ -817,7 +819,7 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
             {{ t("admin.mailboxes.teamDialog.description") }}
           </p>
 
-          <div v-if="!manageLoading" class="mt-3 flex items-end gap-2">
+          <form v-if="!manageLoading" class="mt-3 flex items-end gap-2" @submit.prevent="linkTeam">
             <div class="flex min-w-0 flex-1 flex-col gap-1.5">
               <label for="select-team" class="text-sm font-medium text-foreground">{{
                 t("admin.mailboxes.teamDialog.teamLabel")
@@ -837,11 +839,11 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
                 </SelectContent>
               </Select>
             </div>
-            <Button :disabled="!selectedTeamId || manageSubmitting" @click="linkTeam">
+            <Button type="submit" :disabled="!selectedTeamId || manageSubmitting">
               <Icon v-if="manageSubmitting" icon="lucide:loader-circle" class="animate-spin" />
               <span>{{ t("admin.mailboxes.teamDialog.add") }}</span>
             </Button>
-          </div>
+          </form>
           <div v-if="linkedTeams.length > 0" class="mt-3 flex flex-col gap-2">
             <p class="text-sm font-medium text-foreground">
               {{ t("admin.mailboxes.teamDialog.linkedTeams", { count: linkedTeams.length }) }}
