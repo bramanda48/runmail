@@ -4,6 +4,7 @@ import Pagination from "@/components/forms/Pagination.vue";
 import AdminShell from "@/components/layouts/AdminShell.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import {
   DialogContent,
   DialogDescription,
@@ -21,19 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
 import { useCursorPagination } from "@/composables/use-cursor-pagination";
 import { useFormSubmit } from "@/composables/use-form-submit";
-import { Icon } from "@/icons";
 import { translateApiError } from "@/i18n/api-errors";
+import { Icon } from "@/icons";
 import {
   ApiError,
   addTeamUser,
@@ -79,41 +72,48 @@ const {
   handleOperationError,
 );
 
-const memberCounts = ref<Record<string, number>>({});
-
-
 const roleLabels = computed<Record<Role, string>>(() => ({
   admin: t("admin.role.admin"),
   member: t("admin.role.member"),
 }));
 
-async function countMembers(teamId: string): Promise<number> {
-  const users = await paginateAll(
-    async (cursor, limit) => {
-      const { data, meta: responseMeta } = await getTeamUsers(teamId, cursor, limit);
-      return {
-        items: data.users,
-        hasMore: responseMeta?.has_more ?? false,
-        nextCursor: responseMeta?.next_cursor,
-      };
-    },
-    100,
-  );
-  return users.length;
+const teamMembers = ref<Record<string, TeamLinkedUser[]>>({});
+
+async function fetchMembers(teamId: string): Promise<TeamLinkedUser[]> {
+  return paginateAll(async (cursor, limit) => {
+    const { data, meta: responseMeta } = await getTeamUsers(teamId, cursor, limit);
+    return {
+      items: data.users,
+      hasMore: responseMeta?.has_more ?? false,
+      nextCursor: responseMeta?.next_cursor,
+    };
+  }, 100);
 }
 
-async function refreshCounts(list: Team[]) {
-  const counts = await Promise.allSettled(list.map((team) => countMembers(team.id)));
-  const next: Record<string, number> = {};
+async function refreshMembers(list: Team[]) {
+  const results = await Promise.allSettled(list.map((team) => fetchMembers(team.id)));
+  const next: Record<string, TeamLinkedUser[]> = {};
   list.forEach((team, i) => {
-    const result = counts[i];
-    next[team.id] = result.status === "fulfilled" ? result.value : 0;
+    const result = results[i];
+    next[team.id] = result.status === "fulfilled" ? result.value : [];
   });
-  memberCounts.value = next;
+  teamMembers.value = next;
+}
+
+function membersOf(teamId: string): TeamLinkedUser[] {
+  return teamMembers.value[teamId] ?? [];
+}
+
+function previewOf(teamId: string): TeamLinkedUser[] {
+  return membersOf(teamId).slice(0, 4);
+}
+
+function overflowOf(teamId: string): number {
+  return Math.max(membersOf(teamId).length - 4, 0);
 }
 
 watch(teams, (list) => {
-  void refreshCounts(list);
+  void refreshMembers(list);
 });
 
 function retry() {
@@ -139,7 +139,9 @@ function validateName(raw: string, setError: (message: string) => void): boolean
 
 function openCreate() {
   createName.value = "";
-  createForm.resetErrors([{ value: createNameError.value, set: (m) => (createNameError.value = m) }]);
+  createForm.resetErrors([
+    { value: createNameError.value, set: (m) => (createNameError.value = m) },
+  ]);
   createOpen.value = true;
 }
 
@@ -191,7 +193,9 @@ const renameNameError = ref("");
 function openRename(team: Team) {
   renamingTeam.value = team;
   renameName.value = team.name;
-  renameForm.resetErrors([{ value: renameNameError.value, set: (m) => (renameNameError.value = m) }]);
+  renameForm.resetErrors([
+    { value: renameNameError.value, set: (m) => (renameNameError.value = m) },
+  ]);
   renameOpen.value = true;
 }
 
@@ -281,31 +285,25 @@ const userOptions = computed(() =>
 );
 
 async function fetchAllUsers(): Promise<User[]> {
-  return paginateAll(
-    async (cursor, limit) => {
-      const { data, meta } = await listUsers(cursor, limit);
-      return {
-        items: data.users,
-        hasMore: meta?.has_more ?? false,
-        nextCursor: meta?.next_cursor,
-      };
-    },
-    100,
-  );
+  return paginateAll(async (cursor, limit) => {
+    const { data, meta } = await listUsers(cursor, limit);
+    return {
+      items: data.users,
+      hasMore: meta?.has_more ?? false,
+      nextCursor: meta?.next_cursor,
+    };
+  }, 100);
 }
 
 async function loadLinkedUsers(teamId: string): Promise<void> {
-  linkedUsers.value = await paginateAll(
-    async (cursor, limit) => {
-      const { data, meta } = await getTeamUsers(teamId, cursor, limit);
-      return {
-        items: data.users,
-        hasMore: meta?.has_more ?? false,
-        nextCursor: meta?.next_cursor,
-      };
-    },
-    100,
-  );
+  linkedUsers.value = await paginateAll(async (cursor, limit) => {
+    const { data, meta } = await getTeamUsers(teamId, cursor, limit);
+    return {
+      items: data.users,
+      hasMore: meta?.has_more ?? false,
+      nextCursor: meta?.next_cursor,
+    };
+  }, 100);
 }
 
 async function openManageMembers(team: Team) {
@@ -357,6 +355,7 @@ async function addMember() {
     await addTeamUser(managingTeam.value.id, selectedUserId.value);
     selectedUserId.value = "";
     await refreshLinkedUsers();
+    teamMembers.value = { ...teamMembers.value, [managingTeam.value.id]: linkedUsers.value };
   } catch (err) {
     if (err instanceof ApiError) {
       manageInlineError.value = err.message || t("admin.teams.manageDialog.addError");
@@ -375,6 +374,9 @@ async function removeMember(user: TeamLinkedUser) {
   try {
     await removeTeamUser(managingTeam.value.id, user.user_id);
     await refreshLinkedUsers();
+    if (managingTeam.value) {
+      teamMembers.value = { ...teamMembers.value, [managingTeam.value.id]: linkedUsers.value };
+    }
   } catch (err) {
     if (err instanceof ApiError) {
       manageInlineError.value = err.message || t("admin.teams.manageDialog.removeError");
@@ -403,8 +405,11 @@ async function removeMember(user: TeamLinkedUser) {
         </Button>
       </div>
 
-      <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
+      <div
+        v-if="isLoading"
+        class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3"
+      >
+        <Skeleton v-for="n in 6" :key="n" class="h-40 w-full" />
       </div>
 
       <div v-else-if="error" class="flex flex-col gap-4">
@@ -427,50 +432,60 @@ async function removeMember(user: TeamLinkedUser) {
       </EmptyState>
 
       <div v-else class="flex flex-col gap-4">
-        <div class="rounded-lg border bg-card p-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{{ t("admin.teams.table.name") }}</TableHead>
-                <TableHead>{{ t("admin.teams.table.users") }}</TableHead>
-                <TableHead class="w-32">{{ t("admin.teams.table.actions") }}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="team in teams" :key="team.id">
-                <TableCell class="font-medium">{{ team.name }}</TableCell>
-                <TableCell>{{ memberCounts[team.id] ?? 0 }}</TableCell>
-                <TableCell>
-                  <div class="flex items-center gap-1">
-                    <Button
-                      :aria-label="t('admin.teams.renameAria', { name: team.name })"
-                      variant="ghost"
-                      size="icon"
-                      @click="openRename(team)"
+        <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <Card v-for="team in teams" :key="team.id" class="flex h-full flex-col">
+            <CardContent class="flex flex-col gap-3 pt-6">
+              <CardTitle>{{ team.name }}</CardTitle>
+              <div class="flex h-8 items-center gap-3">
+                <template v-if="membersOf(team.id).length > 0">
+                  <div class="flex -space-x-2">
+                    <span
+                      v-for="member in previewOf(team.id)"
+                      :key="member.user_id"
+                      class="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase ring-2 ring-card"
                     >
-                      <Icon icon="lucide:pencil" />
-                    </Button>
-                    <Button
-                      :aria-label="t('admin.teams.membersAria', { name: team.name })"
-                      variant="ghost"
-                      size="icon"
-                      @click="openManageMembers(team)"
-                    >
-                      <Icon icon="lucide:users" />
-                    </Button>
-                    <Button
-                      :aria-label="t('admin.teams.deleteAria', { name: team.name })"
-                      variant="ghost"
-                      size="icon"
-                      @click="openDelete(team)"
-                    >
-                      <Icon icon="lucide:trash-2" />
-                    </Button>
+                      {{ member.username.charAt(0) }}
+                    </span>
                   </div>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+                  <span v-if="overflowOf(team.id) > 0" class="text-xs text-muted-foreground">
+                    +{{ overflowOf(team.id) }}
+                  </span>
+                  <span class="text-sm text-muted-foreground">
+                    {{ t("admin.teams.members", { count: membersOf(team.id).length }) }}
+                  </span>
+                </template>
+                <span v-else class="text-sm text-muted-foreground">
+                  {{ t("admin.teams.members", { count: 0 }) }}
+                </span>
+              </div>
+            </CardContent>
+            <CardFooter class="mt-auto gap-1">
+              <Button
+                :aria-label="t('admin.teams.renameAria', { name: team.name })"
+                variant="ghost"
+                size="icon"
+                @click="openRename(team)"
+              >
+                <Icon icon="lucide:pencil" />
+              </Button>
+              <Button
+                :aria-label="t('admin.teams.membersAria', { name: team.name })"
+                variant="ghost"
+                size="icon"
+                @click="openManageMembers(team)"
+              >
+                <Icon icon="lucide:users" />
+              </Button>
+              <Button
+                :aria-label="t('admin.teams.deleteAria', { name: team.name })"
+                variant="ghost"
+                size="icon"
+                @click="openDelete(team)"
+              >
+                <Icon icon="lucide:trash-2" />
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
 
         <Pagination
