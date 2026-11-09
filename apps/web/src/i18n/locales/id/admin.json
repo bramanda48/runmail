@@ -181,7 +181,7 @@
       "updateError": "Tidak dapat menyimpan pengaturan. Coba lagi.",
       "catchAll": {
         "title": "Aturan Catch-all",
-        "description": "Pilih worker yang menangani alamat yang tidak cocok.",
+        "description": "Pilih worker yang akan menangani semua pesan yang diterima.",
         "label": "Worker",
         "placeholder": "Pilih worker",
         "loading": "Memuat worker…",
@@ -292,11 +292,7 @@
     "title": "Tim",
     "description": "Buat dan kelola tim serta keanggotaannya.",
     "create": "Buat tim",
-    "table": {
-      "name": "Nama",
-      "users": "Pengguna",
-      "actions": "Aksi"
-    },
+    "members": "{count} anggota",
     "empty": {
       "title": "Belum ada tim",
       "description": "Belum ada tim yang dibuat."

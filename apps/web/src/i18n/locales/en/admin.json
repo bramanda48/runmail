@@ -181,7 +181,7 @@
       "updateError": "Could not save settings. Please try again.",
       "catchAll": {
         "title": "Catch-all Rule",
-        "description": "Choose the worker that handles unmatched addresses.",
+        "description": "Choose the worker who will handle all received messages.",
         "label": "Send to Worker",
         "placeholder": "Select a worker",
         "loading": "Loading workers…",
@@ -292,11 +292,7 @@
     "title": "Teams",
     "description": "Create and manage teams and team membership.",
     "create": "Create team",
-    "table": {
-      "name": "Name",
-      "users": "Users",
-      "actions": "Actions"
-    },
+    "members": "{count} members",
     "empty": {
       "title": "No teams yet",
       "description": "No teams have been created yet."
