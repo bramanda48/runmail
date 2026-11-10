@@ -434,55 +434,50 @@ async function removeMember(user: TeamLinkedUser) {
       <div v-else class="flex flex-col gap-4">
         <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
           <Card v-for="team in teams" :key="team.id" class="flex h-full flex-col">
-            <CardContent class="flex flex-col gap-3 pt-6">
-              <CardTitle>{{ team.name }}</CardTitle>
+            <CardContent class="flex flex-col gap-4 pt-6">
+              <div class="flex items-center justify-between gap-2">
+                <CardTitle>{{ team.name }}</CardTitle>
+                <div class="flex shrink-0 items-center gap-2">
+                  <Button
+                    :aria-label="t('admin.teams.renameAria', { name: team.name })"
+                    :title="t('admin.teams.renameAria', { name: team.name })"
+                    variant="ghost"
+                    size="icon"
+                    @click="openRename(team)"
+                  >
+                    <Icon icon="lucide:pencil" />
+                  </Button>
+                  <Button
+                    :aria-label="t('admin.teams.deleteAria', { name: team.name })"
+                    :title="t('admin.teams.deleteAria', { name: team.name })"
+                    variant="ghost"
+                    size="icon"
+                    @click="openDelete(team)"
+                  >
+                    <Icon icon="lucide:trash-2" />
+                  </Button>
+                </div>
+              </div>
               <div class="flex h-8 items-center gap-3">
-                <template v-if="membersOf(team.id).length > 0">
-                  <div class="flex -space-x-2">
-                    <span
-                      v-for="member in previewOf(team.id)"
-                      :key="member.user_id"
-                      class="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase ring-2 ring-card"
-                    >
-                      {{ member.username.charAt(0) }}
-                    </span>
-                  </div>
-                  <span v-if="overflowOf(team.id) > 0" class="text-xs text-muted-foreground">
-                    +{{ overflowOf(team.id) }}
+                <div v-if="membersOf(team.id).length > 0" class="flex -space-x-2">
+                  <span
+                    v-for="member in previewOf(team.id)"
+                    :key="member.user_id"
+                    :title="member.username"
+                    class="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase ring-2 ring-card"
+                  >
+                    {{ member.username.charAt(0) }}
                   </span>
-                  <span class="text-sm text-muted-foreground">
-                    {{ t("admin.teams.members", { count: membersOf(team.id).length }) }}
-                  </span>
-                </template>
-                <span v-else class="text-sm text-muted-foreground">
-                  {{ t("admin.teams.members", { count: 0 }) }}
+                </div>
+                <span class="text-sm text-muted-foreground">
+                  {{ t("admin.teams.members", { count: membersOf(team.id).length }) }}
                 </span>
               </div>
             </CardContent>
-            <CardFooter class="mt-auto gap-1">
-              <Button
-                :aria-label="t('admin.teams.renameAria', { name: team.name })"
-                variant="ghost"
-                size="icon"
-                @click="openRename(team)"
-              >
-                <Icon icon="lucide:pencil" />
-              </Button>
-              <Button
-                :aria-label="t('admin.teams.membersAria', { name: team.name })"
-                variant="ghost"
-                size="icon"
-                @click="openManageMembers(team)"
-              >
+            <CardFooter class="mt-auto">
+              <Button variant="outline" size="sm" @click="openManageMembers(team)">
                 <Icon icon="lucide:users" />
-              </Button>
-              <Button
-                :aria-label="t('admin.teams.deleteAria', { name: team.name })"
-                variant="ghost"
-                size="icon"
-                @click="openDelete(team)"
-              >
-                <Icon icon="lucide:trash-2" />
+                <span>{{ t("admin.teams.manageDialog.title") }}</span>
               </Button>
             </CardFooter>
           </Card>
@@ -514,10 +509,10 @@ async function removeMember(user: TeamLinkedUser) {
           <div class="flex flex-col gap-4 py-2">
             <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">{{
-                t("admin.teams.createDialog.nameLabel")
-              }}</span>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-medium text-foreground">
+                {{ t("admin.teams.createDialog.nameLabel") }}
+              </span>
               <Input
                 v-model="createName"
                 :placeholder="t('admin.teams.createDialog.namePlaceholder')"
@@ -558,10 +553,10 @@ async function removeMember(user: TeamLinkedUser) {
           <div class="flex flex-col gap-4 py-2">
             <Alert v-if="renameInlineError" variant="destructive">{{ renameInlineError }}</Alert>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">{{
-                t("admin.teams.renameDialog.nameLabel")
-              }}</span>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-medium text-foreground">
+                {{ t("admin.teams.renameDialog.nameLabel") }}
+              </span>
               <Input
                 v-model="renameName"
                 :placeholder="t('admin.teams.renameDialog.namePlaceholder')"
@@ -618,7 +613,7 @@ async function removeMember(user: TeamLinkedUser) {
 
     <!-- Manage members dialog -->
     <DialogRoot v-model:open="manageOpen">
-      <DialogContent>
+      <DialogContent class="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{{ t("admin.teams.manageDialog.title") }}</DialogTitle>
           <DialogDescription>
