@@ -368,10 +368,10 @@ async function submitEdit() {
           <div class="flex flex-col gap-4 py-2">
             <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">{{
-                t("admin.users.createDialog.usernameLabel")
-              }}</span>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-medium text-foreground">
+                {{ t("admin.users.createDialog.usernameLabel") }}
+              </span>
               <Input
                 v-model="createUsername"
                 :placeholder="t('admin.users.createDialog.usernamePlaceholder')"
@@ -383,10 +383,10 @@ async function submitEdit() {
               </p>
             </label>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">{{
-                t("admin.users.createDialog.passwordLabel")
-              }}</span>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-medium text-foreground">
+                {{ t("admin.users.createDialog.passwordLabel") }}
+              </span>
               <PasswordField
                 v-model="createPassword"
                 :placeholder="t('admin.users.createDialog.passwordPlaceholder')"
@@ -397,10 +397,10 @@ async function submitEdit() {
               </p>
             </label>
 
-            <div class="flex flex-col gap-1.5">
-              <label for="select-create-role" class="text-sm font-medium text-foreground">{{
-                t("admin.users.createDialog.roleLabel")
-              }}</label>
+            <div class="flex flex-col gap-2">
+              <label for="select-create-role" class="text-sm font-medium text-foreground">
+                {{ t("admin.users.createDialog.roleLabel") }}
+              </label>
               <Select v-model="createRole">
                 <SelectTrigger id="select-create-role" :disabled="createSubmitting">
                   <SelectValue :placeholder="t('admin.users.createDialog.rolePlaceholder')" />
@@ -453,10 +453,10 @@ async function submitEdit() {
               <p class="font-medium text-foreground">{{ editingUser?.username }}</p>
             </div>
 
-            <div class="flex flex-col gap-1.5">
-              <label for="select-edit-role" class="text-sm font-medium text-foreground">{{
-                t("admin.users.editDialog.roleLabel")
-              }}</label>
+            <div class="flex flex-col gap-2">
+              <label for="select-edit-role" class="text-sm font-medium text-foreground">
+                {{ t("admin.users.editDialog.roleLabel") }}
+              </label>
               <Select v-model="editRole">
                 <SelectTrigger
                   id="select-edit-role"
@@ -495,10 +495,10 @@ async function submitEdit() {
               />
             </div>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">{{
-                t("admin.users.editDialog.passwordLabel")
-              }}</span>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-medium text-foreground">
+                {{ t("admin.users.editDialog.passwordLabel") }}
+              </span>
               <PasswordField
                 v-model="editNewPassword"
                 :placeholder="t('admin.users.editDialog.passwordPlaceholder')"

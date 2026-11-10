@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import MemberShell from "@/components/layouts/MemberShell.vue";
 import PasswordField from "@/components/forms/PasswordField.vue";
+import MemberShell from "@/components/layouts/MemberShell.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { translateApiError } from "@/i18n/api-errors";
 import { mapValidationErrors, resetFieldErrors } from "@/composables/use-auth-form";
+import { translateApiError } from "@/i18n/api-errors";
 import { Icon } from "@/icons";
 import { ApiError, changePassword } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
@@ -112,12 +112,10 @@ async function handleChangePassword() {
         </CardHeader>
         <CardContent class="flex flex-col gap-4">
           <div class="flex flex-col gap-3">
-            <div>
+            <div class="flex flex-col gap-2">
+              <p class="text-sm text-muted-foreground">{{ t("profile.account.username") }}</p>
               <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-muted-foreground">{{ t("profile.account.username") }}</p>
-                  <p class="font-medium text-foreground">{{ authStore.user?.username }}</p>
-                </div>
+                <p class="font-medium text-foreground">{{ authStore.user?.username }}</p>
                 <Badge :variant="authStore.isAdmin ? 'secondary' : 'outline'">
                   {{
                     authStore.isAdmin
@@ -151,7 +149,7 @@ async function handleChangePassword() {
           <Alert v-if="successMessage">{{ successMessage }}</Alert>
 
           <form class="flex flex-col gap-4" @submit.prevent="handleChangePassword">
-            <label class="flex flex-col gap-1.5">
+            <label class="flex flex-col gap-2">
               <span class="text-sm font-medium text-foreground">
                 {{ t("profile.password.currentLabel") }}
               </span>
@@ -165,7 +163,7 @@ async function handleChangePassword() {
               </p>
             </label>
 
-            <label class="flex flex-col gap-1.5">
+            <label class="flex flex-col gap-2">
               <span class="text-sm font-medium text-foreground">
                 {{ t("profile.password.newLabel") }}
               </span>
@@ -187,7 +185,7 @@ async function handleChangePassword() {
               </p>
             </label>
 
-            <label class="flex flex-col gap-1.5">
+            <label class="flex flex-col gap-2">
               <span class="text-sm font-medium text-foreground">
                 {{ t("profile.password.confirmLabel") }}
               </span>

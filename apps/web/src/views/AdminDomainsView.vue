@@ -468,13 +468,13 @@ onMounted(() => load());
 
         <form class="flex flex-col gap-4" @submit.prevent="addDialog.submit(reload)">
           <div class="flex flex-col gap-4 py-2">
-            <Alert v-if="addDialog.error.value" variant="destructive">{{
-              addDialog.error.value
-            }}</Alert>
-            <div class="flex flex-col gap-1.5">
-              <label for="select-domain" class="text-sm font-medium text-foreground">{{
-                t("admin.domains.addDialog.domainLabel")
-              }}</label>
+            <Alert v-if="addDialog.error.value" variant="destructive">
+              {{ addDialog.error.value }}
+            </Alert>
+            <div class="flex flex-col gap-2">
+              <label for="select-domain" class="text-sm font-medium text-foreground">
+                {{ t("admin.domains.addDialog.domainLabel") }}
+              </label>
               <p
                 v-if="addDialog.isLoadingZones.value"
                 role="status"

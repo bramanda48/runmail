@@ -378,10 +378,10 @@ watch(
           <div class="flex flex-col gap-4 py-2">
             <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">{{
-                t("folders.fields.name")
-              }}</span>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-medium text-foreground">
+                {{ t("folders.fields.name") }}
+              </span>
               <Input
                 v-model="newFolderName"
                 :placeholder="t('folders.fields.namePlaceholder')"
@@ -422,10 +422,10 @@ watch(
           <div class="flex flex-col gap-4 py-2">
             <Alert v-if="editInlineError" variant="destructive">{{ editInlineError }}</Alert>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">{{
-                t("folders.fields.name")
-              }}</span>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-medium text-foreground">
+                {{ t("folders.fields.name") }}
+              </span>
               <Input
                 v-model="editFolderName"
                 :placeholder="t('folders.fields.namePlaceholder')"

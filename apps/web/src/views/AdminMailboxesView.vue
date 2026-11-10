@@ -595,10 +595,10 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
               {{ t("admin.mailboxes.createDialog.noActiveDomains") }}
             </Alert>
 
-            <div class="flex flex-col gap-1.5">
-              <label for="select-domain" class="text-sm font-medium text-foreground">{{
-                t("admin.mailboxes.createDialog.domainLabel")
-              }}</label>
+            <div class="flex flex-col gap-2">
+              <label for="select-domain" class="text-sm font-medium text-foreground">
+                {{ t("admin.mailboxes.createDialog.domainLabel") }}
+              </label>
               <Select v-model="selectedDomainId">
                 <SelectTrigger
                   id="select-domain"
@@ -618,10 +618,10 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
               </Select>
             </div>
 
-            <label class="flex flex-col gap-1.5">
-              <span class="text-sm font-medium text-foreground">{{
-                t("admin.mailboxes.createDialog.addressLabel")
-              }}</span>
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-medium text-foreground">
+                {{ t("admin.mailboxes.createDialog.addressLabel") }}
+              </span>
               <div class="flex items-center gap-2">
                 <Input
                   v-model="localPart"

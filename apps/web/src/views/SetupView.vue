@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
 import PasswordField from "@/components/forms/PasswordField.vue";
+import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
 import ThemeSwitcher from "@/components/topbar/ThemeSwitcher.vue";
 import Wordmark from "@/components/topbar/Wordmark.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  isConnectionError,
+  mapValidationErrors,
+  resetFieldErrors,
+} from "@/composables/use-auth-form";
 import { translateApiError } from "@/i18n/api-errors";
-import { isConnectionError, mapValidationErrors, resetFieldErrors } from "@/composables/use-auth-form";
 import { Icon } from "@/icons";
 import { ApiError } from "@/lib/api";
-import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_PATTERN } from "@runmail/shared";
 import { useAuthStore } from "@/stores/auth";
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, USERNAME_PATTERN } from "@runmail/shared";
 import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
@@ -116,7 +120,7 @@ async function handleSubmit() {
         <Alert v-if="apiError" variant="destructive">{{ apiError }}</Alert>
 
         <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
-          <label class="flex flex-col gap-1.5">
+          <label class="flex flex-col gap-2">
             <span class="text-sm font-medium text-foreground">
               {{ t("auth.setup.username") }}
             </span>
@@ -129,7 +133,7 @@ async function handleSubmit() {
             <p v-if="usernameError" class="text-sm text-destructive">{{ usernameError }}</p>
           </label>
 
-          <label class="flex flex-col gap-1.5">
+          <label class="flex flex-col gap-2">
             <span class="text-sm font-medium text-foreground">
               {{ t("auth.setup.password") }}
             </span>
@@ -141,7 +145,7 @@ async function handleSubmit() {
             <p v-if="passwordError" class="text-sm text-destructive">{{ passwordError }}</p>
           </label>
 
-          <label class="flex flex-col gap-1.5">
+          <label class="flex flex-col gap-2">
             <span class="text-sm font-medium text-foreground">
               {{ t("auth.setup.confirmPassword") }}
             </span>

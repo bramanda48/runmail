@@ -3,7 +3,9 @@ import RulesetActionRow, {
   type ActionRow,
   type FolderOption,
 } from "@/components/email/rules/RulesetActionRow.vue";
-import RulesetConditionRow, { type ConditionRow } from "@/components/email/rules/RulesetConditionRow.vue";
+import RulesetConditionRow, {
+  type ConditionRow,
+} from "@/components/email/rules/RulesetConditionRow.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,8 +19,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
+import { translateApiError } from "@/i18n/api-errors";
 import { Icon } from "@/icons";
-import { translateApiError, translateFieldErrors } from "@/i18n/api-errors";
 import { ApiError, createRuleset, getRuleset, listFolders, updateRuleset } from "@/lib/api";
 import type { LogicOperator, RulesetDetail } from "@runmail/shared";
 import { LOGIC_OPERATORS, rulesetSchema, validateRegexSafe } from "@runmail/shared";
@@ -409,7 +411,7 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
         <Alert v-if="errors.inline" variant="destructive">{{ errors.inline }}</Alert>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <label class="flex flex-col gap-1.5">
+          <label class="flex flex-col gap-2">
             <span class="text-sm font-medium text-foreground">{{ t("rulesets.editor.name") }}</span>
             <Input
               v-model="form.name"
@@ -419,8 +421,10 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
             />
             <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
           </label>
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{ t("rulesets.editor.priority") }}</span>
+          <label class="flex flex-col gap-2">
+            <span class="text-sm font-medium text-foreground">
+              {{ t("rulesets.editor.priority") }}
+            </span>
             <Input
               v-model="form.priority"
               type="number"
@@ -438,8 +442,10 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
         </div>
 
         <div class="grid gap-4 md:grid-cols-2">
-          <div class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{ t("rulesets.editor.logic") }}</span>
+          <div class="flex flex-col gap-2">
+            <span class="text-sm font-medium text-foreground">
+              {{ t("rulesets.editor.logic") }}
+            </span>
             <Select v-model="form.logic_operator" :disabled="isSaving">
               <SelectTrigger id="select-logic-operator">
                 <SelectValue :placeholder="t('rulesets.editor.logicPlaceholder')" />
@@ -460,7 +466,6 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
             <div>
               <p class="text-sm font-medium text-foreground">{{ t("rulesets.editor.enabled") }}</p>
               <p class="text-xs text-muted-foreground">{{ t("rulesets.editor.enabledHint") }}</p>
-
             </div>
             <Switch
               :model-value="form.is_enabled"
@@ -473,7 +478,9 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
 
         <!-- Conditions -->
         <div class="flex flex-col gap-3">
-          <h3 class="text-sm font-semibold text-foreground">{{ t("rulesets.editor.conditions") }}</h3>
+          <h3 class="text-sm font-semibold text-foreground">
+            {{ t("rulesets.editor.conditions") }}
+          </h3>
           <div v-for="(condition, index) in form.conditions" :key="condition.id">
             <RulesetConditionRow
               v-model:condition="form.conditions[index]"
@@ -492,7 +499,7 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
             type="button"
             variant="outline"
             size="sm"
-                        :disabled="isSaving"
+            :disabled="isSaving"
             @click="addCondition"
           >
             <Icon icon="lucide:plus" />
@@ -521,21 +528,16 @@ watch([() => route.params.ruleset_id, () => route.name], () => loadRuleset());
           <p class="text-xs text-muted-foreground">
             {{ t("rulesets.editor.moveHint") }}
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            :disabled="isSaving"
-            @click="addAction"
-          >
-
+          <Button type="button" variant="outline" size="sm" :disabled="isSaving" @click="addAction">
             <Icon icon="lucide:plus" />
             <span>{{ t("rulesets.editor.addAction") }}</span>
           </Button>
         </div>
 
         <div class="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:justify-end">
-          <Button variant="ghost" :disabled="isSaving" @click="goBack"> {{ t("rulesets.editor.cancel") }} </Button>
+          <Button variant="ghost" :disabled="isSaving" @click="goBack">
+            {{ t("rulesets.editor.cancel") }}
+          </Button>
           <Button :disabled="isSaving" @click="submit">
             <Icon v-if="isSaving" icon="lucide:loader-circle" class="animate-spin" />
             <span>{{ t("rulesets.editor.save") }}</span>

@@ -304,15 +304,15 @@
     "createDialog": {
       "title": "Buat tim",
       "description": "Masukkan nama untuk tim baru.",
-      "nameLabel": "Nama tim",
-      "namePlaceholder": "Support",
+      "nameLabel": "Nama",
+      "namePlaceholder": "Support team",
       "submit": "Buat"
     },
     "renameDialog": {
       "title": "Ubah nama tim",
       "description": "Masukkan nama baru untuk tim ini.",
-      "nameLabel": "Nama tim",
-      "namePlaceholder": "Support",
+      "nameLabel": "Nama",
+      "namePlaceholder": "Support team",
       "submit": "Simpan"
     },
     "deleteDialog": {

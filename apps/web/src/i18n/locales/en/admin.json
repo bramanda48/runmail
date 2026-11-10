@@ -304,15 +304,15 @@
     "createDialog": {
       "title": "Create team",
       "description": "Enter a name for the new team.",
-      "nameLabel": "Team name",
-      "namePlaceholder": "Support",
+      "nameLabel": "Name",
+      "namePlaceholder": "Support team",
       "submit": "Create"
     },
     "renameDialog": {
       "title": "Rename team",
       "description": "Enter a new name for this team.",
-      "nameLabel": "Team name",
-      "namePlaceholder": "Support",
+      "nameLabel": "Name",
+      "namePlaceholder": "Support team",
       "submit": "Save"
     },
     "deleteDialog": {

@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
 import PasswordField from "@/components/forms/PasswordField.vue";
+import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
 import ThemeSwitcher from "@/components/topbar/ThemeSwitcher.vue";
 import Wordmark from "@/components/topbar/Wordmark.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  isConnectionError,
+  mapValidationErrors,
+  resetFieldErrors,
+} from "@/composables/use-auth-form";
 import { translateApiError } from "@/i18n/api-errors";
-import { isConnectionError, mapValidationErrors, resetFieldErrors } from "@/composables/use-auth-form";
 import { Icon } from "@/icons";
 import { ApiError, listMailboxes } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
@@ -112,7 +116,7 @@ async function handleSubmit() {
         <Alert v-if="apiError" variant="destructive">{{ apiError }}</Alert>
 
         <form class="flex flex-col gap-4" @submit.prevent="handleSubmit">
-          <label class="flex flex-col gap-1.5">
+          <label class="flex flex-col gap-2">
             <span class="text-sm font-medium text-foreground">
               {{ t("auth.login.usernameLabel") }}
             </span>
@@ -125,7 +129,7 @@ async function handleSubmit() {
             <p v-if="usernameError" class="text-sm text-destructive">{{ usernameError }}</p>
           </label>
 
-          <label class="flex flex-col gap-1.5">
+          <label class="flex flex-col gap-2">
             <span class="text-sm font-medium text-foreground">
               {{ t("auth.login.passwordLabel") }}
             </span>
