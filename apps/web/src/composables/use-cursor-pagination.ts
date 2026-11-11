@@ -26,6 +26,10 @@ export function useCursorPagination<T>(
   const start = computed(() => pageIndex.value * perPage + 1);
   const end = computed(() => start.value + items.value.length - 1);
   const showPagination = computed(() => cursors.value.length > 1 || meta.value?.has_more);
+  const hasMore = computed(() => meta.value?.has_more === true);
+  const knownPages = computed(() =>
+    Math.max(cursors.value.length, pageIndex.value + 1 + (hasMore.value ? 1 : 0)),
+  );
   const paginationTotal = computed(() =>
     meta.value?.has_more ? page.value * perPage + 1 : page.value * perPage,
   );
@@ -64,6 +68,19 @@ export function useCursorPagination<T>(
     void load(cursors.value[pageIndex.value]);
   }
 
+  function goTo(n: number) {
+    if (!Number.isInteger(n) || n < 1 || n > knownPages.value) return;
+    if (n - 1 >= cursors.value.length) return;
+    pageIndex.value = n - 1;
+    void load(cursors.value[pageIndex.value]);
+  }
+
+  function reset(cursor?: string) {
+    cursors.value = [cursor];
+    pageIndex.value = 0;
+    void load(cursor);
+  }
+
   function reload() {
     void load(cursors.value[pageIndex.value]);
   }
@@ -76,11 +93,15 @@ export function useCursorPagination<T>(
     end,
     showPagination,
     paginationTotal,
+    hasMore,
+    knownPages,
     isLoading,
     error,
     load,
     goNext,
     goPrev,
+    goTo,
     reload,
+    reset,
   };
 }

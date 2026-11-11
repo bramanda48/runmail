@@ -13,7 +13,6 @@ CREATE INDEX `refresh_tokens_user_id_idx` ON `refresh_tokens` (`user_id`);--> st
 CREATE TABLE `domains` (
 	`id` text PRIMARY KEY NOT NULL,
 	`domain_name` text NOT NULL,
-	`verification_status` text DEFAULT 'pending_verification' NOT NULL,
 	`created_at` integer NOT NULL,
 	`updated_at` integer NOT NULL
 );
@@ -149,7 +148,7 @@ CREATE TABLE `mailbox_teams` (
 	`team_id` text NOT NULL,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`mailbox_id`) REFERENCES `mailboxes`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`team_id`) REFERENCES `teams`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`team_id`) REFERENCES `teams`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `mailbox_teams_mailbox_id_team_id_unique` ON `mailbox_teams` (`mailbox_id`,`team_id`);--> statement-breakpoint
@@ -158,7 +157,7 @@ CREATE TABLE `team_members` (
 	`team_id` text NOT NULL,
 	`user_id` text NOT NULL,
 	`created_at` integer NOT NULL,
-	FOREIGN KEY (`team_id`) REFERENCES `teams`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`team_id`) REFERENCES `teams`(`id`) ON UPDATE no action ON DELETE cascade,
 	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
@@ -178,7 +177,8 @@ CREATE TABLE `users` (
 	`role` text DEFAULT 'member' NOT NULL,
 	`is_active` integer DEFAULT true NOT NULL,
 	`created_at` integer NOT NULL,
-	`updated_at` integer NOT NULL
+	`updated_at` integer NOT NULL,
+	`last_login_at` integer
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `users_username_unique` ON `users` (`username`);

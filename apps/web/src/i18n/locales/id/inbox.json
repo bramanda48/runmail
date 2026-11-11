@@ -37,7 +37,8 @@
     "label": "Navigasi halaman",
     "previous": "Halaman sebelumnya",
     "next": "Halaman berikutnya",
-    "range": "{start}–{end} dari {total}"
+    "range": "{start}–{end} dari {total}",
+    "goTo": "Ke halaman {page}"
   },
   "folders": {
     "label": "Folder",

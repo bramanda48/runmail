@@ -7,6 +7,7 @@ import { refreshTokens, users } from "@runmail/db";
 import type { PageMeta, User } from "@runmail/shared";
 import { buildIdCursor, buildPageMeta } from "@runmail/shared";
 import { and, desc, eq, isNull } from "drizzle-orm";
+import { buildUsersFilter, type UsersFilter } from "./filters";
 
 export type PublicUser = User;
 
@@ -18,6 +19,7 @@ export function toPublicUser(row: typeof users.$inferSelect): PublicUser {
     is_active: row.is_active,
     created_at: row.created_at,
     updated_at: row.updated_at,
+    last_login_at: row.last_login_at ?? null,
   };
 }
 
@@ -25,9 +27,14 @@ export async function listUsers(
   c: AppContext,
   limit: number,
   cursorId: string | undefined,
+  filters: UsersFilter = {},
 ): Promise<{ users: PublicUser[]; meta: PageMeta }> {
   const db = getDb(c);
-  const rows = await db.select().from(users).orderBy(desc(users.created_at), desc(users.id));
+  const rows = await db
+    .select()
+    .from(users)
+    .where(buildUsersFilter(filters))
+    .orderBy(desc(users.created_at), desc(users.id));
 
   let start = 0;
   if (cursorId) {
@@ -90,6 +97,7 @@ export async function createUser(
       is_active: true,
       created_at: now,
       updated_at: now,
+      last_login_at: null,
     },
   };
 }

@@ -36,10 +36,11 @@ import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
 import { useCursorPagination } from "@/composables/use-cursor-pagination";
 import { useFormSubmit } from "@/composables/use-form-submit";
 import { translateApiError } from "@/i18n/api-errors";
+import { formatDateTime, formatRelativeTime } from "@/i18n/format";
 import { Icon } from "@/icons";
 import { ApiError, createUser, listUsers, updateUser } from "@/lib/api";
 import type { Role, User } from "@runmail/shared";
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 
 const { t } = useI18n();
@@ -54,15 +55,24 @@ const {
   end,
   showPagination,
   paginationTotal,
+  knownPages,
+  hasMore,
   isLoading,
   error,
   load,
   goNext,
   goPrev,
+  goTo,
   reload,
+  reset,
 } = useCursorPagination<User>(
   async (cursor, limit) => {
-    const { data, meta } = await listUsers(cursor, limit);
+    const filters = {
+      search: searchQuery.value.trim() || undefined,
+      role: roleFilter.value !== "all" ? roleFilter.value : undefined,
+      status: statusFilter.value !== "all" ? statusFilter.value : undefined,
+    };
+    const { data, meta } = await listUsers(cursor, limit, filters);
     return { items: data.users, meta: meta ?? null };
   },
   "admin.users.loadError",
@@ -77,6 +87,48 @@ function retry() {
 onMounted(() => {
   void load();
 });
+
+// Filters (server-side; pagination resets to page 1 on change)
+const searchQuery = ref("");
+const roleFilter = ref<"all" | Role>("all");
+const statusFilter = ref<"all" | "active" | "inactive">("all");
+
+const hasActiveFilter = computed(
+  () =>
+    searchQuery.value.trim() !== "" || roleFilter.value !== "all" || statusFilter.value !== "all",
+);
+
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+let suppressWatch = false;
+
+watch(searchQuery, () => {
+  if (suppressWatch) return;
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => {
+    reset(undefined);
+  }, 300);
+});
+
+watch([roleFilter, statusFilter], () => {
+  if (suppressWatch) return;
+  reset(undefined);
+});
+
+onUnmounted(() => {
+  if (searchTimer) clearTimeout(searchTimer);
+});
+
+function resetFilters() {
+  if (searchTimer) clearTimeout(searchTimer);
+  suppressWatch = true;
+  searchQuery.value = "";
+  roleFilter.value = "all";
+  statusFilter.value = "all";
+  void nextTick(() => {
+    suppressWatch = false;
+    reset(undefined);
+  });
+}
 
 // Create dialog
 const createForm = useFormSubmit("admin.connectionError", handleOperationError);
@@ -270,91 +322,140 @@ async function submitEdit() {
 
 <template>
   <AdminShell>
-    <main class="p-4 lg:p-8">
-      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-col gap-1">
-          <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">
-            {{ t("admin.users.title") }}
-          </h1>
-          <p class="text-sm text-muted-foreground">{{ t("admin.users.description") }}</p>
-        </div>
-        <Button @click="openCreate">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">
+          {{ t("admin.users.title") }}
+        </h1>
+        <p class="text-sm text-muted-foreground">{{ t("admin.users.description") }}</p>
+      </div>
+      <Button @click="openCreate">
+        <Icon icon="lucide:plus" />
+        <span>{{ t("admin.users.create") }}</span>
+      </Button>
+    </div>
+
+    <div v-if="isLoading" class="flex flex-col gap-4">
+      <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
+    </div>
+
+    <div v-else-if="error" class="flex flex-col gap-4">
+      <Alert variant="destructive">{{ error }}</Alert>
+      <Button variant="ghost" @click="retry">{{ t("common.actions.retry") }}</Button>
+    </div>
+
+    <EmptyState
+      v-else-if="users.length === 0 && !hasActiveFilter"
+      icon="lucide:users"
+      :heading="t('admin.users.empty.title')"
+      :description="t('admin.users.empty.description')"
+    >
+      <template #action>
+        <Button class="mt-4" @click="openCreate">
           <Icon icon="lucide:plus" />
           <span>{{ t("admin.users.create") }}</span>
         </Button>
-      </div>
+      </template>
+    </EmptyState>
 
-      <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
+    <div v-else class="flex flex-col gap-4">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Input
+          v-model="searchQuery"
+          :placeholder="t('admin.users.searchPlaceholder')"
+          :aria-label="t('admin.users.searchPlaceholder')"
+          class="sm:max-w-xs"
+        />
+        <Select v-model="roleFilter">
+          <SelectTrigger class="sm:w-44" :aria-label="t('admin.users.table.role')">
+            <SelectValue :placeholder="t('admin.users.roleFilterAll')" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{{ t("admin.users.roleFilterAll") }}</SelectItem>
+            <SelectItem value="admin">{{ t("admin.users.roleFilterAdmin") }}</SelectItem>
+            <SelectItem value="member">{{ t("admin.users.roleFilterMember") }}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select v-model="statusFilter">
+          <SelectTrigger class="sm:w-44" :aria-label="t('admin.users.table.status')">
+            <SelectValue :placeholder="t('admin.users.statusFilterAll')" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{{ t("admin.users.statusFilterAll") }}</SelectItem>
+            <SelectItem value="active">{{ t("admin.users.statusFilterActive") }}</SelectItem>
+            <SelectItem value="inactive">{{ t("admin.users.statusFilterInactive") }}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-
-      <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="destructive">{{ error }}</Alert>
-        <Button variant="ghost" @click="retry">{{ t("common.actions.retry") }}</Button>
-      </div>
-
       <EmptyState
-        v-else-if="users.length === 0"
-        icon="lucide:users"
-        :heading="t('admin.users.empty.title')"
-        :description="t('admin.users.empty.description')"
+        v-if="users.length === 0 && hasActiveFilter"
+        icon="lucide:search-x"
+        :heading="t('admin.users.emptySearch.title')"
+        :description="t('admin.users.emptySearch.description')"
       >
         <template #action>
-          <Button class="mt-4" @click="openCreate">
-            <Icon icon="lucide:plus" />
-            <span>{{ t("admin.users.create") }}</span>
+          <Button class="mt-4" variant="outline" @click="resetFilters">
+            <span>{{ t("admin.users.emptySearch.reset") }}</span>
           </Button>
         </template>
       </EmptyState>
-
-      <div v-else class="flex flex-col gap-4">
-        <div class="rounded-lg border bg-card p-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{{ t("admin.users.table.username") }}</TableHead>
-                <TableHead>{{ t("admin.users.table.role") }}</TableHead>
-                <TableHead>{{ t("admin.users.table.status") }}</TableHead>
-                <TableHead class="w-32">{{ t("admin.users.table.actions") }}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="user in users" :key="user.id">
-                <TableCell class="font-medium">{{ user.username }}</TableCell>
-                <TableCell class="capitalize">{{ roleLabels[user.role] }}</TableCell>
-                <TableCell>
-                  <Badge :variant="user.is_active ? 'secondary' : 'outline'">
-                    {{ user.is_active ? t("admin.status.active") : t("admin.status.inactive") }}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    :aria-label="t('admin.users.editAria', { username: user.username })"
-                    variant="ghost"
-                    size="icon"
-                    @click="openEdit(user)"
-                  >
-                    <Icon icon="lucide:pencil" />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-
-        <Pagination
-          v-if="showPagination"
-          :page="page"
-          :per-page="perPage"
-          :total="paginationTotal"
-          :disabled="isLoading"
-          @prev="goPrev"
-          @next="goNext"
-        >
-          <template #range> {{ start }}–{{ end }} </template>
-        </Pagination>
+      <div v-else class="rounded-lg border bg-card p-4">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{{ t("admin.users.table.username") }}</TableHead>
+              <TableHead>{{ t("admin.users.table.role") }}</TableHead>
+              <TableHead>{{ t("admin.users.table.status") }}</TableHead>
+              <TableHead>{{ t("admin.users.table.lastActive") }}</TableHead>
+              <TableHead class="w-32">{{ t("admin.users.table.actions") }}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-for="user in users" :key="user.id">
+              <TableCell class="font-medium">{{ user.username }}</TableCell>
+              <TableCell class="capitalize">{{ roleLabels[user.role] }}</TableCell>
+              <TableCell>
+                <Badge :variant="user.is_active ? 'secondary' : 'outline'">
+                  {{ user.is_active ? t("admin.status.active") : t("admin.status.inactive") }}
+                </Badge>
+              </TableCell>
+              <TableCell
+                :title="user.last_login_at ? formatDateTime(user.last_login_at) : undefined"
+              >
+                {{
+                  user.last_login_at
+                    ? formatRelativeTime(user.last_login_at)
+                    : t("admin.users.table.neverActive")
+                }}
+              </TableCell>
+              <TableCell>
+                <Button
+                  :aria-label="t('admin.users.editAria', { username: user.username })"
+                  variant="ghost"
+                  size="icon"
+                  @click="openEdit(user)"
+                >
+                  <Icon icon="lucide:pencil" />
+                </Button>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </div>
-    </main>
+
+      <Pagination
+        v-if="showPagination"
+        :page="page"
+        :per-page="perPage"
+        :total="paginationTotal"
+        :known-pages="knownPages"
+        :has-more="hasMore"
+        :disabled="isLoading"
+        @prev="goPrev"
+        @next="goNext"
+        @goto="goTo"
+      />
+    </div>
 
     <!-- Create user dialog -->
     <DialogRoot v-model:open="createOpen">

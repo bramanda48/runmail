@@ -20,11 +20,25 @@
       "username": "Username",
       "role": "Peran",
       "status": "Status",
+      "lastActive": "Terakhir aktif",
+      "neverActive": "Belum pernah masuk",
       "actions": "Aksi"
     },
     "empty": {
       "title": "Belum ada user",
       "description": "Belum ada pengguna yang terdaftar."
+    },
+    "searchPlaceholder": "Cari user...",
+    "roleFilterAll": "Semua peran",
+    "roleFilterAdmin": "Admin",
+    "roleFilterMember": "Member",
+    "statusFilterAll": "Semua status",
+    "statusFilterActive": "Aktif",
+    "statusFilterInactive": "Nonaktif",
+    "emptySearch": {
+      "title": "Tidak ada user yang cocok dengan pencarian.",
+      "description": "Coba ubah pencarian atau filter Anda.",
+      "reset": "Atur ulang filter"
     },
     "editAria": "Edit {username}",
     "activeSwitchAria": "Status aktif user",

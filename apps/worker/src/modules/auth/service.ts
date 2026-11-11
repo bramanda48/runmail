@@ -57,13 +57,16 @@ export async function login(
   const ttlMs = parseInt(c.env.REFRESH_TOKEN_TTL_SECONDS, 10) * 1000;
   const now = Date.now();
 
-  await db.insert(refreshTokens).values({
-    id: createId(),
-    user_id: user.id,
-    token_hash,
-    expires_at: now + ttlMs,
-    created_at: now,
-  });
+  await db.batch([
+    db.insert(refreshTokens).values({
+      id: createId(),
+      user_id: user.id,
+      token_hash,
+      expires_at: now + ttlMs,
+      created_at: now,
+    }),
+    db.update(users).set({ last_login_at: now }).where(eq(users.id, user.id)),
+  ]);
 
   const access_token = await issueAccessToken(
     c.env.JWT_SIGNING_SECRET,

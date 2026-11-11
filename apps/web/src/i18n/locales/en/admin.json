@@ -20,11 +20,25 @@
       "username": "Username",
       "role": "Role",
       "status": "Status",
+      "lastActive": "Last active",
+      "neverActive": "Never logged in",
       "actions": "Actions"
     },
     "empty": {
       "title": "No users yet",
       "description": "No users have been registered yet."
+    },
+    "searchPlaceholder": "Search users...",
+    "roleFilterAll": "All roles",
+    "roleFilterAdmin": "Admin",
+    "roleFilterMember": "Member",
+    "statusFilterAll": "All statuses",
+    "statusFilterActive": "Active",
+    "statusFilterInactive": "Inactive",
+    "emptySearch": {
+      "title": "No users match your search.",
+      "description": "Try adjusting your search or filters.",
+      "reset": "Reset filters"
     },
     "editAria": "Edit {username}",
     "activeSwitchAria": "User active status",

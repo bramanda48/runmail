@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import AccountMenu from "@/components/topbar/AccountMenu.vue";
 import AdminSidebar from "@/components/navigation/AdminSidebar.vue";
-import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
 import MobileNavDrawer from "@/components/navigation/MobileNavDrawer.vue";
+import AccountMenu from "@/components/topbar/AccountMenu.vue";
+import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
 import ThemeSwitcher from "@/components/topbar/ThemeSwitcher.vue";
 import Wordmark from "@/components/topbar/Wordmark.vue";
 import { Badge } from "@/components/ui/badge";

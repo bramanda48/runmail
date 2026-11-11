@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import AccountMenu from "@/components/topbar/AccountMenu.vue";
+import AccessoryRail from "@/components/email/AccessoryRail.vue";
 import FolderNavigation from "@/components/navigation/FolderNavigation.vue";
-import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
-import MailboxSearchBar from "@/components/topbar/MailboxSearchBar.vue";
 import MailboxSidebar from "@/components/navigation/MailboxSidebar.vue";
 import MobileNavDrawer from "@/components/navigation/MobileNavDrawer.vue";
+import AccountMenu from "@/components/topbar/AccountMenu.vue";
+import LocaleSwitcher from "@/components/topbar/LocaleSwitcher.vue";
+import MailboxSearchBar from "@/components/topbar/MailboxSearchBar.vue";
 import ThemeSwitcher from "@/components/topbar/ThemeSwitcher.vue";
 import Wordmark from "@/components/topbar/Wordmark.vue";
-import AccessoryRail from "@/components/email/AccessoryRail.vue";
 import { Button } from "@/components/ui/button";
 import type { LocalFolder } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
@@ -127,7 +127,7 @@ function onSearch(value: string) {
       </MobileNavDrawer>
 
       <main
-        class="z-10 mx-0 mt-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-t-3xl shadow-xs border bg-background"
+        class="z-10 mx-0 mt-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-t-3xl shadow-xs border bg-background p-4 lg:p-8"
       >
         <slot />
       </main>

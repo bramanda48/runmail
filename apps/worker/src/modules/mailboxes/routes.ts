@@ -177,6 +177,44 @@ mailboxRoutes.patch("/:mailbox_id", jwtAuth, requireAdmin, async (c) => {
   return c.json({ data: { mailbox: result.mailbox } }, 200);
 });
 
+mailboxRoutes.get("/:mailbox_id/users", jwtAuth, requireAdmin, async (c) => {
+  const query = c.req.query();
+  const parsed = cursorQuerySchema.safeParse(query);
+  if (!parsed.success) {
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
+  }
+  const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
+
+  let cursorId: string | undefined;
+  if (parsed.data.cursor) {
+    const payload = decodeCursor<IdCursorPayload>(parsed.data.cursor);
+    if (!payload) {
+      return c.json(badRequest({ cursor: ["Invalid cursor"] }), 400);
+    }
+    cursorId = payload.id;
+  }
+
+  const result = await service.listMailboxUsers(
+    c,
+    c.req.param("mailbox_id") ?? "",
+    limit,
+    cursorId,
+  );
+  if ("error" in result) {
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.NOT_FOUND,
+          message: "Mailbox tidak ditemukan",
+        },
+      },
+      404,
+    );
+  }
+  return c.json({ data: { users: result.users }, meta: result.meta }, 200);
+});
+
 mailboxRoutes.post("/:mailbox_id/users", jwtAuth, requireAdmin, async (c) => {
   const body = await c.req.json();
   const parsed = linkUserBodySchema.safeParse(body);
@@ -229,6 +267,44 @@ mailboxRoutes.delete("/:mailbox_id/users/:user_id", jwtAuth, requireAdmin, async
     );
   }
   return c.json({ data: { ok: true } }, 200);
+});
+
+mailboxRoutes.get("/:mailbox_id/teams", jwtAuth, requireAdmin, async (c) => {
+  const query = c.req.query();
+  const parsed = cursorQuerySchema.safeParse(query);
+  if (!parsed.success) {
+    const fieldErrors = z.flattenError(parsed.error).fieldErrors;
+    return c.json(badRequest(fieldErrors), 400);
+  }
+  const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
+
+  let cursorId: string | undefined;
+  if (parsed.data.cursor) {
+    const payload = decodeCursor<IdCursorPayload>(parsed.data.cursor);
+    if (!payload) {
+      return c.json(badRequest({ cursor: ["Invalid cursor"] }), 400);
+    }
+    cursorId = payload.id;
+  }
+
+  const result = await service.listMailboxTeams(
+    c,
+    c.req.param("mailbox_id") ?? "",
+    limit,
+    cursorId,
+  );
+  if ("error" in result) {
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.NOT_FOUND,
+          message: "Mailbox tidak ditemukan",
+        },
+      },
+      404,
+    );
+  }
+  return c.json({ data: { teams: result.teams }, meta: result.meta }, 200);
 });
 
 mailboxRoutes.post("/:mailbox_id/teams", jwtAuth, requireAdmin, async (c) => {

@@ -193,10 +193,19 @@ export async function requestWithMeta<T>(
 }
 
 /** Builds a `?cursor=&limit=` suffix shared by the cursor-paginated list helpers. */
-function pageQuery(cursor?: string, limit?: number): string {
+function pageQuery(
+  cursor?: string,
+  limit?: number,
+  extra?: Record<string, string | undefined>,
+): string {
   const params = new URLSearchParams();
   if (cursor) params.set("cursor", cursor);
   if (limit !== undefined) params.set("limit", String(limit));
+  if (extra) {
+    for (const [key, value] of Object.entries(extra)) {
+      if (value !== undefined && value !== "") params.set(key, value);
+    }
+  }
   return params.size > 0 ? `?${params.toString()}` : "";
 }
 
@@ -284,8 +293,9 @@ export interface UpdateUserInput {
 export async function listUsers(
   cursor?: string,
   limit?: number,
+  filters?: { search?: string; role?: string; status?: string },
 ): Promise<RequestWithMeta<UserList>> {
-  return requestWithMeta<UserList>("GET", `/users${pageQuery(cursor, limit)}`);
+  return requestWithMeta<UserList>("GET", `/users${pageQuery(cursor, limit, filters)}`);
 }
 
 export async function createUser(body: CreateUserInput): Promise<{ user: User }> {

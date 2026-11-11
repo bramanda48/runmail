@@ -6,9 +6,9 @@ import { createUserBodySchema, patchUserBodySchema } from "@/modules/users/valid
 import type { IdCursorPayload } from "@runmail/shared";
 import {
   API_ERROR_CODES,
-  cursorQuerySchema,
   decodeCursor,
   PAGINATION_DEFAULT_LIMIT,
+  usersQuerySchema,
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -19,7 +19,7 @@ userRoutes.use("*", jwtAuth, requireAdmin);
 
 userRoutes.get("/", async (c) => {
   const query = c.req.query();
-  const parsed = cursorQuerySchema.safeParse(query);
+  const parsed = usersQuerySchema.safeParse(query);
 
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
@@ -36,7 +36,11 @@ userRoutes.get("/", async (c) => {
     cursorId = payload.id;
   }
 
-  const { users, meta } = await service.listUsers(c, limit, cursorId);
+  const { users, meta } = await service.listUsers(c, limit, cursorId, {
+    search: parsed.data.search,
+    role: parsed.data.role,
+    status: parsed.data.status,
+  });
   return c.json({ data: { users }, meta }, 200);
 });
 

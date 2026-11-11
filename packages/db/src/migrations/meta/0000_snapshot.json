@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "860259d8-ed70-4a55-8760-e286bbc0b348",
+  "id": "ebfc28aa-9986-4b49-9db6-87903d8fec89",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "refresh_tokens": {
@@ -101,14 +101,6 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
-        },
-        "verification_status": {
-          "name": "verification_status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": "'pending_verification'"
         },
         "created_at": {
           "name": "created_at",
@@ -1056,7 +1048,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1117,7 +1109,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "team_members_user_id_users_id_fk": {
@@ -1236,6 +1228,13 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "last_login_at": {
+          "name": "last_login_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         }
       },
