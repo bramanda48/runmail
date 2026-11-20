@@ -7,7 +7,7 @@ export const refreshTokens = sqliteTable(
     id: text("id").primaryKey(),
     user_id: text("user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: "cascade" }),
     token_hash: text("token_hash").notNull(),
     expires_at: integer("expires_at").notNull(),
     revoked_at: integer("revoked_at"),

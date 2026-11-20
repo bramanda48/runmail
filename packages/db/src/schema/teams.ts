@@ -25,7 +25,7 @@ export const teamMembers = sqliteTable(
       .references(() => teams.id, { onDelete: "cascade" }),
     user_id: text("user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: "cascade" }),
     created_at: integer("created_at").notNull(),
   },
   (t) => [uniqueIndex("team_members_team_id_user_id_unique").on(t.team_id, t.user_id)],

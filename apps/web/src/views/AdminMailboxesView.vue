@@ -544,10 +544,10 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
                 </Badge>
               </TableCell>
               <TableCell>
-                <div class="flex items-center gap-1">
+                <div class="flex items-center gap-2">
                   <Button
                     :aria-label="t('admin.mailboxes.editAria', { address: mailbox.address })"
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     @click="openEdit(mailbox)"
                   >
@@ -555,7 +555,7 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
                   </Button>
                   <Button
                     :aria-label="t('admin.mailboxes.manageAria', { address: mailbox.address })"
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     @click="openManageUsers(mailbox)"
                   >

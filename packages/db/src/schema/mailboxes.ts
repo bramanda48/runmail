@@ -29,7 +29,7 @@ export const mailboxUsers = sqliteTable(
       .references(() => mailboxes.id),
     user_id: text("user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: "cascade" }),
     created_at: integer("created_at").notNull(),
   },
   (t) => [uniqueIndex("mailbox_users_mailbox_id_user_id_unique").on(t.mailbox_id, t.user_id)],

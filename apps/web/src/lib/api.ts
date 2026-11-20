@@ -310,6 +310,10 @@ export async function updateUser(userId: string, body: UpdateUserInput): Promise
   return request<{ user: User }>("PATCH", `/users/${userId}`, { body });
 }
 
+export async function deleteUser(userId: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>("DELETE", `/users/${userId}`);
+}
+
 // --- Cloudflare Integration (admin) ---
 
 export function getCloudflareOAuthStatus(): Promise<{ configured: boolean }> {

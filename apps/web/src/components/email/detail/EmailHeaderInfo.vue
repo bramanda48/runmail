@@ -80,7 +80,7 @@ const rows = computed(() => {
       <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
         <template v-for="row in rows" :key="row.label">
           <dt class="text-right text-muted-foreground">{{ row.label }}</dt>
-          <dd class="min-w-0 break-words text-foreground">
+          <dd class="min-w-0 wrap-break-word text-foreground">
             <span v-if="row.bold" class="font-bold">{{ row.bold }} </span>{{ row.rest }}
           </dd>
         </template>

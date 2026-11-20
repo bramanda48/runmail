@@ -13,9 +13,9 @@ import type { LocalFolder } from "@/db/mailbox-db";
 import { Icon } from "@/icons";
 import { useThemeStore } from "@/stores/theme";
 import { storeToRefs } from "pinia";
-import { shallowRef } from "vue";
+import { computed, shallowRef } from "vue";
 import { useI18n } from "vue-i18n";
-import { RouterLink } from "vue-router";
+import { RouterLink, useRoute } from "vue-router";
 
 defineProps<{
   mailboxId: string;
@@ -27,6 +27,7 @@ defineProps<{
 
 const searchQuery = defineModel<string>("searchQuery", { default: "" });
 
+const route = useRoute();
 const { t } = useI18n();
 
 const { backgroundImage } = storeToRefs(useThemeStore());
@@ -36,6 +37,7 @@ const emits = defineEmits<{
   compose: [];
 }>();
 
+const isNotInbox = computed(() => route.name !== "inbox");
 const drawerOpen = shallowRef(false);
 const sidebarCollapsed = shallowRef(false);
 
@@ -56,12 +58,12 @@ function onSearch(value: string) {
   <div class="relative flex h-screen flex-col overflow-hidden bg-background text-sm">
     <div
       aria-hidden="true"
-      class="pointer-events-none absolute inset-x-0 top-0 h-[325px] bg-repeat-x bg-top-left"
+      class="pointer-events-none absolute inset-x-0 top-0 h-81.25 bg-repeat-x bg-top-left"
       :style="{ backgroundImage }"
     />
     <div
       aria-hidden="true"
-      class="pointer-events-none absolute inset-x-0 bottom-0 h-[325px] rotate-180 bg-repeat-x bg-top-left"
+      class="pointer-events-none absolute inset-x-0 bottom-0 h-81.25 rotate-180 bg-repeat-x bg-top-left"
       :style="{ backgroundImage }"
     />
     <header class="relative z-10 flex h-16 shrink-0 items-center justify-between gap-4 px-4">
@@ -127,9 +129,11 @@ function onSearch(value: string) {
       </MobileNavDrawer>
 
       <main
-        class="z-10 mx-0 mt-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-t-3xl shadow-xs border bg-background p-4 lg:p-8"
+        class="z-10 mx-0 mt-2 flex min-w-0 flex-1 flex-col overflow-hidden rounded-t-3xl border bg-background shadow-xs"
       >
-        <slot />
+        <div :class="[isNotInbox && 'p-4 lg:p-8']">
+          <slot />
+        </div>
       </main>
 
       <div class="hidden shrink-0 md:flex">

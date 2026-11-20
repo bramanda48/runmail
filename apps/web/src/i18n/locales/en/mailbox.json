@@ -6,7 +6,7 @@
     "title": "Direct access"
   },
   "team": {
-    "title": "Shared to team {name}"
+    "title": "Shared to member {name}"
   },
   "status": {
     "active": "Active",

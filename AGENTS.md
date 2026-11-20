@@ -4,7 +4,7 @@
 
 **Runmail** — SaaS email inbox modern berbasis Cloudflare Workers dengan mailbox sebagai tenant boundary.
 
-**Status:** Awal development — struktur monorepo sudah dibuat, dokumentasi lengkap (PRD v0.5, Tech Plan v0.5, UI/UX Spec v0.2), implementasi fitur dimulai bertahap.
+**Status:** Awal development — struktur monorepo sudah dibuat, implementasi fitur dimulai bertahap.
 
 **Konteks Unik:**
 - **Mailbox = Tenant:** Tidak ada entitas workspace/tenant terpisah. Satu user bisa mengelola banyak mailbox, satu mailbox bisa dikelola banyak user dengan hak yang sama.

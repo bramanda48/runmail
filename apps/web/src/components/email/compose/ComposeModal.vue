@@ -164,7 +164,7 @@ function close() {
         :title="t('message.compose.comingSoon')"
         class="ml-auto flex size-9 items-center justify-center rounded-full text-muted-foreground"
       >
-        <Icon icon="lucide:trash-2" class="size-4" />
+        <Icon icon="lucide:trash" class="size-4" />
       </button>
     </div>
   </div>

@@ -130,3 +130,31 @@ userRoutes.patch("/:user_id", async (c) => {
   }
   return c.json({ data: { user: result.user } }, 200);
 });
+
+userRoutes.delete("/:user_id", async (c) => {
+  const userId = c.req.param("user_id");
+  if (c.get("auth").user_id === userId) {
+    return c.json(
+      {
+        error: {
+          code: "CANNOT_DELETE_SELF",
+          message: "Tidak dapat menghapus akun sendiri",
+        },
+      },
+      400,
+    );
+  }
+  const result = await service.deleteUser(c, userId);
+  if ("error" in result) {
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.NOT_FOUND,
+          message: "Pengguna tidak ditemukan",
+        },
+      },
+      404,
+    );
+  }
+  return c.json({ data: { ok: true } }, 200);
+});

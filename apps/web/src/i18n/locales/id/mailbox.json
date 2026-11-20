@@ -6,7 +6,7 @@
     "title": "Akses langsung"
   },
   "team": {
-    "title": "Dibagikan ke tim {name}"
+    "title": "Dibagikan ke member {name}"
   },
   "status": {
     "active": "Aktif",

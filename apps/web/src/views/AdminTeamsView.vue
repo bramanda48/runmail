@@ -443,7 +443,7 @@ async function removeMember(user: TeamLinkedUser) {
                 <Button
                   :aria-label="t('admin.teams.renameAria', { name: team.name })"
                   :title="t('admin.teams.renameAria', { name: team.name })"
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
                   @click="openRename(team)"
                 >
@@ -452,11 +452,12 @@ async function removeMember(user: TeamLinkedUser) {
                 <Button
                   :aria-label="t('admin.teams.deleteAria', { name: team.name })"
                   :title="t('admin.teams.deleteAria', { name: team.name })"
-                  variant="ghost"
+                  variant="outline"
                   size="icon"
+                  class="text-destructive hover:text-destructive"
                   @click="openDelete(team)"
                 >
-                  <Icon icon="lucide:trash-2" />
+                  <Icon icon="lucide:trash" />
                 </Button>
               </div>
             </div>

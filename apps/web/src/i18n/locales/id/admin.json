@@ -71,6 +71,13 @@
       "description": "Nonaktifkan user? Sesi user akan diakhiri.",
       "submit": "Nonaktifkan"
     },
+    "deleteAria": "Hapus {username}",
+    "deleteSelfTooltip": "Anda tidak dapat menghapus akun sendiri",
+    "deleteDialog": {
+      "title": "Hapus user",
+      "description": "Hapus user {username}? Tindakan ini permanen dan menghapus akses mailbox/tim serta sesi login user tersebut.",
+      "submit": "Hapus"
+    },
     "validation": {
       "usernameRequired": "Username wajib diisi",
       "passwordRequired": "Kata sandi wajib diisi"

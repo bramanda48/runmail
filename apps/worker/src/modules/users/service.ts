@@ -149,3 +149,14 @@ export async function updateUser(
     return { user: toPublicUser(row) };
   }
 }
+
+export async function deleteUser(
+  c: AppContext,
+  id: string,
+): Promise<{ ok: true } | { error: "NOT_FOUND" }> {
+  const db = getDb(c);
+  const [existing] = await db.select({ id: users.id }).from(users).where(eq(users.id, id)).limit(1);
+  if (!existing) return { error: "NOT_FOUND" };
+  await db.delete(users).where(eq(users.id, id));
+  return { ok: true };
+}

@@ -33,12 +33,12 @@ function toggleSidebar() {
   <div class="relative flex h-screen flex-col overflow-hidden bg-background text-sm">
     <div
       aria-hidden="true"
-      class="pointer-events-none absolute inset-x-0 top-0 h-[325px] bg-repeat-x bg-top-left"
+      class="pointer-events-none absolute inset-x-0 top-0 h-81.25 bg-repeat-x bg-top-left"
       :style="{ backgroundImage }"
     />
     <div
       aria-hidden="true"
-      class="pointer-events-none absolute inset-x-0 bottom-0 h-[325px] rotate-180 bg-repeat-x bg-top-left"
+      class="pointer-events-none absolute inset-x-0 bottom-0 h-81.25 rotate-180 bg-repeat-x bg-top-left"
       :style="{ backgroundImage }"
     />
     <header class="relative z-10 flex h-16 shrink-0 items-center justify-between gap-4 px-4">

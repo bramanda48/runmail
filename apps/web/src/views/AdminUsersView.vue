@@ -38,7 +38,8 @@ import { useFormSubmit } from "@/composables/use-form-submit";
 import { translateApiError } from "@/i18n/api-errors";
 import { formatDateTime, formatRelativeTime } from "@/i18n/format";
 import { Icon } from "@/icons";
-import { ApiError, createUser, listUsers, updateUser } from "@/lib/api";
+import { ApiError, createUser, deleteUser, listUsers, updateUser } from "@/lib/api";
+import { useAuthStore } from "@/stores/auth";
 import type { Role, User } from "@runmail/shared";
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
@@ -318,6 +319,43 @@ async function submitEdit() {
     editSubmitting.value = false;
   }
 }
+
+// Delete dialog
+const authStore = useAuthStore();
+const currentUserId = computed(() => authStore.user?.id ?? "");
+const deleteOpen = ref(false);
+const deletingUser = ref<User | null>(null);
+const deleteSubmitting = ref(false);
+const deleteInlineError = ref("");
+
+function isSelf(user: User) {
+  return user.id === currentUserId.value;
+}
+
+function openDelete(user: User) {
+  deletingUser.value = user;
+  deleteInlineError.value = "";
+  deleteOpen.value = true;
+}
+
+async function confirmDelete() {
+  if (!deletingUser.value) return;
+  deleteSubmitting.value = true;
+  deleteInlineError.value = "";
+  try {
+    await deleteUser(deletingUser.value.id);
+    deleteOpen.value = false;
+    reload();
+  } catch (err) {
+    if (err instanceof ApiError) {
+      deleteInlineError.value = translateApiError(err);
+    } else {
+      deleteInlineError.value = t("admin.connectionError");
+    }
+  } finally {
+    deleteSubmitting.value = false;
+  }
+}
 </script>
 
 <template>
@@ -429,14 +467,27 @@ async function submitEdit() {
                 }}
               </TableCell>
               <TableCell>
-                <Button
-                  :aria-label="t('admin.users.editAria', { username: user.username })"
-                  variant="ghost"
-                  size="icon"
-                  @click="openEdit(user)"
-                >
-                  <Icon icon="lucide:pencil" />
-                </Button>
+                <div class="flex gap-2">
+                  <Button
+                    :aria-label="t('admin.users.editAria', { username: user.username })"
+                    variant="outline"
+                    size="icon"
+                    @click="openEdit(user)"
+                  >
+                    <Icon icon="lucide:pencil" />
+                  </Button>
+                  <Button
+                    :aria-label="t('admin.users.deleteAria', { username: user.username })"
+                    :title="isSelf(user) ? t('admin.users.deleteSelfTooltip') : undefined"
+                    variant="outline"
+                    size="icon"
+                    class="text-destructive hover:text-destructive"
+                    :disabled="isSelf(user)"
+                    @click="openDelete(user)"
+                  >
+                    <Icon icon="lucide:trash" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           </TableBody>
@@ -643,6 +694,28 @@ async function submitEdit() {
           <Button variant="destructive" :disabled="editSubmitting" @click="confirmDeactivate">
             <Icon v-if="editSubmitting" icon="lucide:loader-circle" class="animate-spin" />
             <span>{{ t("admin.users.deactivateDialog.submit") }}</span>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </DialogRoot>
+
+    <!-- Delete confirmation -->
+    <DialogRoot v-model:open="deleteOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{{ t("admin.users.deleteDialog.title") }}</DialogTitle>
+          <DialogDescription>{{
+            t("admin.users.deleteDialog.description", { username: deletingUser?.username ?? "" })
+          }}</DialogDescription>
+        </DialogHeader>
+        <Alert v-if="deleteInlineError" variant="destructive">{{ deleteInlineError }}</Alert>
+        <DialogFooter>
+          <Button variant="ghost" :disabled="deleteSubmitting" @click="deleteOpen = false">
+            {{ t("common.actions.cancel") }}
+          </Button>
+          <Button variant="destructive" :disabled="deleteSubmitting" @click="confirmDelete">
+            <Icon v-if="deleteSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+            <span>{{ t("admin.users.deleteDialog.submit") }}</span>
           </Button>
         </DialogFooter>
       </DialogContent>
