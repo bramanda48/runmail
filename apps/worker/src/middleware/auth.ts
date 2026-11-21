@@ -16,7 +16,7 @@ export const jwtAuth: MiddlewareHandler<AppEnv> = async (c, next) => {
       401,
     );
   }
-  const payload = await verifyAccessToken(c.env.JWT_SIGNING_SECRET, header.slice(7));
+  const payload = await verifyAccessToken(c, header.slice(7));
   if (!payload) {
     return c.json(
       {

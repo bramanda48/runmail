@@ -108,7 +108,7 @@ cloudflare.post("/cloudflare/authorize", async (c) => {
     return c.json(badRequest(fieldErrors), 400);
   }
 
-  const { url, state } = await getAuthorizationUrl(c.env, parsed.data.redirect_uri);
+  const { url, state } = await getAuthorizationUrl(c, parsed.data.redirect_uri);
 
   return c.json({
     data: {

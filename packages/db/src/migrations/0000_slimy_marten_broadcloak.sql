@@ -5,7 +5,7 @@ CREATE TABLE `refresh_tokens` (
 	`expires_at` integer NOT NULL,
 	`revoked_at` integer,
 	`created_at` integer NOT NULL,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE INDEX `refresh_tokens_token_hash_idx` ON `refresh_tokens` (`token_hash`);--> statement-breakpoint
@@ -35,7 +35,7 @@ CREATE TABLE `mailbox_users` (
 	`user_id` text NOT NULL,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`mailbox_id`) REFERENCES `mailboxes`(`id`) ON UPDATE no action ON DELETE no action,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `mailbox_users_mailbox_id_user_id_unique` ON `mailbox_users` (`mailbox_id`,`user_id`);--> statement-breakpoint
@@ -121,6 +121,8 @@ CREATE TABLE `settings` (
 	`brand_name` text DEFAULT 'Runmail' NOT NULL,
 	`is_setup_complete` integer DEFAULT false NOT NULL,
 	`cloudflare_oauth_token` text,
+	`jwt_private_key` text,
+	`jwt_public_key` text,
 	`updated_at` integer NOT NULL,
 	CONSTRAINT "settings_singleton" CHECK("settings"."id" = 1)
 );
@@ -158,7 +160,7 @@ CREATE TABLE `team_members` (
 	`user_id` text NOT NULL,
 	`created_at` integer NOT NULL,
 	FOREIGN KEY (`team_id`) REFERENCES `teams`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `team_members_team_id_user_id_unique` ON `team_members` (`team_id`,`user_id`);--> statement-breakpoint

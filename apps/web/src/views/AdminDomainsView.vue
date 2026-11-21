@@ -184,7 +184,7 @@ onMounted(() => load());
     <Alert v-else-if="statusError" class="mb-6 [&>div]:min-w-0 [&>div]:flex-1">
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p>{{ statusError }}</p>
-        <Button class="min-h-11 shrink-0 text-foreground" @click="checkStatus">
+        <Button class="min-h-11 shrink-0" @click="checkStatus">
           {{ t("admin.domains.cloudflare.checkAgain") }}
         </Button>
       </div>

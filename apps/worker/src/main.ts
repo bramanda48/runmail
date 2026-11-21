@@ -13,6 +13,7 @@ import { settingsRoutes } from "@/modules/settings";
 import { syncRoutes } from "@/modules/sync";
 import { teamRoutes } from "@/modules/teams";
 import { userRoutes } from "@/modules/users";
+import { wellKnownRoutes } from "@/modules/well-known";
 import { API_ERROR_CODES } from "@runmail/shared";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -33,6 +34,7 @@ app.route("/api/v1/mailboxes", messageRoutes);
 app.route("/api/v1/mailboxes", syncRoutes);
 app.route("/api/v1/integrations", cloudflareRoutes);
 app.route("/api/v1/settings", settingsRoutes);
+app.route("/api/v1/.well-known", wellKnownRoutes);
 
 app.onError((err, c) => {
   const logger = createLogger(c);

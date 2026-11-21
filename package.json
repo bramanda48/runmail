@@ -17,7 +17,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "cd apps/web && bun run typecheck && cd ../../apps/worker && bun run typecheck && cd ../../packages/shared && bun run typecheck && cd ../db && bun run typecheck",
-    "test": "bun test"
+    "test": "bun test",
+    "wrangler": "cd apps/worker && bun run wrangler",
+    "wrangler:types": "cd apps/worker && bun run types"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

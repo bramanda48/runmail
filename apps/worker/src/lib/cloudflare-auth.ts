@@ -1,6 +1,7 @@
+import { toBase64Url } from "@/lib/encoding";
 import type { AppContext } from "@/lib/env";
+import { ensureKeypair, fromBase64Url, publicKeyOnly } from "@/modules/auth/keypair";
 import { clearCloudflareToken, getSettings, updateSettings } from "@/modules/settings/service";
-import { sign, verify } from "hono/jwt";
 
 type CloudflareStatePayload = {
   type: "cloudflare_state";
@@ -9,29 +10,47 @@ type CloudflareStatePayload = {
   exp: number;
 };
 
-export async function generateCloudflareState(
-  secret: string,
-  redirectUri: string,
-): Promise<string> {
+export async function generateCloudflareState(c: AppContext, redirectUri: string): Promise<string> {
+  const { privateKey } = await ensureKeypair(c);
   const nonce = crypto.randomUUID();
   const exp = Math.floor(Date.now() / 1000) + 300; // 5 minutes
-
+  const headerB64 = toBase64Url(
+    new TextEncoder().encode(JSON.stringify({ alg: "RS256", typ: "JWT" })),
+  );
   const payload: CloudflareStatePayload = {
     type: "cloudflare_state",
     nonce,
     redirectUri,
     exp,
   };
-
-  return await sign(payload, secret, "HS256");
+  const payloadB64 = toBase64Url(new TextEncoder().encode(JSON.stringify(payload)));
+  const sig = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    privateKey,
+    new TextEncoder().encode(`${headerB64}.${payloadB64}`),
+  );
+  return `${headerB64}.${payloadB64}.${toBase64Url(new Uint8Array(sig))}`;
 }
 
 export async function verifyCloudflareState(
-  secret: string,
+  c: AppContext,
   state: string,
 ): Promise<{ valid: true; nonce: string; redirectUri: string } | { valid: false }> {
   try {
-    const payload = (await verify(state, secret, "HS256")) as unknown;
+    const publicKey = await publicKeyOnly(c);
+    const parts = state.split(".");
+    if (parts.length !== 3) return { valid: false };
+    const stateHeader = parts[0] as string;
+    const statePayload = parts[1] as string;
+    const stateSig = parts[2] as string;
+    const ok = await crypto.subtle.verify(
+      "RSASSA-PKCS1-v1_5",
+      publicKey,
+      fromBase64Url(stateSig),
+      new TextEncoder().encode(`${stateHeader}.${statePayload}`),
+    );
+    if (!ok) return { valid: false };
+    const payload = JSON.parse(new TextDecoder().decode(fromBase64Url(statePayload))) as unknown;
 
     if (
       typeof payload !== "object" ||
@@ -39,12 +58,15 @@ export async function verifyCloudflareState(
       !("type" in payload) ||
       !("nonce" in payload) ||
       !("redirectUri" in payload) ||
+      !("exp" in payload) ||
       payload.type !== "cloudflare_state" ||
       typeof payload.nonce !== "string" ||
-      typeof payload.redirectUri !== "string"
+      typeof payload.redirectUri !== "string" ||
+      typeof payload.exp !== "number"
     ) {
       return { valid: false };
     }
+    if (payload.exp <= Math.floor(Date.now() / 1000)) return { valid: false };
 
     return { valid: true, nonce: payload.nonce, redirectUri: payload.redirectUri };
   } catch {
