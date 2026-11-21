@@ -1,4 +1,6 @@
+import { relations } from "drizzle-orm";
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { mailboxes } from "./mailboxes";
 
 export const domains = sqliteTable(
   "domains",
@@ -10,6 +12,10 @@ export const domains = sqliteTable(
   },
   (t) => [uniqueIndex("domains_domain_name_unique").on(t.domain_name)],
 );
+
+export const domainsRelation = relations(domains, ({ many }) => ({
+  mailboxes: many(mailboxes),
+}));
 
 export type Domain = typeof domains.$inferSelect;
 export type NewDomain = typeof domains.$inferInsert;

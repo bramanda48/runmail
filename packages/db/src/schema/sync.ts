@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { mailboxes } from "./mailboxes";
 
@@ -30,6 +31,13 @@ export const syncEvents = sqliteTable(
   ],
 );
 
+export const syncEventsRelation = relations(syncEvents, ({ one }) => ({
+  mailbox: one(mailboxes, {
+    fields: [syncEvents.mailbox_id],
+    references: [mailboxes.id],
+  }),
+}));
+
 export type SyncEvent = typeof syncEvents.$inferSelect;
 export type NewSyncEvent = typeof syncEvents.$inferInsert;
 
@@ -39,5 +47,12 @@ export const mailboxSyncCounters = sqliteTable("mailbox_sync_counters", {
     .references(() => mailboxes.id),
   last_version: integer("last_version").notNull().default(0),
 });
+
+export const mailboxSyncCountersRelation = relations(mailboxSyncCounters, ({ one }) => ({
+  mailbox: one(mailboxes, {
+    fields: [mailboxSyncCounters.mailbox_id],
+    references: [mailboxes.id],
+  }),
+}));
 
 export type MailboxSyncCounter = typeof mailboxSyncCounters.$inferSelect;

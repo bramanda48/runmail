@@ -1,4 +1,8 @@
+import { relations } from "drizzle-orm";
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { refreshTokens } from "./auth";
+import { mailboxUsers } from "./mailboxes";
+import { teamMembers } from "./teams";
 
 export const userRoles = ["admin", "member"] as const;
 export type UserRole = (typeof userRoles)[number];
@@ -17,6 +21,12 @@ export const users = sqliteTable(
   },
   (t) => [uniqueIndex("users_username_unique").on(t.username)],
 );
+
+export const usersRelation = relations(users, ({ many }) => ({
+  teamMembers: many(teamMembers),
+  mailboxUsers: many(mailboxUsers),
+  refreshTokens: many(refreshTokens),
+}));
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

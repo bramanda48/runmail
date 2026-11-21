@@ -10,7 +10,7 @@ import {
 } from "@/modules/auth/helpers";
 import { ensureKeypair, issueAccessToken } from "@/modules/auth/keypair";
 import { ensureSettings, updateSettings } from "@/modules/settings/service";
-import { refreshTokens, teamMembers, teams, users } from "@runmail/db";
+import { refreshTokens, users } from "@runmail/db";
 import { and, eq, gt, isNull } from "drizzle-orm";
 
 export type TokenErrorCode = "TOKEN_EXPIRED" | "TOKEN_REUSED" | "UNAUTHORIZED";
@@ -151,7 +151,11 @@ export type AuthMe = {
 export async function getMe(c: AppContext, userId: string): Promise<AuthMe | null> {
   const db = getDb(c);
 
-  const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  const user = await db.query.users.findFirst({
+    with: { teamMembers: { with: { teams: true } } },
+    where: eq(users.id, userId),
+  });
+
   if (typeof user === "undefined") {
     return null;
   }
@@ -159,13 +163,17 @@ export async function getMe(c: AppContext, userId: string): Promise<AuthMe | nul
     return null;
   }
 
-  const teamRows = await db
-    .select({ id: teams.id, name: teams.name })
-    .from(teamMembers)
-    .innerJoin(teams, eq(teamMembers.team_id, teams.id))
-    .where(eq(teamMembers.user_id, user.id));
+  const teamRows = user.teamMembers.map((member) => ({
+    id: member.teams.id,
+    name: member.teams.name,
+  }));
 
-  return { id: user.id, username: user.username, role: user.role, teams: teamRows };
+  return {
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    teams: teamRows,
+  };
 }
 
 export async function logout(c: AppContext, userId: string, refreshToken: string): Promise<void> {

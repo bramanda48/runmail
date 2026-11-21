@@ -1,6 +1,7 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { mailboxes } from "./mailboxes";
+import { messages } from "./messages";
 
 export const folderTypes = ["system", "custom"] as const;
 export type FolderType = (typeof folderTypes)[number];
@@ -21,6 +22,14 @@ export const folders = sqliteTable(
   // (SQLite supports expression indexes; applies to custom folders only).
   (t) => [uniqueIndex("folders_mailbox_id_name_unique").on(t.mailbox_id, sql`lower(${t.name})`)],
 );
+
+export const foldersRelation = relations(folders, ({ many, one }) => ({
+  mailbox: one(mailboxes, {
+    fields: [folders.mailbox_id],
+    references: [mailboxes.id],
+  }),
+  messages: many(messages),
+}));
 
 export type Folder = typeof folders.$inferSelect;
 export type NewFolder = typeof folders.$inferInsert;

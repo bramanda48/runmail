@@ -1,5 +1,11 @@
+import { relations } from "drizzle-orm";
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { domains } from "./domains";
+import { folders } from "./folders";
+import { messages } from "./messages";
+import { rulesets } from "./rulesets";
+import { mailboxSyncCounters, syncEvents } from "./sync";
+import { mailboxTeams } from "./teams";
 import { users } from "./users";
 
 export const mailboxes = sqliteTable(
@@ -16,6 +22,20 @@ export const mailboxes = sqliteTable(
   },
   (t) => [uniqueIndex("mailboxes_domain_id_local_part_unique").on(t.domain_id, t.local_part)],
 );
+
+export const mailboxesRelation = relations(mailboxes, ({ many, one }) => ({
+  domain: one(domains, {
+    fields: [mailboxes.domain_id],
+    references: [domains.id],
+  }),
+  mailboxUsers: many(mailboxUsers),
+  folders: many(folders),
+  messages: many(messages),
+  rulesets: many(rulesets),
+  syncEvents: many(syncEvents),
+  mailboxSyncCounters: many(mailboxSyncCounters),
+  mailboxTeams: many(mailboxTeams),
+}));
 
 export type Mailbox = typeof mailboxes.$inferSelect;
 export type NewMailbox = typeof mailboxes.$inferInsert;
@@ -34,6 +54,17 @@ export const mailboxUsers = sqliteTable(
   },
   (t) => [uniqueIndex("mailbox_users_mailbox_id_user_id_unique").on(t.mailbox_id, t.user_id)],
 );
+
+export const mailboxUsersRelation = relations(mailboxUsers, ({ one }) => ({
+  mailbox: one(mailboxes, {
+    fields: [mailboxUsers.mailbox_id],
+    references: [mailboxes.id],
+  }),
+  user: one(users, {
+    fields: [mailboxUsers.user_id],
+    references: [users.id],
+  }),
+}));
 
 export type MailboxUser = typeof mailboxUsers.$inferSelect;
 export type NewMailboxUser = typeof mailboxUsers.$inferInsert;
