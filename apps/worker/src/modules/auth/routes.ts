@@ -29,8 +29,10 @@ authRoutes.get("/me", jwtAuth, async (c) => {
       404,
     );
   }
+
   return c.json({ data: { user: me } }, 200, {
-    "Cache-Control": "public, max-age=" + c.env.JWT_ACCESS_TTL_SECONDS,
+    "Cache-Control": `private, max-age=${c.env.JWT_ACCESS_TTL_SECONDS}`,
+    Vary: "Authorization",
   });
 });
 

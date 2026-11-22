@@ -8,7 +8,10 @@ export const wellKnownRoutes = new Hono<AppEnv>();
 wellKnownRoutes.get("/jwks.json", async (c) => {
   try {
     const jwk = await publicJwk(c);
-    return c.json({ keys: [jwk] }, 200, { "Cache-Control": "public, max-age=86400" });
+
+    return c.json({ keys: [jwk] }, 200, {
+      "Cache-Control": "private, max-age=900, stale-while-revalidate=3600",
+    });
   } catch {
     return c.json(
       {
