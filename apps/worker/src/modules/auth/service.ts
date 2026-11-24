@@ -1,3 +1,4 @@
+import { accessTokenTTL, refreshTokenTTL } from "@/config/auth";
 import { getDb } from "@/lib/db";
 import type { AppContext } from "@/lib/env";
 import { createId } from "@/lib/ids";
@@ -45,7 +46,7 @@ export async function login(
   }
 
   const { token: refresh_token, token_hash } = await generateRefreshToken();
-  const ttlMs = parseInt(c.env.REFRESH_TOKEN_TTL_SECONDS, 10) * 1000;
+  const ttlMs = refreshTokenTTL * 1000;
   const now = Date.now();
 
   await db.batch([
@@ -59,16 +60,12 @@ export async function login(
     db.update(users).set({ last_login_at: now }).where(eq(users.id, user.id)),
   ]);
 
-  const access_token = await issueAccessToken(
-    c,
-    { id: user.id, role: user.role },
-    parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-  );
+  const access_token = await issueAccessToken(c, { id: user.id, role: user.role }, accessTokenTTL);
 
   return {
     access_token,
     refresh_token,
-    expires_in: parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
+    expires_in: accessTokenTTL,
   };
 }
 
@@ -112,7 +109,7 @@ export async function refresh(
   }
 
   const { token: refresh_token, token_hash: newHash } = await generateRefreshToken();
-  const ttlMs = parseInt(c.env.REFRESH_TOKEN_TTL_SECONDS, 10) * 1000;
+  const ttlMs = refreshTokenTTL * 1000;
   const issuedAt = Date.now();
 
   await db.insert(refreshTokens).values({
@@ -123,16 +120,12 @@ export async function refresh(
     created_at: issuedAt,
   });
 
-  const access_token = await issueAccessToken(
-    c,
-    { id: user.id, role: user.role },
-    parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-  );
+  const access_token = await issueAccessToken(c, { id: user.id, role: user.role }, accessTokenTTL);
 
   return {
     access_token,
     refresh_token,
-    expires_in: parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
+    expires_in: accessTokenTTL,
   };
 }
 
@@ -257,7 +250,7 @@ export async function setup(
   await updateSettings(c, { is_setup_complete: true });
 
   const { token: refresh_token, token_hash } = await generateRefreshToken();
-  const ttlMs = parseInt(c.env.REFRESH_TOKEN_TTL_SECONDS, 10) * 1000;
+  const ttlMs = refreshTokenTTL * 1000;
   const issuedAt = Date.now();
 
   await db.insert(refreshTokens).values({
@@ -268,15 +261,11 @@ export async function setup(
     created_at: issuedAt,
   });
 
-  const access_token = await issueAccessToken(
-    c,
-    { id, role: "admin" },
-    parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-  );
+  const access_token = await issueAccessToken(c, { id, role: "admin" }, accessTokenTTL);
 
   return {
     access_token,
     refresh_token,
-    expires_in: parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
+    expires_in: accessTokenTTL,
   };
 }

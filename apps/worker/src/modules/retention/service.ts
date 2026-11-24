@@ -1,20 +1,15 @@
+import { syncRetentionDays, trashSpamRetentionDays } from "@/config/mailboxes";
 import { bumpCounterStmt, emitEventStmt, nextVersionSql } from "@/lib/allocate";
 import { getDb } from "@/lib/db";
 import { deleteRawEmail } from "@/lib/r2";
 import { folders, messageRecipients, messages, syncEvents } from "@runmail/db";
 import { and, eq, isNotNull, lt, sql } from "drizzle-orm";
 
-export function retentionDaysFromEnv(raw: string | undefined): number {
-  const parsed = parseInt(raw ?? "", 10);
-  if (Number.isNaN(parsed) || parsed < 1) return 30;
-  return parsed;
-}
-
 export async function runRetentionCleanup(
   env: CloudflareBindings,
   opts?: { execution_id?: string },
 ): Promise<{ expired_messages: number; pruned_events: number }> {
-  const days = retentionDaysFromEnv(env.TRASH_SPAM_RETENTION_DAYS);
+  const days = trashSpamRetentionDays;
   const now = Date.now();
   const cutoff = now - days * 24 * 60 * 60 * 1000;
 
@@ -72,7 +67,7 @@ export async function runRetentionCleanup(
     }
   }
 
-  const syncDays = retentionDaysFromEnv(env.SYNC_RETENTION_DAYS);
+  const syncDays = syncRetentionDays;
   const syncCutoff = now - syncDays * 24 * 60 * 60 * 1000;
   const [countRow] = await db
     .select({ n: sql<number>`count(*)` })

@@ -1,4 +1,5 @@
-import Cloudflare from "cloudflare";
+import { EmailRouting, Workers, Zones } from "cloudflare/resources";
+import { createClient } from "cloudflare/tree-shakable";
 
 /**
  * Cloudflare SDK wired through the worker OAuth proxy.
@@ -84,6 +85,7 @@ async function proxyFetch(input: RequestInfo | URL, init?: RequestInit): Promise
   return fetch(retried.url, retried.init);
 }
 
-export const cloudflareClient = new Cloudflare({
+export const cloudflareClient = createClient({
   fetch: proxyFetch,
+  resources: [EmailRouting, Zones, Workers],
 });

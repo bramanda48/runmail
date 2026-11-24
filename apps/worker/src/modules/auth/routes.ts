@@ -1,3 +1,4 @@
+import { accessTokenTTL } from "@/config/auth";
 import type { AppEnv } from "@/lib/env";
 import { badRequest } from "@/lib/http-error";
 import { jwtAuth } from "@/middleware/auth";
@@ -31,7 +32,7 @@ authRoutes.get("/me", jwtAuth, async (c) => {
   }
 
   return c.json({ data: { user: me } }, 200, {
-    "Cache-Control": `private, max-age=${c.env.JWT_ACCESS_TTL_SECONDS}`,
+    "Cache-Control": `private, max-age=${accessTokenTTL}`,
     Vary: "Authorization",
   });
 });

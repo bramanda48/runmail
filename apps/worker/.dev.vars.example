@@ -1,4 +1,12 @@
-# Salin file ini menjadi apps/worker/.dev.vars lalu isi dengan nilai asli.
-# .dev.vars hanya berlaku untuk `wrangler dev` lokal dan tidak pernah di-commit.
+###################################################################################
+# For local development :                                                         #
+# Copy this file to apps/worker/.dev.vars and populate it with the actual values. #
+# .dev.vars is only used for local `wrangler dev` and should never be committed.  #
+#                                                                                 #
+# For remote / production :                                                       #
+# Cloudflare OAuth credentials are stored as secrets                              #
+# Use: wrangler secret put CLOUDFLARE_OAUTH_CLIENT_ID                             #
+# Use: wrangler secret put CLOUDFLARE_OAUTH_CLIENT_SECRET                         #
+###################################################################################
 CLOUDFLARE_OAUTH_CLIENT_ID=<your_cloudflare_oauth_client_id>
 CLOUDFLARE_OAUTH_CLIENT_SECRET=<your_cloudflare_oauth_client_secret>

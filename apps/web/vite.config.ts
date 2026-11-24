@@ -27,7 +27,16 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: "dist",
-      sourcemap: true,
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            "vue-vendor": ["vue", "vue-router", "vue-i18n", "pinia"],
+            dexie: ["dexie"],
+            cloudflare: ["cloudflare"],
+          },
+        },
+      },
     },
     server: {
       port,
