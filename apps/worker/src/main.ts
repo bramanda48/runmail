@@ -1,5 +1,6 @@
 import type { AppEnv } from "@/lib/env";
 import { errorCodeForStatus } from "@/lib/error";
+import { notFound } from "@/lib/http-error";
 import { createLogger } from "@/lib/logger";
 import { requestLogger } from "@/middleware/logging";
 import { authRoutes } from "@/modules/auth";
@@ -45,7 +46,12 @@ app.onError((err, c) => {
       message: err.message,
     });
     return c.json(
-      { error: { code: errorCodeForStatus(err.status), message: err.message } },
+      {
+        error: {
+          code: errorCodeForStatus(err.status),
+          message: err.message,
+        },
+      },
       err.status,
     );
   }
@@ -58,13 +64,13 @@ app.onError((err, c) => {
     {
       error: {
         code: API_ERROR_CODES.INTERNAL_ERROR,
-        message: "An unexpected error occurred",
+        message: "An unexpected error occurred.",
       },
     },
     500,
   );
 });
 
-app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
+app.notFound((c) => c.json(notFound(`The route '${c.req.path}' could not be found.`)));
 
 export { app };
