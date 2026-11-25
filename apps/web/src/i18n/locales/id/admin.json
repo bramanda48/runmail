@@ -68,8 +68,8 @@
     "add": "Tambah Domain",
     "table": {
       "domain": "Domain",
-      "routingStatus": "Status Routing",
-      "dnsStatus": "Status DNS",
+      "routingStatus": "Status Email Routing",
+      "dnsStatus": "Status DNS Records",
       "actions": "Aksi"
     },
     "routingStatus": {

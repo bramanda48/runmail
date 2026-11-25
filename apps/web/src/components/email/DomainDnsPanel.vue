@@ -14,8 +14,11 @@ defineProps<{
 const { t } = useI18n();
 
 function shortenPart(kind: string, part: string): string {
-  if (kind !== "dkim") return part;
-  return part.replace(/(\bp=)(\S{8})\S+(\S{4})/, "$1$2...$3");
+  if (kind === "mx") {
+    return part.replace(/^\d+\s+/, "");
+  } else if (kind === "dkim") {
+    return part.replace(/(\bp=)(\S{8})\S+(\S{4})/, "$1$2...$3");
+  } else return part;
 }
 
 function splitLines(value: string): string[] {
