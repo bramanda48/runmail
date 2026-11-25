@@ -1,19 +1,29 @@
 import { ApiError } from "@/lib/api";
 import { cloudflareClient } from "@/lib/cloudflare-client";
+import { ConflictError } from "cloudflare/error";
 import { ref, type Ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 export type DnsStatusKey =
   "ready" | "unconfigured" | "misconfigured" | "misconfigured/locked" | "unlocked";
 
+export type RoutingErrorKind = "generic" | "mx_conflict";
+
 export interface DomainRoutingState {
   status: "idle" | "loading" | "ready" | "error";
   enabled: boolean | null;
   dns: DnsStatusKey | null;
   error: string;
+  error_kind: RoutingErrorKind;
 }
 
-const IDLE: DomainRoutingState = { status: "idle", enabled: null, dns: null, error: "" };
+const IDLE: DomainRoutingState = {
+  status: "idle",
+  enabled: null,
+  dns: null,
+  error: "",
+  error_kind: "generic",
+};
 
 /**
  * Per-domain Email Routing status via `emailRouting.get({ zone_id })`.
@@ -33,7 +43,13 @@ export function useDomainRoutingStatus(
   }
 
   async function fetchOne(id: string, current: number): Promise<void> {
-    states.value.set(id, { status: "loading", enabled: null, dns: null, error: "" });
+    states.value.set(id, {
+      status: "loading",
+      enabled: null,
+      dns: null,
+      error: "",
+      error_kind: "generic",
+    });
     try {
       const settings = await cloudflareClient.emailRouting.get({ zone_id: id });
       if (current !== revision) return;
@@ -42,6 +58,7 @@ export function useDomainRoutingStatus(
         enabled: settings.enabled,
         dns: (settings.status as DnsStatusKey | undefined) ?? null,
         error: "",
+        error_kind: "generic",
       });
     } catch (err) {
       if (current !== revision) return;
@@ -51,6 +68,7 @@ export function useDomainRoutingStatus(
         enabled: null,
         dns: null,
         error: err instanceof ApiError ? err.message : t("admin.domains.routingStatus.loadError"),
+        error_kind: "generic",
       });
     }
   }
@@ -76,7 +94,13 @@ export function useDomainRoutingStatus(
   async function enable(id: string): Promise<boolean> {
     const allowed = typeof canFetch === "function" ? canFetch() : canFetch.value;
     if (!allowed) return false;
-    states.value.set(id, { status: "loading", enabled: null, dns: null, error: "" });
+    states.value.set(id, {
+      status: "loading",
+      enabled: null,
+      dns: null,
+      error: "",
+      error_kind: "generic",
+    });
     try {
       const settings = await cloudflareClient.emailRouting.dns.create({ zone_id: id });
       states.value.set(id, {
@@ -84,6 +108,7 @@ export function useDomainRoutingStatus(
         enabled: settings.enabled,
         dns: (settings.status as DnsStatusKey | undefined) ?? null,
         error: "",
+        error_kind: "generic",
       });
       return true;
     } catch (err) {
@@ -92,7 +117,8 @@ export function useDomainRoutingStatus(
         status: "error",
         enabled: null,
         dns: null,
-        error: err instanceof ApiError ? err.message : t("admin.domains.routingStatus.loadError"),
+        error: err instanceof ApiError ? err.message : t("admin.domains.routingStatus.enableError"),
+        error_kind: err instanceof ConflictError ? "mx_conflict" : "generic",
       });
       return false;
     }
@@ -101,7 +127,13 @@ export function useDomainRoutingStatus(
   async function disable(id: string): Promise<boolean> {
     const allowed = typeof canFetch === "function" ? canFetch() : canFetch.value;
     if (!allowed) return false;
-    states.value.set(id, { status: "loading", enabled: null, dns: null, error: "" });
+    states.value.set(id, {
+      status: "loading",
+      enabled: null,
+      dns: null,
+      error: "",
+      error_kind: "generic",
+    });
     try {
       const settings = await cloudflareClient.emailRouting.dns.delete({ zone_id: id });
       states.value.set(id, {
@@ -109,6 +141,7 @@ export function useDomainRoutingStatus(
         enabled: settings.enabled,
         dns: (settings.status as DnsStatusKey | undefined) ?? null,
         error: "",
+        error_kind: "generic",
       });
       return true;
     } catch (err) {
@@ -117,7 +150,9 @@ export function useDomainRoutingStatus(
         status: "error",
         enabled: null,
         dns: null,
-        error: err instanceof ApiError ? err.message : t("admin.domains.routingStatus.loadError"),
+        error:
+          err instanceof ApiError ? err.message : t("admin.domains.routingStatus.disableError"),
+        error_kind: "generic",
       });
       return false;
     }

@@ -97,6 +97,7 @@ const USED_ICONS: Record<string, string[]> = {
     "trash-2",
     "type",
     "user",
+    "user-group",
     "users",
     "x",
   ],

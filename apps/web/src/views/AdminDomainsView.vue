@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import DomainDnsPanel from "@/components/email/DomainDnsPanel.vue";
+import DomainSettingsDialog from "@/components/email/DomainSettingsDialog.vue";
 import EmptyState from "@/components/forms/EmptyState.vue";
 import Pagination from "@/components/forms/Pagination.vue";
 import AdminShell from "@/components/layouts/AdminShell.vue";
-import { Alert } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +37,7 @@ import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
 import { useDomainDnsRecords } from "@/composables/use-domain-dns-records";
 import { useDomainList } from "@/composables/use-domain-list";
 import { useDomainRoutingStatus } from "@/composables/use-domain-routing-status";
+import { useDomainSettings } from "@/composables/use-domain-settings";
 import { Icon } from "@/icons";
 import { computed, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
@@ -73,6 +75,7 @@ const {
 } = useDomainList(handleOperationError);
 
 const routing = useDomainRoutingStatus(canUseCloudflare, handleOperationError);
+const settings = useDomainSettings(canUseCloudflare, handleOperationError);
 const dns = useDomainDnsRecords(canUseCloudflare, handleOperationError);
 
 watch([() => domains.value.map((d) => d.id), canUseCloudflare], ([ids, allowed]) => {
@@ -103,13 +106,27 @@ async function confirmEnable(): Promise<void> {
   if (ok) {
     enableTarget.value = null;
   } else {
-    enableError.value = t("admin.domains.routingStatus.enableError");
+    enableError.value = routing.get(enableTarget.value.id).error;
   }
 }
+
+const enableConflict = computed(() => {
+  if (!enableTarget.value) return false;
+  const state = routing.get(enableTarget.value.id);
+  return state.status === "error" && state.error_kind === "mx_conflict";
+});
 
 const disableTarget = ref<{ id: string; name: string } | null>(null);
 const disableSubmitting = ref(false);
 const disableError = ref("");
+
+const settingsTarget = ref<{ id: string; name: string } | null>(null);
+
+function openSettings(domain: { id: string; domain_name: string }): void {
+  if (!canUseCloudflare.value) return;
+  settingsTarget.value = { id: domain.id, name: domain.domain_name };
+  void settings.loadSettings(domain.id);
+}
 
 function openDisable(domain: { id: string; domain_name: string }): void {
   disableTarget.value = { id: domain.id, name: domain.domain_name };
@@ -125,7 +142,7 @@ async function confirmDisable(): Promise<void> {
   if (ok) {
     disableTarget.value = null;
   } else {
-    disableError.value = t("admin.domains.routingStatus.disableError");
+    disableError.value = routing.get(disableTarget.value.id).error;
   }
 }
 
@@ -242,7 +259,9 @@ onMounted(() => load());
                 <TableHead>{{ t("admin.domains.table.domain") }}</TableHead>
                 <TableHead>{{ t("admin.domains.table.routingStatus") }}</TableHead>
                 <TableHead>{{ t("admin.domains.table.dnsStatus") }}</TableHead>
-                <TableHead class="w-32">{{ t("admin.domains.table.actions") }}</TableHead>
+                <TableHead colspan="2">
+                  {{ t("admin.domains.table.actions") }}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -311,7 +330,7 @@ onMounted(() => load());
                       </Button>
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell class="w-px">
                     <div class="flex items-center gap-2">
                       <Button
                         v-if="routing.get(domain.id).enabled === false"
@@ -336,6 +355,21 @@ onMounted(() => load());
                         <Icon icon="lucide:route-off" aria-hidden="true" />
                       </Button>
                       <Button
+                        v-if="routing.get(domain.id).enabled === true"
+                        variant="outline"
+                        size="icon"
+                        :aria-label="t('admin.domains.settings.open')"
+                        :title="t('admin.domains.settings.open')"
+                        :disabled="!canUseCloudflare || settingsTarget?.id === domain.id"
+                        @click="openSettings(domain)"
+                      >
+                        <Icon icon="lucide:settings" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell class="w-px">
+                    <div class="flex items-center gap-2">
+                      <Button
                         :aria-expanded="dns.isExpanded(domain.id)"
                         :disabled="!canUseCloudflare"
                         @click="() => dns.toggle(domain, domain.domain_name)"
@@ -356,7 +390,7 @@ onMounted(() => load());
                   </TableCell>
                 </TableRow>
                 <TableRow v-if="dns.isExpanded(domain.id)" :key="`${domain.id}-dns`">
-                  <TableCell colspan="4" class="bg-muted/30 p-4">
+                  <TableCell colspan="5" class="bg-muted/30 p-4">
                     <DomainDnsPanel
                       :state="dns.get(domain.id)"
                       :on-retry-record="(i) => dns.retryRecord(domain.id, i)"
@@ -432,61 +466,64 @@ onMounted(() => load());
           <DialogDescription>{{ t("admin.domains.addDialog.description") }}</DialogDescription>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="addDialog.error.value" variant="destructive">{{
-            addDialog.error.value
-          }}</Alert>
-          <div class="flex flex-col gap-1.5">
-            <label for="select-domain" class="text-sm font-medium text-foreground">{{
-              t("admin.domains.addDialog.domainLabel")
-            }}</label>
-            <p
-              v-if="addDialog.isLoadingZones.value"
-              role="status"
-              class="text-sm text-muted-foreground"
-            >
-              {{ t("admin.domains.addDialog.loading") }}
-            </p>
-            <p
-              v-else-if="addDialog.options.value.length === 0"
-              class="text-sm text-muted-foreground"
-            >
-              {{ t("admin.domains.addDialog.none") }}
-            </p>
-            <Select v-else v-model="addDialog.selected.value">
-              <SelectTrigger id="select-domain" :disabled="addDialog.isSubmitting.value">
-                <SelectValue :placeholder="t('admin.domains.addDialog.domainPlaceholder')" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="option in addDialog.options.value"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+        <form class="flex flex-col gap-4" @submit.prevent="addDialog.submit(reload)">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="addDialog.error.value" variant="destructive">
+              {{ addDialog.error.value }}
+            </Alert>
+            <div class="flex flex-col gap-2">
+              <label for="select-domain" class="text-sm font-medium text-foreground">
+                {{ t("admin.domains.addDialog.domainLabel") }}
+              </label>
+              <p
+                v-if="addDialog.isLoadingZones.value"
+                role="status"
+                class="text-sm text-muted-foreground"
+              >
+                {{ t("admin.domains.addDialog.loading") }}
+              </p>
+              <p
+                v-else-if="addDialog.options.value.length === 0"
+                class="text-sm text-muted-foreground"
+              >
+                {{ t("admin.domains.addDialog.none") }}
+              </p>
+              <Select v-else v-model="addDialog.selected.value">
+                <SelectTrigger id="select-domain" :disabled="addDialog.isSubmitting.value">
+                  <SelectValue :placeholder="t('admin.domains.addDialog.domainPlaceholder')" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="option in addDialog.options.value"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
 
-        <DialogFooter>
-          <Button
-            variant="ghost"
-            :disabled="addDialog.isSubmitting.value"
-            @click="addDialog.isOpen.value = false"
-          >
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="!canAdd" @click="addDialog.submit(reload)">
-            <Icon
-              v-if="addDialog.isSubmitting.value"
-              icon="lucide:loader-circle"
-              class="animate-spin"
-            />
-            <span>{{ t("admin.domains.addDialog.submit") }}</span>
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              :disabled="addDialog.isSubmitting.value"
+              @click="addDialog.isOpen.value = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="!canAdd">
+              <Icon
+                v-if="addDialog.isSubmitting.value"
+                icon="lucide:loader-circle"
+                class="animate-spin"
+              />
+              <span>{{ t("admin.domains.addDialog.submit") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 
@@ -510,7 +547,15 @@ onMounted(() => load());
           </DialogDescription>
         </DialogHeader>
 
-        <Alert v-if="enableError" variant="destructive">{{ enableError }}</Alert>
+        <Alert v-if="enableConflict && enableTarget" variant="destructive">
+          <AlertDescription class="flex flex-col gap-2">
+            <p class="font-medium">{{ t("admin.domains.enableDialog.mxConflictTitle") }}</p>
+            <p>
+              {{ t("admin.domains.enableDialog.mxConflictMessage", { domain: enableTarget.name }) }}
+            </p>
+          </AlertDescription>
+        </Alert>
+        <Alert v-else-if="enableError" variant="destructive">{{ enableError }}</Alert>
 
         <DialogFooter>
           <Button variant="ghost" :disabled="enableSubmitting" @click="enableTarget = null">
@@ -556,6 +601,35 @@ onMounted(() => load());
           </Button>
         </DialogFooter>
       </DialogContent>
+    </DialogRoot>
+
+    <DialogRoot
+      :open="settingsTarget !== null"
+      @update:open="
+        (v) => {
+          if (!v) settingsTarget = null;
+        }
+      "
+    >
+      <DomainSettingsDialog
+        v-if="settingsTarget"
+        :domain-id="settingsTarget.id"
+        :domain-name="settingsTarget.name"
+        :state="settings.get(settingsTarget.id)"
+        :on-retry="() => settingsTarget && settings.retry(settingsTarget.id)"
+        :on-select-worker="
+          (name) => settingsTarget && settings.updateCatchAll(settingsTarget.id, name)
+        "
+        :on-toggle-subaddress="
+          (v) => settingsTarget && settings.updateSubaddress(settingsTarget.id, v)
+        "
+        :on-add-subdomain="
+          (name) => settingsTarget && settings.addSubdomain(settingsTarget.id, name)
+        "
+        :on-remove-subdomain="
+          (name) => settingsTarget && settings.removeSubdomain(settingsTarget.id, name)
+        "
+      />
     </DialogRoot>
   </AdminShell>
 </template>

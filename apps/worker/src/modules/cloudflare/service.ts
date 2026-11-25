@@ -16,6 +16,8 @@ const CLOUDFLARE_OAUTH_SCOPES = [
   "zone-settings.read",
   "zone-settings.write",
   "email-routing-rule.read",
+  "email-routing-rule.write",
+  "workers-scripts.metadata_read",
   "offline_access",
 ].join(" ");
 
@@ -81,6 +83,7 @@ export async function handleCloudflareCallback(
   });
 
   setCachedAccessToken(tokenResponse.access_token, tokenResponse.expires_in);
+
   return { success: true };
 }
 

@@ -4,6 +4,7 @@ import Pagination from "@/components/forms/Pagination.vue";
 import AdminShell from "@/components/layouts/AdminShell.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
 import {
   DialogContent,
   DialogDescription,
@@ -21,19 +22,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useCloudflareOAuth } from "@/composables/use-cloudflare-oauth";
 import { useCursorPagination } from "@/composables/use-cursor-pagination";
 import { useFormSubmit } from "@/composables/use-form-submit";
-import { Icon } from "@/icons";
 import { translateApiError } from "@/i18n/api-errors";
+import { Icon } from "@/icons";
 import {
   ApiError,
   addTeamUser,
@@ -79,41 +72,48 @@ const {
   handleOperationError,
 );
 
-const memberCounts = ref<Record<string, number>>({});
-
-
 const roleLabels = computed<Record<Role, string>>(() => ({
   admin: t("admin.role.admin"),
   member: t("admin.role.member"),
 }));
 
-async function countMembers(teamId: string): Promise<number> {
-  const users = await paginateAll(
-    async (cursor, limit) => {
-      const { data, meta: responseMeta } = await getTeamUsers(teamId, cursor, limit);
-      return {
-        items: data.users,
-        hasMore: responseMeta?.has_more ?? false,
-        nextCursor: responseMeta?.next_cursor,
-      };
-    },
-    100,
-  );
-  return users.length;
+const teamMembers = ref<Record<string, TeamLinkedUser[]>>({});
+
+async function fetchMembers(teamId: string): Promise<TeamLinkedUser[]> {
+  return paginateAll(async (cursor, limit) => {
+    const { data, meta: responseMeta } = await getTeamUsers(teamId, cursor, limit);
+    return {
+      items: data.users,
+      hasMore: responseMeta?.has_more ?? false,
+      nextCursor: responseMeta?.next_cursor,
+    };
+  }, 100);
 }
 
-async function refreshCounts(list: Team[]) {
-  const counts = await Promise.allSettled(list.map((team) => countMembers(team.id)));
-  const next: Record<string, number> = {};
+async function refreshMembers(list: Team[]) {
+  const results = await Promise.allSettled(list.map((team) => fetchMembers(team.id)));
+  const next: Record<string, TeamLinkedUser[]> = {};
   list.forEach((team, i) => {
-    const result = counts[i];
-    next[team.id] = result.status === "fulfilled" ? result.value : 0;
+    const result = results[i];
+    next[team.id] = result.status === "fulfilled" ? result.value : [];
   });
-  memberCounts.value = next;
+  teamMembers.value = next;
+}
+
+function membersOf(teamId: string): TeamLinkedUser[] {
+  return teamMembers.value[teamId] ?? [];
+}
+
+function previewOf(teamId: string): TeamLinkedUser[] {
+  return membersOf(teamId).slice(0, 4);
+}
+
+function overflowOf(teamId: string): number {
+  return Math.max(membersOf(teamId).length - 4, 0);
 }
 
 watch(teams, (list) => {
-  void refreshCounts(list);
+  void refreshMembers(list);
 });
 
 function retry() {
@@ -139,7 +139,9 @@ function validateName(raw: string, setError: (message: string) => void): boolean
 
 function openCreate() {
   createName.value = "";
-  createForm.resetErrors([{ value: createNameError.value, set: (m) => (createNameError.value = m) }]);
+  createForm.resetErrors([
+    { value: createNameError.value, set: (m) => (createNameError.value = m) },
+  ]);
   createOpen.value = true;
 }
 
@@ -191,7 +193,9 @@ const renameNameError = ref("");
 function openRename(team: Team) {
   renamingTeam.value = team;
   renameName.value = team.name;
-  renameForm.resetErrors([{ value: renameNameError.value, set: (m) => (renameNameError.value = m) }]);
+  renameForm.resetErrors([
+    { value: renameNameError.value, set: (m) => (renameNameError.value = m) },
+  ]);
   renameOpen.value = true;
 }
 
@@ -281,31 +285,25 @@ const userOptions = computed(() =>
 );
 
 async function fetchAllUsers(): Promise<User[]> {
-  return paginateAll(
-    async (cursor, limit) => {
-      const { data, meta } = await listUsers(cursor, limit);
-      return {
-        items: data.users,
-        hasMore: meta?.has_more ?? false,
-        nextCursor: meta?.next_cursor,
-      };
-    },
-    100,
-  );
+  return paginateAll(async (cursor, limit) => {
+    const { data, meta } = await listUsers(cursor, limit);
+    return {
+      items: data.users,
+      hasMore: meta?.has_more ?? false,
+      nextCursor: meta?.next_cursor,
+    };
+  }, 100);
 }
 
 async function loadLinkedUsers(teamId: string): Promise<void> {
-  linkedUsers.value = await paginateAll(
-    async (cursor, limit) => {
-      const { data, meta } = await getTeamUsers(teamId, cursor, limit);
-      return {
-        items: data.users,
-        hasMore: meta?.has_more ?? false,
-        nextCursor: meta?.next_cursor,
-      };
-    },
-    100,
-  );
+  linkedUsers.value = await paginateAll(async (cursor, limit) => {
+    const { data, meta } = await getTeamUsers(teamId, cursor, limit);
+    return {
+      items: data.users,
+      hasMore: meta?.has_more ?? false,
+      nextCursor: meta?.next_cursor,
+    };
+  }, 100);
 }
 
 async function openManageMembers(team: Team) {
@@ -357,6 +355,7 @@ async function addMember() {
     await addTeamUser(managingTeam.value.id, selectedUserId.value);
     selectedUserId.value = "";
     await refreshLinkedUsers();
+    teamMembers.value = { ...teamMembers.value, [managingTeam.value.id]: linkedUsers.value };
   } catch (err) {
     if (err instanceof ApiError) {
       manageInlineError.value = err.message || t("admin.teams.manageDialog.addError");
@@ -375,6 +374,9 @@ async function removeMember(user: TeamLinkedUser) {
   try {
     await removeTeamUser(managingTeam.value.id, user.user_id);
     await refreshLinkedUsers();
+    if (managingTeam.value) {
+      teamMembers.value = { ...teamMembers.value, [managingTeam.value.id]: linkedUsers.value };
+    }
   } catch (err) {
     if (err instanceof ApiError) {
       manageInlineError.value = err.message || t("admin.teams.manageDialog.removeError");
@@ -403,8 +405,11 @@ async function removeMember(user: TeamLinkedUser) {
         </Button>
       </div>
 
-      <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
+      <div
+        v-if="isLoading"
+        class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3"
+      >
+        <Skeleton v-for="n in 6" :key="n" class="h-40 w-full" />
       </div>
 
       <div v-else-if="error" class="flex flex-col gap-4">
@@ -427,50 +432,55 @@ async function removeMember(user: TeamLinkedUser) {
       </EmptyState>
 
       <div v-else class="flex flex-col gap-4">
-        <div class="rounded-lg border bg-card p-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{{ t("admin.teams.table.name") }}</TableHead>
-                <TableHead>{{ t("admin.teams.table.users") }}</TableHead>
-                <TableHead class="w-32">{{ t("admin.teams.table.actions") }}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="team in teams" :key="team.id">
-                <TableCell class="font-medium">{{ team.name }}</TableCell>
-                <TableCell>{{ memberCounts[team.id] ?? 0 }}</TableCell>
-                <TableCell>
-                  <div class="flex items-center gap-1">
-                    <Button
-                      :aria-label="t('admin.teams.renameAria', { name: team.name })"
-                      variant="ghost"
-                      size="icon"
-                      @click="openRename(team)"
-                    >
-                      <Icon icon="lucide:pencil" />
-                    </Button>
-                    <Button
-                      :aria-label="t('admin.teams.membersAria', { name: team.name })"
-                      variant="ghost"
-                      size="icon"
-                      @click="openManageMembers(team)"
-                    >
-                      <Icon icon="lucide:users" />
-                    </Button>
-                    <Button
-                      :aria-label="t('admin.teams.deleteAria', { name: team.name })"
-                      variant="ghost"
-                      size="icon"
-                      @click="openDelete(team)"
-                    >
-                      <Icon icon="lucide:trash-2" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+        <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <Card v-for="team in teams" :key="team.id" class="flex h-full flex-col">
+            <CardContent class="flex flex-col gap-4 pt-6">
+              <div class="flex items-center justify-between gap-2">
+                <CardTitle>{{ team.name }}</CardTitle>
+                <div class="flex shrink-0 items-center gap-2">
+                  <Button
+                    :aria-label="t('admin.teams.renameAria', { name: team.name })"
+                    :title="t('admin.teams.renameAria', { name: team.name })"
+                    variant="ghost"
+                    size="icon"
+                    @click="openRename(team)"
+                  >
+                    <Icon icon="lucide:pencil" />
+                  </Button>
+                  <Button
+                    :aria-label="t('admin.teams.deleteAria', { name: team.name })"
+                    :title="t('admin.teams.deleteAria', { name: team.name })"
+                    variant="ghost"
+                    size="icon"
+                    @click="openDelete(team)"
+                  >
+                    <Icon icon="lucide:trash-2" />
+                  </Button>
+                </div>
+              </div>
+              <div class="flex h-8 items-center gap-3">
+                <div v-if="membersOf(team.id).length > 0" class="flex -space-x-2">
+                  <span
+                    v-for="member in previewOf(team.id)"
+                    :key="member.user_id"
+                    :title="member.username"
+                    class="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase ring-2 ring-card"
+                  >
+                    {{ member.username.charAt(0) }}
+                  </span>
+                </div>
+                <span class="text-sm text-muted-foreground">
+                  {{ t("admin.teams.members", { count: membersOf(team.id).length }) }}
+                </span>
+              </div>
+            </CardContent>
+            <CardFooter class="mt-auto">
+              <Button variant="outline" size="sm" @click="openManageMembers(team)">
+                <Icon icon="lucide:users" />
+                <span>{{ t("admin.teams.manageDialog.title") }}</span>
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
 
         <Pagination
@@ -495,32 +505,39 @@ async function removeMember(user: TeamLinkedUser) {
           <DialogDescription>{{ t("admin.teams.createDialog.description") }}</DialogDescription>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
+        <form @submit.prevent="submitCreate">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="createInlineError" variant="destructive">{{ createInlineError }}</Alert>
 
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{
-              t("admin.teams.createDialog.nameLabel")
-            }}</span>
-            <Input
-              v-model="createName"
-              :placeholder="t('admin.teams.createDialog.namePlaceholder')"
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-medium text-foreground">
+                {{ t("admin.teams.createDialog.nameLabel") }}
+              </span>
+              <Input
+                v-model="createName"
+                :placeholder="t('admin.teams.createDialog.namePlaceholder')"
+                :disabled="createSubmitting"
+                :aria-invalid="Boolean(createNameError)"
+              />
+              <p v-if="createNameError" class="text-sm text-destructive">{{ createNameError }}</p>
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
               :disabled="createSubmitting"
-              :aria-invalid="Boolean(createNameError)"
-            />
-            <p v-if="createNameError" class="text-sm text-destructive">{{ createNameError }}</p>
-          </label>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" :disabled="createSubmitting" @click="createOpen = false">
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="createSubmitting" @click="submitCreate">
-            <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>{{ t("admin.teams.createDialog.submit") }}</span>
-          </Button>
-        </DialogFooter>
+              @click="createOpen = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="createSubmitting">
+              <Icon v-if="createSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("admin.teams.createDialog.submit") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 
@@ -532,32 +549,39 @@ async function removeMember(user: TeamLinkedUser) {
           <DialogDescription>{{ t("admin.teams.renameDialog.description") }}</DialogDescription>
         </DialogHeader>
 
-        <div class="flex flex-col gap-4 py-2">
-          <Alert v-if="renameInlineError" variant="destructive">{{ renameInlineError }}</Alert>
+        <form @submit.prevent="submitRename">
+          <div class="flex flex-col gap-4 py-2">
+            <Alert v-if="renameInlineError" variant="destructive">{{ renameInlineError }}</Alert>
 
-          <label class="flex flex-col gap-1.5">
-            <span class="text-sm font-medium text-foreground">{{
-              t("admin.teams.renameDialog.nameLabel")
-            }}</span>
-            <Input
-              v-model="renameName"
-              :placeholder="t('admin.teams.renameDialog.namePlaceholder')"
+            <label class="flex flex-col gap-2">
+              <span class="text-sm font-medium text-foreground">
+                {{ t("admin.teams.renameDialog.nameLabel") }}
+              </span>
+              <Input
+                v-model="renameName"
+                :placeholder="t('admin.teams.renameDialog.namePlaceholder')"
+                :disabled="renameSubmitting"
+                :aria-invalid="Boolean(renameNameError)"
+              />
+              <p v-if="renameNameError" class="text-sm text-destructive">{{ renameNameError }}</p>
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
               :disabled="renameSubmitting"
-              :aria-invalid="Boolean(renameNameError)"
-            />
-            <p v-if="renameNameError" class="text-sm text-destructive">{{ renameNameError }}</p>
-          </label>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" :disabled="renameSubmitting" @click="renameOpen = false">
-            {{ t("common.actions.cancel") }}
-          </Button>
-          <Button :disabled="renameSubmitting" @click="submitRename">
-            <Icon v-if="renameSubmitting" icon="lucide:loader-circle" class="animate-spin" />
-            <span>{{ t("admin.teams.renameDialog.submit") }}</span>
-          </Button>
-        </DialogFooter>
+              @click="renameOpen = false"
+            >
+              {{ t("common.actions.cancel") }}
+            </Button>
+            <Button type="submit" :disabled="renameSubmitting">
+              <Icon v-if="renameSubmitting" icon="lucide:loader-circle" class="animate-spin" />
+              <span>{{ t("admin.teams.renameDialog.submit") }}</span>
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </DialogRoot>
 
@@ -589,7 +613,7 @@ async function removeMember(user: TeamLinkedUser) {
 
     <!-- Manage members dialog -->
     <DialogRoot v-model:open="manageOpen">
-      <DialogContent>
+      <DialogContent class="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{{ t("admin.teams.manageDialog.title") }}</DialogTitle>
           <DialogDescription>
@@ -604,7 +628,7 @@ async function removeMember(user: TeamLinkedUser) {
             {{ t("admin.teams.manageDialog.loading") }}
           </div>
 
-          <div v-else class="flex items-end gap-2">
+          <form v-else class="flex items-end gap-2" @submit.prevent="addMember">
             <div class="flex min-w-0 flex-1 flex-col gap-1.5">
               <label for="select-member" class="text-sm font-medium text-foreground">{{
                 t("admin.teams.manageDialog.userLabel")
@@ -624,11 +648,11 @@ async function removeMember(user: TeamLinkedUser) {
                 </SelectContent>
               </Select>
             </div>
-            <Button :disabled="!selectedUserId || manageSubmitting" @click="addMember">
+            <Button type="submit" :disabled="!selectedUserId || manageSubmitting">
               <Icon v-if="manageSubmitting" icon="lucide:loader-circle" class="animate-spin" />
               <span>{{ t("admin.teams.manageDialog.add") }}</span>
             </Button>
-          </div>
+          </form>
           <div v-if="linkedUsers.length > 0" class="flex flex-col gap-2">
             <p class="text-sm font-medium text-foreground">
               {{ t("admin.teams.manageDialog.linkedUsers", { count: linkedUsers.length }) }}

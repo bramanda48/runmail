@@ -15,6 +15,13 @@
       "when": 1793454149792,
       "tag": "0001_drop_domains_verification_status",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794232259791,
+      "tag": "0002_wise_jackal",
+      "breakpoints": true
     }
   ]
 }
