@@ -1,3 +1,4 @@
+import { accessTokenTTL } from "@/config/auth";
 import type { AppEnv } from "@/lib/env";
 import { badRequest } from "@/lib/http-error";
 import { jwtAuth } from "@/middleware/auth";
@@ -14,6 +15,27 @@ import { Hono } from "hono";
 import { z } from "zod";
 
 export const authRoutes = new Hono<AppEnv>();
+
+authRoutes.get("/me", jwtAuth, async (c) => {
+  const auth = c.get("auth");
+  const me = await service.getMe(c, auth.user_id);
+  if (!me) {
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.NOT_FOUND,
+          message: "Pengguna tidak ditemukan",
+        },
+      },
+      404,
+    );
+  }
+
+  return c.json({ data: { user: me } }, 200, {
+    "Cache-Control": `private, max-age=${accessTokenTTL}`,
+    Vary: "Authorization",
+  });
+});
 
 authRoutes.post("/login", async (c) => {
   const body = await c.req.json();
@@ -49,6 +71,17 @@ authRoutes.post("/setup", async (c) => {
 
   const result = await service.setup(c, parsed.data);
   if ("error" in result) {
+    if (result.error === "KEYPAIR_UNAVAILABLE") {
+      return c.json(
+        {
+          error: {
+            code: API_ERROR_CODES.INTERNAL_ERROR,
+            message: "Gagal menyiapkan kunci keamanan, silakan coba lagi",
+          },
+        },
+        500,
+      );
+    }
     if (result.error === "SETUP_COMPLETE") {
       return c.json(
         {

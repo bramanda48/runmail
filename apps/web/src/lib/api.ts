@@ -59,6 +59,7 @@ export function setRefreshHandler(fn: RefreshHandler): void {
 export interface RequestOptions {
   body?: unknown;
   auth?: boolean;
+  cache?: RequestInit["cache"];
 }
 
 interface ErrorEnvelope {
@@ -88,6 +89,7 @@ async function doFetch(method: string, path: string, opts?: RequestOptions): Pro
     method,
     headers,
     body: opts?.body === undefined ? undefined : JSON.stringify(opts.body),
+    cache: opts?.cache,
   });
 }
 
@@ -193,10 +195,19 @@ export async function requestWithMeta<T>(
 }
 
 /** Builds a `?cursor=&limit=` suffix shared by the cursor-paginated list helpers. */
-function pageQuery(cursor?: string, limit?: number): string {
+function pageQuery(
+  cursor?: string,
+  limit?: number,
+  extra?: Record<string, string | undefined>,
+): string {
   const params = new URLSearchParams();
   if (cursor) params.set("cursor", cursor);
   if (limit !== undefined) params.set("limit", String(limit));
+  if (extra) {
+    for (const [key, value] of Object.entries(extra)) {
+      if (value !== undefined && value !== "") params.set(key, value);
+    }
+  }
   return params.size > 0 ? `?${params.toString()}` : "";
 }
 
@@ -213,7 +224,6 @@ export interface AuthPayload {
   access_token: string;
   refresh_token: string;
   expires_in: number;
-  user: SessionUser;
 }
 
 export async function loginRequest(username: string, password: string): Promise<AuthPayload> {
@@ -235,6 +245,41 @@ export async function setupRequest(username: string, password: string): Promise<
     body: { username, password },
     auth: false,
   });
+}
+
+// Fetch the public JWKS used for local access-token verification. The
+// endpoint is public (no auth), so this bypasses the auth/401-retry layer
+// with a raw fetch.
+
+export interface JwksKey {
+  kty: string;
+  alg: string;
+  kid: string;
+  n: string;
+  e: string;
+  [key: string]: string;
+}
+
+export interface JwksDocument {
+  keys: JwksKey[];
+}
+
+export async function fetchJwks(cache?: RequestOptions["cache"]): Promise<JwksDocument> {
+  const res = await performAuthorizedFetch("GET", "/.well-known/jwks.json", {
+    auth: false,
+    cache,
+  });
+  const payload: unknown = await res.json().catch(() => null);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch JWKS: ${res.status} ${res.statusText}`, { cause: payload });
+  }
+  return payload as JwksDocument;
+}
+
+// Fetch the current session user. Used after login/refresh/restore to hydrate
+// the auth store and by ProfileView on every mount.
+export async function getMe(): Promise<{ user: SessionUser }> {
+  return request<{ user: SessionUser }>("GET", "/auth/me");
 }
 
 export async function getPublicSetting<TValue = string>(
@@ -284,8 +329,9 @@ export interface UpdateUserInput {
 export async function listUsers(
   cursor?: string,
   limit?: number,
+  filters?: { search?: string; role?: string; status?: string },
 ): Promise<RequestWithMeta<UserList>> {
-  return requestWithMeta<UserList>("GET", `/users${pageQuery(cursor, limit)}`);
+  return requestWithMeta<UserList>("GET", `/users${pageQuery(cursor, limit, filters)}`);
 }
 
 export async function createUser(body: CreateUserInput): Promise<{ user: User }> {
@@ -298,6 +344,10 @@ export async function getUser(userId: string): Promise<{ user: User }> {
 
 export async function updateUser(userId: string, body: UpdateUserInput): Promise<{ user: User }> {
   return request<{ user: User }>("PATCH", `/users/${userId}`, { body });
+}
+
+export async function deleteUser(userId: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>("DELETE", `/users/${userId}`);
 }
 
 // --- Cloudflare Integration (admin) ---

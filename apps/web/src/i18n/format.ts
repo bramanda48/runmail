@@ -49,3 +49,37 @@ export function formatFullDate(value: DateInput): string {
     year: "numeric",
   }).format(toDate(value));
 }
+
+export function formatRelativeTime(value: DateInput): string {
+  const target = toDate(value).getTime();
+  const nowMs = Date.now();
+  const diffMs = Math.max(0, nowMs - target);
+  const minute = 60_000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  const week = 7 * day;
+  const month = 30 * day;
+  const year = 365 * day;
+  let unit: Intl.RelativeTimeFormatUnit;
+  let amount: number;
+  if (diffMs < hour) {
+    unit = "minute";
+    amount = -Math.max(1, Math.round(diffMs / minute));
+  } else if (diffMs < day) {
+    unit = "hour";
+    amount = -Math.max(1, Math.round(diffMs / hour));
+  } else if (diffMs < week) {
+    unit = "day";
+    amount = -Math.max(1, Math.round(diffMs / day));
+  } else if (diffMs < month) {
+    unit = "week";
+    amount = -Math.max(1, Math.round(diffMs / week));
+  } else if (diffMs < year) {
+    unit = "month";
+    amount = -Math.max(1, Math.round(diffMs / month));
+  } else {
+    unit = "year";
+    amount = -Math.max(1, Math.round(diffMs / year));
+  }
+  return new Intl.RelativeTimeFormat(localeTag(), { numeric: "auto" }).format(amount, unit);
+}

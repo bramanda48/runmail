@@ -16,10 +16,3 @@ declare module "hono" {
 }
 
 export type AppContext = Context<AppEnv>;
-
-export function validateEnv(env: CloudflareBindings): void {
-  // Note: 64+ characters (256-bit) recommended for production
-  if (!env.JWT_SIGNING_SECRET || env.JWT_SIGNING_SECRET.length < 32) {
-    throw new Error("JWT_SIGNING_SECRET must be at least 32 characters");
-  }
-}

@@ -20,11 +20,25 @@
       "username": "Username",
       "role": "Peran",
       "status": "Status",
+      "lastActive": "Terakhir aktif",
+      "neverActive": "Belum pernah masuk",
       "actions": "Aksi"
     },
     "empty": {
       "title": "Belum ada user",
       "description": "Belum ada pengguna yang terdaftar."
+    },
+    "searchPlaceholder": "Cari user...",
+    "roleFilterAll": "Semua peran",
+    "roleFilterAdmin": "Admin",
+    "roleFilterMember": "Member",
+    "statusFilterAll": "Semua status",
+    "statusFilterActive": "Aktif",
+    "statusFilterInactive": "Nonaktif",
+    "emptySearch": {
+      "title": "Tidak ada user yang cocok dengan pencarian.",
+      "description": "Coba ubah pencarian atau filter Anda.",
+      "reset": "Atur ulang filter"
     },
     "editAria": "Edit {username}",
     "activeSwitchAria": "Status aktif user",
@@ -56,6 +70,13 @@
       "title": "Nonaktifkan User",
       "description": "Nonaktifkan user? Sesi user akan diakhiri.",
       "submit": "Nonaktifkan"
+    },
+    "deleteAria": "Hapus {username}",
+    "deleteSelfTooltip": "Anda tidak dapat menghapus akun sendiri",
+    "deleteDialog": {
+      "title": "Hapus user",
+      "description": "Hapus user {username}? Tindakan ini permanen dan menghapus akses mailbox/tim serta sesi login user tersebut.",
+      "submit": "Hapus"
     },
     "validation": {
       "usernameRequired": "Username wajib diisi",
@@ -100,17 +121,16 @@
     "enableDialog": {
       "title": "Aktifkan email routing?",
       "description": "Beberapa record DNS akan ditambahkan ke DNS Anda. Record yang berkonflik dapat dihapus.",
-      "submit": "Ya, Aktifkan"
+      "submit": "Ya, Aktifkan",
+      "mxConflictTitle": "Ditemukan record MX yang berkonflik",
+      "mxConflictMessage": "Email routing tidak dapat diaktifkan untuk {domain} karena ada record MX yang berkonflik. Hapus record MX yang ada secara manual di DNS manager, lalu coba lagi."
     },
     "empty": {
       "title": "Belum ada domain",
       "description": "Tambahkan domain Cloudflare yang tersedia."
     },
-    "verifyAria": "Verifikasi ulang {domain}",
     "closeNoticeAria": "Tutup notifikasi",
     "loadError": "Tidak dapat memuat domain. Coba lagi.",
-    "verifyError": "Tidak dapat memverifikasi domain. Coba lagi.",
-    "availableError": "Tidak dapat memuat domain yang tersedia.",
     "addError": "Tidak dapat menambahkan domain. Coba lagi.",
     "cloudflare": {
       "checking": "Memeriksa koneksi Cloudflare...",
@@ -171,6 +191,47 @@
       "title": "Nonaktifkan email routing?",
       "description": "Ini akan menghapus record DNS yang dikelola Cloudflare dan menonaktifkan layanan. Record DNS pihak ketiga tidak akan dihapus. Tindakan ini tidak dapat dibatalkan.",
       "submit": "Ya, Nonaktifkan"
+    },
+    "settings": {
+      "open": "Pengaturan domain",
+      "title": "Pengaturan",
+      "description": "Kelola aturan routing untuk {domain}.",
+      "close": "Tutup",
+      "loading": "Memuat pengaturan…",
+      "loadError": "Tidak dapat memuat pengaturan. Coba lagi.",
+      "updateError": "Tidak dapat menyimpan pengaturan. Coba lagi.",
+      "catchAll": {
+        "title": "Aturan Catch-all",
+        "description": "Pilih worker yang akan menangani semua pesan yang diterima.",
+        "label": "Worker",
+        "placeholder": "Pilih worker",
+        "loading": "Memuat worker…",
+        "none": "Tidak ada email worker yang tersedia.",
+        "updating": "Menyimpan…"
+      },
+      "subaddress": {
+        "title": "Subaddressing",
+        "description": "Aktifkan atau nonaktifkan routing subaddressing (username+folder{'@'}contoh.com).",
+        "toggle": "Subaddressing",
+        "updating": "Menyimpan…"
+      },
+      "subdomains": {
+        "title": "Subdomain",
+        "description": "Kelola subdomain email routing untuk zona ini.",
+        "name": "Subdomain",
+        "actions": "Aksi",
+        "inputPlaceholder": "sub",
+        "add": "Tambah",
+        "hint": "Subdomain bergantung pada domain. Jika domain dinonaktifkan, subdomain ikut dinonaktifkan.",
+        "loading": "Memuat subdomain…",
+        "empty": "Belum ada subdomain.",
+        "delete": "Hapus subdomain {name}",
+        "enabled": "Aktif",
+        "disabled": "Nonaktif",
+        "unknown": "Tidak diketahui",
+        "adding": "Menambahkan…",
+        "removing": "Menghapus…"
+      }
     }
   },
   "mailboxes": {
@@ -252,11 +313,7 @@
     "title": "Tim",
     "description": "Buat dan kelola tim serta keanggotaannya.",
     "create": "Buat tim",
-    "table": {
-      "name": "Nama",
-      "users": "Pengguna",
-      "actions": "Aksi"
-    },
+    "members": "{count} anggota",
     "empty": {
       "title": "Belum ada tim",
       "description": "Belum ada tim yang dibuat."
@@ -268,15 +325,15 @@
     "createDialog": {
       "title": "Buat tim",
       "description": "Masukkan nama untuk tim baru.",
-      "nameLabel": "Nama tim",
-      "namePlaceholder": "Support",
+      "nameLabel": "Nama",
+      "namePlaceholder": "Support team",
       "submit": "Buat"
     },
     "renameDialog": {
       "title": "Ubah nama tim",
       "description": "Masukkan nama baru untuk tim ini.",
-      "nameLabel": "Nama tim",
-      "namePlaceholder": "Support",
+      "nameLabel": "Nama",
+      "namePlaceholder": "Support team",
       "submit": "Simpan"
     },
     "deleteDialog": {

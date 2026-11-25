@@ -1,17 +1,17 @@
 <script setup lang="ts">
-import MemberShell from "@/components/layouts/MemberShell.vue";
 import PasswordField from "@/components/forms/PasswordField.vue";
+import MemberShell from "@/components/layouts/MemberShell.vue";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { translateApiError } from "@/i18n/api-errors";
 import { mapValidationErrors, resetFieldErrors } from "@/composables/use-auth-form";
+import { translateApiError } from "@/i18n/api-errors";
 import { Icon } from "@/icons";
 import { ApiError, changePassword } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth";
 import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from "@runmail/shared";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useRouter } from "vue-router";
 
@@ -29,6 +29,7 @@ const confirmPasswordError = ref("");
 const inlineError = ref("");
 const successMessage = ref("");
 const isSubmitting = ref(false);
+const profile = computed(() => authStore.user);
 
 function clearErrors() {
   resetFieldErrors(currentPasswordError, newPasswordError, confirmPasswordError, inlineError);
@@ -112,25 +113,23 @@ async function handleChangePassword() {
         </CardHeader>
         <CardContent class="flex flex-col gap-4">
           <div class="flex flex-col gap-3">
-            <div>
+            <div class="flex flex-col gap-2">
+              <p class="text-sm text-muted-foreground">{{ t("profile.account.username") }}</p>
               <div class="flex items-center justify-between">
-                <div>
-                  <p class="text-sm text-muted-foreground">{{ t("profile.account.username") }}</p>
-                  <p class="font-medium text-foreground">{{ authStore.user?.username }}</p>
-                </div>
-                <Badge :variant="authStore.isAdmin ? 'secondary' : 'outline'">
+                <p class="font-medium text-foreground">{{ profile?.username }}</p>
+                <Badge :variant="profile?.role === 'admin' ? 'secondary' : 'outline'">
                   {{
-                    authStore.isAdmin
+                    profile?.role === "admin"
                       ? t("profile.account.role.admin")
                       : t("profile.account.role.member")
                   }}
                 </Badge>
               </div>
             </div>
-            <div v-if="authStore.user?.teams?.length">
+            <div v-if="profile?.teams?.length">
               <p class="text-sm text-muted-foreground">{{ t("profile.account.teams") }}</p>
               <ul class="mt-2 flex flex-wrap gap-1.5">
-                <li v-for="team in authStore.user.teams" :key="team.id">
+                <li v-for="team in profile.teams" :key="team.id">
                   <Badge variant="secondary">
                     {{ team.name }}
                   </Badge>
@@ -151,7 +150,7 @@ async function handleChangePassword() {
           <Alert v-if="successMessage">{{ successMessage }}</Alert>
 
           <form class="flex flex-col gap-4" @submit.prevent="handleChangePassword">
-            <label class="flex flex-col gap-1.5">
+            <label class="flex flex-col gap-2">
               <span class="text-sm font-medium text-foreground">
                 {{ t("profile.password.currentLabel") }}
               </span>
@@ -165,7 +164,7 @@ async function handleChangePassword() {
               </p>
             </label>
 
-            <label class="flex flex-col gap-1.5">
+            <label class="flex flex-col gap-2">
               <span class="text-sm font-medium text-foreground">
                 {{ t("profile.password.newLabel") }}
               </span>
@@ -187,7 +186,7 @@ async function handleChangePassword() {
               </p>
             </label>
 
-            <label class="flex flex-col gap-1.5">
+            <label class="flex flex-col gap-2">
               <span class="text-sm font-medium text-foreground">
                 {{ t("profile.password.confirmLabel") }}
               </span>

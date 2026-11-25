@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import { mailboxes } from "./mailboxes";
 import { users } from "./users";
@@ -13,6 +14,11 @@ export const teams = sqliteTable(
   (t) => [uniqueIndex("teams_name_unique").on(t.name)],
 );
 
+export const teamsRelation = relations(teams, ({ many }) => ({
+  teamMembers: many(teamMembers),
+  mailboxTeams: many(mailboxTeams),
+}));
+
 export type Team = typeof teams.$inferSelect;
 export type NewTeam = typeof teams.$inferInsert;
 
@@ -22,14 +28,29 @@ export const teamMembers = sqliteTable(
     id: text("id").primaryKey(),
     team_id: text("team_id")
       .notNull()
-      .references(() => teams.id),
+      .references(() => teams.id, { onDelete: "cascade" }),
     user_id: text("user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: "cascade" }),
     created_at: integer("created_at").notNull(),
   },
   (t) => [uniqueIndex("team_members_team_id_user_id_unique").on(t.team_id, t.user_id)],
 );
+
+export const teamMembersRelation = relations(teamMembers, ({ one }) => ({
+  teams: one(teams, {
+    fields: [teamMembers.team_id],
+    references: [teams.id],
+  }),
+  users: one(users, {
+    fields: [teamMembers.user_id],
+    references: [users.id],
+  }),
+}));
+
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type NewTeamMember = typeof teamMembers.$inferInsert;
+
 export const mailboxTeams = sqliteTable(
   "mailbox_teams",
   {
@@ -39,13 +60,22 @@ export const mailboxTeams = sqliteTable(
       .references(() => mailboxes.id),
     team_id: text("team_id")
       .notNull()
-      .references(() => teams.id),
+      .references(() => teams.id, { onDelete: "cascade" }),
     created_at: integer("created_at").notNull(),
   },
   (t) => [uniqueIndex("mailbox_teams_mailbox_id_team_id_unique").on(t.mailbox_id, t.team_id)],
 );
 
+export const mailboxTeamsRelation = relations(mailboxTeams, ({ one }) => ({
+  mailbox: one(mailboxes, {
+    fields: [mailboxTeams.mailbox_id],
+    references: [mailboxes.id],
+  }),
+  team: one(teams, {
+    fields: [mailboxTeams.team_id],
+    references: [teams.id],
+  }),
+}));
+
 export type MailboxTeam = typeof mailboxTeams.$inferSelect;
 export type NewMailboxTeam = typeof mailboxTeams.$inferInsert;
-export type TeamMember = typeof teamMembers.$inferSelect;
-export type NewTeamMember = typeof teamMembers.$inferInsert;

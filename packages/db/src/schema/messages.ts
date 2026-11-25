@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { folders } from "./folders";
 import { mailboxes } from "./mailboxes";
@@ -33,6 +34,18 @@ export const messages = sqliteTable(
   ],
 );
 
+export const messagesRelation = relations(messages, ({ many, one }) => ({
+  mailbox: one(mailboxes, {
+    fields: [messages.mailbox_id],
+    references: [mailboxes.id],
+  }),
+  folder: one(folders, {
+    fields: [messages.folder_id],
+    references: [folders.id],
+  }),
+  recipients: many(messageRecipients),
+}));
+
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
 
@@ -55,6 +68,13 @@ export const messageRecipients = sqliteTable(
     index("message_recipients_message_id_recipient_type_idx").on(t.message_id, t.recipient_type),
   ],
 );
+
+export const messageRecipientsRelation = relations(messageRecipients, ({ one }) => ({
+  message: one(messages, {
+    fields: [messageRecipients.message_id],
+    references: [messages.id],
+  }),
+}));
 
 export type MessageRecipient = typeof messageRecipients.$inferSelect;
 export type NewMessageRecipient = typeof messageRecipients.$inferInsert;

@@ -30,11 +30,14 @@ const {
   end,
   showPagination,
   paginationTotal,
+  knownPages,
+  hasMore,
   isLoading,
   error,
   load,
   goNext,
   goPrev,
+  goTo,
   reload,
 } = useCursorPagination<Mailbox>(
   async (cursor, limit) => {
@@ -77,7 +80,7 @@ function rowClasses(isActive: boolean) {
 
 <template>
   <MemberShell>
-    <main class="mx-auto flex w-full max-w-2xl flex-col gap-6">
+    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6">
       <div class="flex flex-col gap-1">
         <h1 class="scroll-m-20 text-3xl font-extrabold tracking-tight text-foreground">
           {{ t("mailbox.title") }}
@@ -196,13 +199,14 @@ function rowClasses(isActive: boolean) {
           :page="page"
           :per-page="perPage"
           :total="paginationTotal"
+          :known-pages="knownPages"
+          :has-more="hasMore"
           :disabled="isLoading"
           @prev="goPrev"
           @next="goNext"
-        >
-          <template #range>{{ start }}–{{ end }}</template>
-        </Pagination>
+          @goto="goTo"
+        />
       </div>
-    </main>
+    </div>
   </MemberShell>
 </template>
