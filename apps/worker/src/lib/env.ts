@@ -16,7 +16,3 @@ declare module "hono" {
 }
 
 export type AppContext = Context<AppEnv>;
-
-export function validateEnv(_env: CloudflareBindings): void {
-  // No required secrets: auth uses RS256 keypair stored in settings table.
-}

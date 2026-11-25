@@ -19,8 +19,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "runmail-db",
-      "database_id": "PLACEHOLDER-LOCAL-DEV",
+      "database_name": "runmail",
+      "database_id": "00000000-0000-0000-0000-000000000000",
       "migrations_dir": "../../packages/db/src/migrations",
     },
   ],
