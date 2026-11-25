@@ -20,11 +20,25 @@
       "username": "Username",
       "role": "Peran",
       "status": "Status",
+      "lastActive": "Terakhir aktif",
+      "neverActive": "Belum pernah masuk",
       "actions": "Aksi"
     },
     "empty": {
       "title": "Belum ada user",
       "description": "Belum ada pengguna yang terdaftar."
+    },
+    "searchPlaceholder": "Cari user...",
+    "roleFilterAll": "Semua peran",
+    "roleFilterAdmin": "Admin",
+    "roleFilterMember": "Member",
+    "statusFilterAll": "Semua status",
+    "statusFilterActive": "Aktif",
+    "statusFilterInactive": "Nonaktif",
+    "emptySearch": {
+      "title": "Tidak ada user yang cocok dengan pencarian.",
+      "description": "Coba ubah pencarian atau filter Anda.",
+      "reset": "Atur ulang filter"
     },
     "editAria": "Edit {username}",
     "activeSwitchAria": "Status aktif user",
@@ -56,6 +70,13 @@
       "title": "Nonaktifkan User",
       "description": "Nonaktifkan user? Sesi user akan diakhiri.",
       "submit": "Nonaktifkan"
+    },
+    "deleteAria": "Hapus {username}",
+    "deleteSelfTooltip": "Anda tidak dapat menghapus akun sendiri",
+    "deleteDialog": {
+      "title": "Hapus user",
+      "description": "Hapus user {username}? Tindakan ini permanen dan menghapus akses mailbox/tim serta sesi login user tersebut.",
+      "submit": "Hapus"
     },
     "validation": {
       "usernameRequired": "Username wajib diisi",

@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1793454149791,
-      "tag": "0000_productive_prism",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1793454149792,
-      "tag": "0001_drop_domains_verification_status",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "6",
-      "when": 1794232259791,
-      "tag": "0002_wise_jackal",
+      "when": 1795233839076,
+      "tag": "0000_slimy_marten_broadcloak",
       "breakpoints": true
     }
   ]

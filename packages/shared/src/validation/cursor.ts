@@ -11,3 +11,11 @@ export const cursorQuerySchema = z.object({
 });
 
 export type CursorQuery = z.infer<typeof cursorQuerySchema>;
+
+export const usersQuerySchema = cursorQuerySchema.extend({
+  search: z.string().trim().max(64).optional(),
+  role: z.enum(["admin", "member"]).optional(),
+  status: z.enum(["active", "inactive"]).optional(),
+});
+
+export type UsersQuery = z.infer<typeof usersQuerySchema>;

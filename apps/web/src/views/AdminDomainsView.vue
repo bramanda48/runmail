@@ -66,11 +66,14 @@ const {
   end,
   showPagination,
   paginationTotal,
+  knownPages,
+  hasMore,
   isLoading,
   error,
   load,
   goNext,
   goPrev,
+  goTo,
   reload,
 } = useDomainList(handleOperationError);
 
@@ -151,270 +154,269 @@ onMounted(() => load());
 
 <template>
   <AdminShell>
-    <main class="p-4 lg:p-8" :inert="redirecting">
-      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-col gap-1">
-          <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">
-            {{ t("admin.domains.title") }}
-          </h1>
-          <p class="text-sm text-muted-foreground">
-            {{ t("admin.domains.description") }}
-          </p>
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">
+          {{ t("admin.domains.title") }}
+        </h1>
+        <p class="text-sm text-muted-foreground">
+          {{ t("admin.domains.description") }}
+        </p>
+      </div>
+      <Button :disabled="!canUseCloudflare" @click="addDialog.open">
+        <Icon icon="lucide:plus" />
+        <span>{{ t("admin.domains.add") }}</span>
+      </Button>
+    </div>
+
+    <p
+      v-if="checking"
+      role="status"
+      class="mb-6 flex items-center gap-2 text-sm text-muted-foreground"
+    >
+      <Icon
+        icon="lucide:loader-circle"
+        class="animate-spin motion-reduce:animate-none"
+        aria-hidden="true"
+      />
+      {{ t("admin.domains.cloudflare.checking") }}
+    </p>
+    <Alert v-else-if="statusError" class="mb-6 [&>div]:min-w-0 [&>div]:flex-1">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p>{{ statusError }}</p>
+        <Button class="min-h-11 shrink-0" @click="checkStatus">
+          {{ t("admin.domains.cloudflare.checkAgain") }}
+        </Button>
+      </div>
+    </Alert>
+    <Alert
+      v-else-if="configured === false"
+      aria-live="polite"
+      class="mb-6 [&>div]:min-w-0 [&>div]:flex-1"
+      aria-labelledby="cloudflare-connection-title"
+    >
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 id="cloudflare-connection-title" class="font-semibold">
+            {{
+              reconnect
+                ? t("admin.domains.cloudflare.reconnectTitle")
+                : t("admin.domains.cloudflare.connectTitle")
+            }}
+          </h2>
+          <p class="mt-1">{{ t("admin.domains.cloudflare.connectDescription") }}</p>
+          <p class="mt-1">{{ t("admin.domains.cloudflare.redirectNotice") }}</p>
         </div>
-        <Button :disabled="!canUseCloudflare" @click="addDialog.open">
+        <Button
+          class="min-h-11 w-full shrink-0 md:w-auto"
+          :disabled="connecting || redirecting"
+          :aria-busy="connecting || redirecting"
+          @click="connect"
+        >
+          <Icon
+            v-if="connecting || redirecting"
+            icon="lucide:loader-circle"
+            class="animate-spin motion-reduce:animate-none"
+            aria-hidden="true"
+          />
+          {{
+            redirecting
+              ? t("admin.domains.cloudflare.redirecting")
+              : connecting
+                ? t("admin.domains.cloudflare.connecting")
+                : t("admin.domains.cloudflare.connect")
+          }}
+        </Button>
+      </div>
+    </Alert>
+
+    <div v-if="isLoading" class="flex flex-col gap-4">
+      <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
+    </div>
+
+    <div v-else-if="error" class="flex flex-col gap-4">
+      <Alert variant="destructive">{{ error }}</Alert>
+      <Button variant="ghost" @click="reload">{{ t("common.actions.retry") }}</Button>
+    </div>
+
+    <EmptyState
+      v-else-if="domains.length === 0"
+      icon="lucide:globe"
+      :heading="t('admin.domains.empty.title')"
+      :description="t('admin.domains.empty.description')"
+    >
+      <template #action>
+        <Button class="mt-4" :disabled="!canUseCloudflare" @click="addDialog.open">
           <Icon icon="lucide:plus" />
           <span>{{ t("admin.domains.add") }}</span>
         </Button>
-      </div>
+      </template>
+    </EmptyState>
 
-      <p
-        v-if="checking"
-        role="status"
-        class="mb-6 flex items-center gap-2 text-sm text-muted-foreground"
-      >
-        <Icon
-          icon="lucide:loader-circle"
-          class="animate-spin motion-reduce:animate-none"
-          aria-hidden="true"
-        />
-        {{ t("admin.domains.cloudflare.checking") }}
-      </p>
-      <Alert v-else-if="statusError" class="mb-6 [&>div]:min-w-0 [&>div]:flex-1">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p>{{ statusError }}</p>
-          <Button class="min-h-11 shrink-0 text-foreground" @click="checkStatus">
-            {{ t("admin.domains.cloudflare.checkAgain") }}
-          </Button>
-        </div>
-      </Alert>
-      <Alert
-        v-else-if="configured === false"
-        aria-live="polite"
-        class="mb-6 [&>div]:min-w-0 [&>div]:flex-1"
-        aria-labelledby="cloudflare-connection-title"
-      >
-        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 id="cloudflare-connection-title" class="font-semibold">
-              {{
-                reconnect
-                  ? t("admin.domains.cloudflare.reconnectTitle")
-                  : t("admin.domains.cloudflare.connectTitle")
-              }}
-            </h2>
-            <p class="mt-1">{{ t("admin.domains.cloudflare.connectDescription") }}</p>
-            <p class="mt-1">{{ t("admin.domains.cloudflare.redirectNotice") }}</p>
-          </div>
-          <Button
-            class="min-h-11 w-full shrink-0 md:w-auto"
-            :disabled="connecting || redirecting"
-            :aria-busy="connecting || redirecting"
-            @click="connect"
-          >
-            <Icon
-              v-if="connecting || redirecting"
-              icon="lucide:loader-circle"
-              class="animate-spin motion-reduce:animate-none"
-              aria-hidden="true"
-            />
-            {{
-              redirecting
-                ? t("admin.domains.cloudflare.redirecting")
-                : connecting
-                  ? t("admin.domains.cloudflare.connecting")
-                  : t("admin.domains.cloudflare.connect")
-            }}
-          </Button>
-        </div>
-      </Alert>
-
-      <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
-      </div>
-
-      <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="destructive">{{ error }}</Alert>
-        <Button variant="ghost" @click="reload">{{ t("common.actions.retry") }}</Button>
-      </div>
-
-      <EmptyState
-        v-else-if="domains.length === 0"
-        icon="lucide:globe"
-        :heading="t('admin.domains.empty.title')"
-        :description="t('admin.domains.empty.description')"
-      >
-        <template #action>
-          <Button class="mt-4" :disabled="!canUseCloudflare" @click="addDialog.open">
-            <Icon icon="lucide:plus" />
-            <span>{{ t("admin.domains.add") }}</span>
-          </Button>
-        </template>
-      </EmptyState>
-
-      <div v-else class="flex flex-col gap-4">
-        <div class="rounded-lg border bg-card p-4">
-          <Table>
-            <TableHeader>
+    <div v-else class="flex flex-col gap-4">
+      <div class="rounded-lg border bg-card p-4">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{{ t("admin.domains.table.domain") }}</TableHead>
+              <TableHead>{{ t("admin.domains.table.routingStatus") }}</TableHead>
+              <TableHead>{{ t("admin.domains.table.dnsStatus") }}</TableHead>
+              <TableHead colspan="2">
+                {{ t("admin.domains.table.actions") }}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <template v-for="domain in domains" :key="domain.id">
               <TableRow>
-                <TableHead>{{ t("admin.domains.table.domain") }}</TableHead>
-                <TableHead>{{ t("admin.domains.table.routingStatus") }}</TableHead>
-                <TableHead>{{ t("admin.domains.table.dnsStatus") }}</TableHead>
-                <TableHead colspan="2">
-                  {{ t("admin.domains.table.actions") }}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <template v-for="domain in domains" :key="domain.id">
-                <TableRow>
-                  <TableCell class="font-medium">{{ domain.domain_name }}</TableCell>
-                  <TableCell>
-                    <Skeleton
-                      v-if="['loading', 'idle'].includes(routing.get(domain.id).status)"
-                      class="h-6 w-24"
-                    />
-                    <span v-else-if="!canUseCloudflare" class="text-muted-foreground">-</span>
-                    <Badge
-                      v-else-if="routing.get(domain.id).status === 'ready'"
-                      :variant="routing.get(domain.id).enabled ? 'secondary' : 'outline'"
+                <TableCell class="font-medium">{{ domain.domain_name }}</TableCell>
+                <TableCell>
+                  <Skeleton
+                    v-if="['loading', 'idle'].includes(routing.get(domain.id).status)"
+                    class="h-6 w-24"
+                  />
+                  <span v-else-if="!canUseCloudflare" class="text-muted-foreground">-</span>
+                  <Badge
+                    v-else-if="routing.get(domain.id).status === 'ready'"
+                    :variant="routing.get(domain.id).enabled ? 'secondary' : 'outline'"
+                  >
+                    {{
+                      routing.get(domain.id).enabled
+                        ? t("admin.domains.routingStatus.enabled")
+                        : t("admin.domains.routingStatus.disabled")
+                    }}
+                  </Badge>
+                  <span v-else class="flex items-center gap-2">
+                    <span class="text-sm text-destructive">
+                      {{ t("admin.domains.routingStatus.loadError") }}
+                    </span>
+                    <Button variant="ghost" size="sm" @click="routing.retry(domain.id)">
+                      {{ t("common.actions.retry") }}
+                    </Button>
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Skeleton
+                    v-if="['loading', 'idle'].includes(routing.get(domain.id).status)"
+                    class="h-6 w-24"
+                  />
+                  <span v-else-if="!canUseCloudflare" class="text-muted-foreground">-</span>
+                  <TooltipProvider v-else-if="routing.get(domain.id).status === 'ready'">
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <Badge variant="secondary" class="cursor-help">
+                          {{
+                            routing.get(domain.id).dns
+                              ? t(`admin.domains.dnsStatus.${routing.get(domain.id).dns}`)
+                              : t("admin.domains.dnsStatus.unknown")
+                          }}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>
+                          {{
+                            routing.get(domain.id).dns
+                              ? t(`admin.domains.dnsStatusHint.${routing.get(domain.id).dns}`)
+                              : t("admin.domains.dnsStatusHint.unknown")
+                          }}
+                        </p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <span v-else class="flex items-center gap-2">
+                    <span class="text-sm text-destructive">
+                      {{ t("admin.domains.routingStatus.loadError") }}
+                    </span>
+                    <Button variant="ghost" size="sm" @click="routing.retry(domain.id)">
+                      {{ t("common.actions.retry") }}
+                    </Button>
+                  </span>
+                </TableCell>
+                <TableCell class="w-px">
+                  <div class="flex items-center gap-2">
+                    <Button
+                      v-if="routing.get(domain.id).enabled === false"
+                      variant="outline"
+                      size="icon"
+                      :aria-label="t('admin.domains.routingStatus.enable')"
+                      :title="t('admin.domains.routingStatus.enable')"
+                      :disabled="!canUseCloudflare || routing.get(domain.id).status === 'loading'"
+                      @click="openEnable(domain)"
                     >
-                      {{
-                        routing.get(domain.id).enabled
-                          ? t("admin.domains.routingStatus.enabled")
-                          : t("admin.domains.routingStatus.disabled")
-                      }}
-                    </Badge>
-                    <span v-else class="flex items-center gap-2">
-                      <span class="text-sm text-destructive">
-                        {{ t("admin.domains.routingStatus.loadError") }}
-                      </span>
-                      <Button variant="ghost" size="sm" @click="routing.retry(domain.id)">
-                        {{ t("common.actions.retry") }}
-                      </Button>
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Skeleton
-                      v-if="['loading', 'idle'].includes(routing.get(domain.id).status)"
-                      class="h-6 w-24"
-                    />
-                    <span v-else-if="!canUseCloudflare" class="text-muted-foreground">-</span>
-                    <TooltipProvider v-else-if="routing.get(domain.id).status === 'ready'">
-                      <Tooltip>
-                        <TooltipTrigger as-child>
-                          <Badge variant="secondary" class="cursor-help">
-                            {{
-                              routing.get(domain.id).dns
-                                ? t(`admin.domains.dnsStatus.${routing.get(domain.id).dns}`)
-                                : t("admin.domains.dnsStatus.unknown")
-                            }}
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>
-                            {{
-                              routing.get(domain.id).dns
-                                ? t(`admin.domains.dnsStatusHint.${routing.get(domain.id).dns}`)
-                                : t("admin.domains.dnsStatusHint.unknown")
-                            }}
-                          </p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    <span v-else class="flex items-center gap-2">
-                      <span class="text-sm text-destructive">
-                        {{ t("admin.domains.routingStatus.loadError") }}
-                      </span>
-                      <Button variant="ghost" size="sm" @click="routing.retry(domain.id)">
-                        {{ t("common.actions.retry") }}
-                      </Button>
-                    </span>
-                  </TableCell>
-                  <TableCell class="w-px">
-                    <div class="flex items-center gap-2">
-                      <Button
-                        v-if="routing.get(domain.id).enabled === false"
-                        variant="outline"
-                        size="icon"
-                        :aria-label="t('admin.domains.routingStatus.enable')"
-                        :title="t('admin.domains.routingStatus.enable')"
-                        :disabled="!canUseCloudflare || routing.get(domain.id).status === 'loading'"
-                        @click="openEnable(domain)"
-                      >
-                        <Icon icon="lucide:route" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        v-if="routing.get(domain.id).enabled === true"
-                        variant="outline"
-                        size="icon"
-                        :aria-label="t('admin.domains.routingStatus.disable')"
-                        :title="t('admin.domains.routingStatus.disable')"
-                        :disabled="!canUseCloudflare || routing.get(domain.id).status === 'loading'"
-                        @click="openDisable(domain)"
-                      >
-                        <Icon icon="lucide:route-off" aria-hidden="true" />
-                      </Button>
-                      <Button
-                        v-if="routing.get(domain.id).enabled === true"
-                        variant="outline"
-                        size="icon"
-                        :aria-label="t('admin.domains.settings.open')"
-                        :title="t('admin.domains.settings.open')"
-                        :disabled="!canUseCloudflare || settingsTarget?.id === domain.id"
-                        @click="openSettings(domain)"
-                      >
-                        <Icon icon="lucide:settings" aria-hidden="true" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell class="w-px">
-                    <div class="flex items-center gap-2">
-                      <Button
-                        :aria-expanded="dns.isExpanded(domain.id)"
-                        :disabled="!canUseCloudflare"
-                        @click="() => dns.toggle(domain, domain.domain_name)"
-                      >
-                        <span>{{
-                          dns.isExpanded(domain.id)
-                            ? t("admin.domains.dnsRecords.hide")
-                            : t("admin.domains.dnsRecords.expand")
-                        }}</span>
-                        <Icon
-                          icon="lucide:chevron-down"
-                          aria-hidden="true"
-                          class="transition-transform"
-                          :class="dns.isExpanded(domain.id) ? 'rotate-180' : ''"
-                        />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-                <TableRow v-if="dns.isExpanded(domain.id)" :key="`${domain.id}-dns`">
-                  <TableCell colspan="5" class="bg-muted/30 p-4">
-                    <DomainDnsPanel
-                      :state="dns.get(domain.id)"
-                      :on-retry-record="(i) => dns.retryRecord(domain.id, i)"
-                    />
-                  </TableCell>
-                </TableRow>
-              </template>
-            </TableBody>
-          </Table>
-        </div>
-
-        <Pagination
-          v-if="showPagination"
-          :page="page"
-          :per-page="10"
-          :total="paginationTotal"
-          :disabled="isLoading"
-          @prev="goPrev"
-          @next="goNext"
-        >
-          <template #range> {{ start }}–{{ end }} </template>
-        </Pagination>
+                      <Icon icon="lucide:route" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      v-if="routing.get(domain.id).enabled === true"
+                      variant="outline"
+                      size="icon"
+                      :aria-label="t('admin.domains.routingStatus.disable')"
+                      :title="t('admin.domains.routingStatus.disable')"
+                      :disabled="!canUseCloudflare || routing.get(domain.id).status === 'loading'"
+                      @click="openDisable(domain)"
+                    >
+                      <Icon icon="lucide:route-off" aria-hidden="true" />
+                    </Button>
+                    <Button
+                      v-if="routing.get(domain.id).enabled === true"
+                      variant="outline"
+                      size="icon"
+                      :aria-label="t('admin.domains.settings.open')"
+                      :title="t('admin.domains.settings.open')"
+                      :disabled="!canUseCloudflare || settingsTarget?.id === domain.id"
+                      @click="openSettings(domain)"
+                    >
+                      <Icon icon="lucide:settings" aria-hidden="true" />
+                    </Button>
+                  </div>
+                </TableCell>
+                <TableCell class="w-px">
+                  <div class="flex items-center gap-2">
+                    <Button
+                      :aria-expanded="dns.isExpanded(domain.id)"
+                      :disabled="!canUseCloudflare"
+                      @click="() => dns.toggle(domain, domain.domain_name)"
+                    >
+                      <span>{{
+                        dns.isExpanded(domain.id)
+                          ? t("admin.domains.dnsRecords.hide")
+                          : t("admin.domains.dnsRecords.expand")
+                      }}</span>
+                      <Icon
+                        icon="lucide:chevron-down"
+                        aria-hidden="true"
+                        class="transition-transform"
+                        :class="dns.isExpanded(domain.id) ? 'rotate-180' : ''"
+                      />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+              <TableRow v-if="dns.isExpanded(domain.id)" :key="`${domain.id}-dns`">
+                <TableCell colspan="5" class="bg-muted/30 p-4">
+                  <DomainDnsPanel
+                    :state="dns.get(domain.id)"
+                    :on-retry-record="(i) => dns.retryRecord(domain.id, i)"
+                  />
+                </TableCell>
+              </TableRow>
+            </template>
+          </TableBody>
+        </Table>
       </div>
-    </main>
+
+      <Pagination
+        v-if="showPagination"
+        :page="page"
+        :per-page="10"
+        :total="paginationTotal"
+        :known-pages="knownPages"
+        :has-more="hasMore"
+        :disabled="isLoading"
+        @prev="goPrev"
+        @next="goNext"
+        @goto="goTo"
+      />
+    </div>
 
     <div
       class="fixed bottom-4 right-4 left-4 z-50 sm:left-auto sm:w-96"

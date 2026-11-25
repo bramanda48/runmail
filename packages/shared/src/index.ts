@@ -34,8 +34,8 @@ export type {
 } from "./types/sync-event";
 export type { MailboxLinkedTeam, Team, TeamLinkedUser } from "./types/team";
 export type { User } from "./types/user";
-export { cursorQuerySchema } from "./validation/cursor";
-export type { CursorQuery } from "./validation/cursor";
+export { cursorQuerySchema, usersQuerySchema } from "./validation/cursor";
+export type { CursorQuery, UsersQuery } from "./validation/cursor";
 // validation
 export {
   DOMAIN_LABEL_MAX_LENGTH,

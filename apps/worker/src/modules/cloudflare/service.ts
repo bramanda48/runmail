@@ -22,16 +22,17 @@ const CLOUDFLARE_OAUTH_SCOPES = [
 ].join(" ");
 
 export async function getAuthorizationUrl(
-  env: {
-    CLOUDFLARE_OAUTH_CLIENT_ID: string;
-    JWT_SIGNING_SECRET: string;
-  },
+  c: AppContext,
   redirectUri: string,
 ): Promise<{ url: string; state: string }> {
-  const state = await generateCloudflareState(env.JWT_SIGNING_SECRET, redirectUri);
+  // c.env is typed as the generic CloudflareBindings; narrow it here so a
+  // missing CLOUDFLARE_OAUTH_CLIENT_ID fails typecheck instead of runtime.
+  const oauthEnv: { CLOUDFLARE_OAUTH_CLIENT_ID: string } = c.env;
+  const clientId = oauthEnv.CLOUDFLARE_OAUTH_CLIENT_ID;
+  const state = await generateCloudflareState(c, redirectUri);
 
   const authUrl = new URL("https://dash.cloudflare.com/oauth2/auth");
-  authUrl.searchParams.set("client_id", env.CLOUDFLARE_OAUTH_CLIENT_ID);
+  authUrl.searchParams.set("client_id", clientId);
   authUrl.searchParams.set("redirect_uri", redirectUri);
   authUrl.searchParams.set("response_type", "code");
   authUrl.searchParams.set("scope", CLOUDFLARE_OAUTH_SCOPES);
@@ -48,13 +49,13 @@ export async function handleCloudflareCallback(
     redirectUri?: string;
   },
 ): Promise<{ success: true } | { success: false; error: string }> {
-  const env = c.env as {
+  // Same narrowing as getAuthorizationUrl above: surface missing secrets at compile time.
+  const env: {
     CLOUDFLARE_OAUTH_CLIENT_ID: string;
     CLOUDFLARE_OAUTH_CLIENT_SECRET: string;
-    JWT_SIGNING_SECRET: string;
-  };
+  } = c.env;
 
-  const stateResult = await verifyCloudflareState(env.JWT_SIGNING_SECRET, params.state);
+  const stateResult = await verifyCloudflareState(c, params.state);
   if (!stateResult.valid) {
     return { success: false, error: "Invalid or expired state parameter" };
   }

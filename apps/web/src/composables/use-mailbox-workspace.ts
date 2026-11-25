@@ -26,7 +26,6 @@ export function useMailboxWorkspace(options: MailboxWorkspaceOptions = {}) {
   async function resolveMailbox(): Promise<void> {
     if (mailboxStore.mailboxId === mailboxId.value) return;
 
-    console.log(mailboxId.value);
     const mailbox = mailboxStore.accessible.get(mailboxId.value);
     if (mailbox) {
       mailboxStore.openMailbox(mailbox);

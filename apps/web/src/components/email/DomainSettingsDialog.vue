@@ -228,7 +228,7 @@ function handleRemove(name: string): void {
                       class="animate-spin"
                       aria-hidden="true"
                     />
-                    <Icon v-else icon="lucide:trash-2" aria-hidden="true" />
+                    <Icon v-else icon="lucide:trash" aria-hidden="true" />
                   </Button>
                 </TableCell>
               </TableRow>

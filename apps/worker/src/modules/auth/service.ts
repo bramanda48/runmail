@@ -1,3 +1,4 @@
+import { accessTokenTTL, refreshTokenTTL } from "@/config/auth";
 import { getDb } from "@/lib/db";
 import type { AppContext } from "@/lib/env";
 import { createId } from "@/lib/ids";
@@ -5,12 +6,12 @@ import { isUniqueViolation } from "@/lib/sqlite";
 import {
   generateRefreshToken,
   hashPassword,
-  issueAccessToken,
   sha256Hex,
   verifyPassword,
 } from "@/modules/auth/helpers";
+import { ensureKeypair, issueAccessToken } from "@/modules/auth/keypair";
 import { ensureSettings, updateSettings } from "@/modules/settings/service";
-import { refreshTokens, teamMembers, teams, users } from "@runmail/db";
+import { refreshTokens, users } from "@runmail/db";
 import { and, eq, gt, isNull } from "drizzle-orm";
 
 export type TokenErrorCode = "TOKEN_EXPIRED" | "TOKEN_REUSED" | "UNAUTHORIZED";
@@ -19,15 +20,6 @@ export type AuthResult = {
   access_token: string;
   refresh_token: string;
   expires_in: number;
-  user: {
-    id: string;
-    username: string;
-    role: string;
-    teams?: {
-      id: string;
-      name: string;
-    }[];
-  };
 };
 
 export type AuthError = { error: TokenErrorCode | "INVALID_CREDENTIALS" };
@@ -54,28 +46,26 @@ export async function login(
   }
 
   const { token: refresh_token, token_hash } = await generateRefreshToken();
-  const ttlMs = parseInt(c.env.REFRESH_TOKEN_TTL_SECONDS, 10) * 1000;
+  const ttlMs = refreshTokenTTL * 1000;
   const now = Date.now();
 
-  await db.insert(refreshTokens).values({
-    id: createId(),
-    user_id: user.id,
-    token_hash,
-    expires_at: now + ttlMs,
-    created_at: now,
-  });
+  await db.batch([
+    db.insert(refreshTokens).values({
+      id: createId(),
+      user_id: user.id,
+      token_hash,
+      expires_at: now + ttlMs,
+      created_at: now,
+    }),
+    db.update(users).set({ last_login_at: now }).where(eq(users.id, user.id)),
+  ]);
 
-  const access_token = await issueAccessToken(
-    c.env.JWT_SIGNING_SECRET,
-    parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    { id: user.id, role: user.role },
-  );
+  const access_token = await issueAccessToken(c, { id: user.id, role: user.role }, accessTokenTTL);
 
   return {
     access_token,
     refresh_token,
-    expires_in: parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    user: { id: user.id, username: user.username, role: user.role },
+    expires_in: accessTokenTTL,
   };
 }
 
@@ -118,14 +108,8 @@ export async function refresh(
     return { error: "UNAUTHORIZED" as const };
   }
 
-  const teamRows = await db
-    .select({ id: teams.id, name: teams.name })
-    .from(teamMembers)
-    .innerJoin(teams, eq(teamMembers.team_id, teams.id))
-    .where(eq(teamMembers.user_id, user.id));
-
   const { token: refresh_token, token_hash: newHash } = await generateRefreshToken();
-  const ttlMs = parseInt(c.env.REFRESH_TOKEN_TTL_SECONDS, 10) * 1000;
+  const ttlMs = refreshTokenTTL * 1000;
   const issuedAt = Date.now();
 
   await db.insert(refreshTokens).values({
@@ -136,17 +120,52 @@ export async function refresh(
     created_at: issuedAt,
   });
 
-  const access_token = await issueAccessToken(
-    c.env.JWT_SIGNING_SECRET,
-    parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    { id: user.id, role: user.role },
-  );
+  const access_token = await issueAccessToken(c, { id: user.id, role: user.role }, accessTokenTTL);
 
   return {
     access_token,
     refresh_token,
-    expires_in: parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    user: { id: user.id, username: user.username, role: user.role, teams: teamRows },
+    expires_in: accessTokenTTL,
+  };
+}
+
+export type AuthMe = {
+  id: string;
+  username: string;
+  role: string;
+  teams: {
+    id: string;
+    name: string;
+  }[];
+};
+
+// Look up the current user for GET /me. Returns null when the user is
+// missing or inactive so the route can answer 404.
+export async function getMe(c: AppContext, userId: string): Promise<AuthMe | null> {
+  const db = getDb(c);
+
+  const user = await db.query.users.findFirst({
+    with: { teamMembers: { with: { teams: true } } },
+    where: eq(users.id, userId),
+  });
+
+  if (typeof user === "undefined") {
+    return null;
+  }
+  if (!user.is_active) {
+    return null;
+  }
+
+  const teamRows = user.teamMembers.map((member) => ({
+    id: member.teams.id,
+    name: member.teams.name,
+  }));
+
+  return {
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    teams: teamRows,
   };
 }
 
@@ -193,7 +212,7 @@ export async function changePassword(
   return { ok: true };
 }
 
-export type SetupError = { error: "SETUP_COMPLETE" | "USERNAME_EXISTS" };
+export type SetupError = { error: "SETUP_COMPLETE" | "USERNAME_EXISTS" | "KEYPAIR_UNAVAILABLE" };
 
 export async function setup(
   c: AppContext,
@@ -201,6 +220,12 @@ export async function setup(
 ): Promise<AuthResult | SetupError> {
   const settings = await ensureSettings(c);
   if (settings.is_setup_complete) return { error: "SETUP_COMPLETE" };
+
+  try {
+    await ensureKeypair(c);
+  } catch {
+    return { error: "KEYPAIR_UNAVAILABLE" };
+  }
 
   const db = getDb(c);
   const now = Date.now();
@@ -225,7 +250,7 @@ export async function setup(
   await updateSettings(c, { is_setup_complete: true });
 
   const { token: refresh_token, token_hash } = await generateRefreshToken();
-  const ttlMs = parseInt(c.env.REFRESH_TOKEN_TTL_SECONDS, 10) * 1000;
+  const ttlMs = refreshTokenTTL * 1000;
   const issuedAt = Date.now();
 
   await db.insert(refreshTokens).values({
@@ -236,16 +261,11 @@ export async function setup(
     created_at: issuedAt,
   });
 
-  const access_token = await issueAccessToken(
-    c.env.JWT_SIGNING_SECRET,
-    parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    { id, role: "admin" },
-  );
+  const access_token = await issueAccessToken(c, { id, role: "admin" }, accessTokenTTL);
 
   return {
     access_token,
     refresh_token,
-    expires_in: parseInt(c.env.JWT_ACCESS_TTL_SECONDS, 10),
-    user: { id, username: input.username, role: "admin" },
+    expires_in: accessTokenTTL,
   };
 }

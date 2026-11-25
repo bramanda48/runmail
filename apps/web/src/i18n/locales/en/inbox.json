@@ -37,7 +37,8 @@
     "label": "Pagination",
     "previous": "Previous page",
     "next": "Next page",
-    "range": "{start}–{end} of {total}"
+    "range": "{start}–{end} of {total}",
+    "goTo": "Go to page {page}"
   },
   "folders": {
     "label": "Folders",

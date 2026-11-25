@@ -1,5 +1,6 @@
 import type { AppEnv } from "@/lib/env";
 import { errorCodeForStatus } from "@/lib/error";
+import { notFound } from "@/lib/http-error";
 import { createLogger } from "@/lib/logger";
 import { requestLogger } from "@/middleware/logging";
 import { authRoutes } from "@/modules/auth";
@@ -13,6 +14,7 @@ import { settingsRoutes } from "@/modules/settings";
 import { syncRoutes } from "@/modules/sync";
 import { teamRoutes } from "@/modules/teams";
 import { userRoutes } from "@/modules/users";
+import { wellKnownRoutes } from "@/modules/well-known";
 import { API_ERROR_CODES } from "@runmail/shared";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -33,6 +35,7 @@ app.route("/api/v1/mailboxes", messageRoutes);
 app.route("/api/v1/mailboxes", syncRoutes);
 app.route("/api/v1/integrations", cloudflareRoutes);
 app.route("/api/v1/settings", settingsRoutes);
+app.route("/api/v1/.well-known", wellKnownRoutes);
 
 app.onError((err, c) => {
   const logger = createLogger(c);
@@ -43,7 +46,12 @@ app.onError((err, c) => {
       message: err.message,
     });
     return c.json(
-      { error: { code: errorCodeForStatus(err.status), message: err.message } },
+      {
+        error: {
+          code: errorCodeForStatus(err.status),
+          message: err.message,
+        },
+      },
       err.status,
     );
   }
@@ -56,13 +64,13 @@ app.onError((err, c) => {
     {
       error: {
         code: API_ERROR_CODES.INTERNAL_ERROR,
-        message: "An unexpected error occurred",
+        message: "An unexpected error occurred.",
       },
     },
     500,
   );
 });
 
-app.notFound((c) => c.env.ASSETS.fetch(c.req.raw));
+app.notFound((c) => c.json(notFound(`The route '${c.req.path}' could not be found.`)));
 
 export { app };

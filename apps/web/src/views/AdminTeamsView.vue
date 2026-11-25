@@ -56,11 +56,14 @@ const {
   end,
   showPagination,
   paginationTotal,
+  knownPages,
+  hasMore,
   isLoading,
   error,
   load,
   goNext,
   goPrev,
+  goTo,
   reload,
 } = useCursorPagination<Team>(
   async (cursor, limit) => {
@@ -391,111 +394,111 @@ async function removeMember(user: TeamLinkedUser) {
 
 <template>
   <AdminShell>
-    <main class="p-4 lg:p-8">
-      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-col gap-1">
-          <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">
-            {{ t("admin.teams.title") }}
-          </h1>
-          <p class="text-sm text-muted-foreground">{{ t("admin.teams.description") }}</p>
-        </div>
-        <Button @click="openCreate">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">
+          {{ t("admin.teams.title") }}
+        </h1>
+        <p class="text-sm text-muted-foreground">{{ t("admin.teams.description") }}</p>
+      </div>
+      <Button @click="openCreate">
+        <Icon icon="lucide:plus" />
+        <span>{{ t("admin.teams.create") }}</span>
+      </Button>
+    </div>
+
+    <div
+      v-if="isLoading"
+      class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3"
+    >
+      <Skeleton v-for="n in 6" :key="n" class="h-40 w-full" />
+    </div>
+
+    <div v-else-if="error" class="flex flex-col gap-4">
+      <Alert variant="destructive">{{ error }}</Alert>
+      <Button variant="ghost" @click="retry">{{ t("common.actions.retry") }}</Button>
+    </div>
+
+    <EmptyState
+      v-else-if="teams.length === 0"
+      icon="lucide:users"
+      :heading="t('admin.teams.empty.title')"
+      :description="t('admin.teams.empty.description')"
+    >
+      <template #action>
+        <Button class="mt-4" @click="openCreate">
           <Icon icon="lucide:plus" />
           <span>{{ t("admin.teams.create") }}</span>
         </Button>
-      </div>
+      </template>
+    </EmptyState>
 
-      <div
-        v-if="isLoading"
-        class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3"
-      >
-        <Skeleton v-for="n in 6" :key="n" class="h-40 w-full" />
-      </div>
-
-      <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="destructive">{{ error }}</Alert>
-        <Button variant="ghost" @click="retry">{{ t("common.actions.retry") }}</Button>
-      </div>
-
-      <EmptyState
-        v-else-if="teams.length === 0"
-        icon="lucide:users"
-        :heading="t('admin.teams.empty.title')"
-        :description="t('admin.teams.empty.description')"
-      >
-        <template #action>
-          <Button class="mt-4" @click="openCreate">
-            <Icon icon="lucide:plus" />
-            <span>{{ t("admin.teams.create") }}</span>
-          </Button>
-        </template>
-      </EmptyState>
-
-      <div v-else class="flex flex-col gap-4">
-        <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <Card v-for="team in teams" :key="team.id" class="flex h-full flex-col">
-            <CardContent class="flex flex-col gap-4 pt-6">
-              <div class="flex items-center justify-between gap-2">
-                <CardTitle>{{ team.name }}</CardTitle>
-                <div class="flex shrink-0 items-center gap-2">
-                  <Button
-                    :aria-label="t('admin.teams.renameAria', { name: team.name })"
-                    :title="t('admin.teams.renameAria', { name: team.name })"
-                    variant="ghost"
-                    size="icon"
-                    @click="openRename(team)"
-                  >
-                    <Icon icon="lucide:pencil" />
-                  </Button>
-                  <Button
-                    :aria-label="t('admin.teams.deleteAria', { name: team.name })"
-                    :title="t('admin.teams.deleteAria', { name: team.name })"
-                    variant="ghost"
-                    size="icon"
-                    @click="openDelete(team)"
-                  >
-                    <Icon icon="lucide:trash-2" />
-                  </Button>
-                </div>
+    <div v-else class="flex flex-col gap-4">
+      <div class="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Card v-for="team in teams" :key="team.id" class="flex h-full flex-col">
+          <CardContent class="flex flex-col gap-4 pt-6">
+            <div class="flex items-center justify-between gap-2">
+              <CardTitle>{{ team.name }}</CardTitle>
+              <div class="flex shrink-0 items-center gap-2">
+                <Button
+                  :aria-label="t('admin.teams.renameAria', { name: team.name })"
+                  :title="t('admin.teams.renameAria', { name: team.name })"
+                  variant="outline"
+                  size="icon"
+                  @click="openRename(team)"
+                >
+                  <Icon icon="lucide:pencil" />
+                </Button>
+                <Button
+                  :aria-label="t('admin.teams.deleteAria', { name: team.name })"
+                  :title="t('admin.teams.deleteAria', { name: team.name })"
+                  variant="outline"
+                  size="icon"
+                  class="text-destructive hover:text-destructive"
+                  @click="openDelete(team)"
+                >
+                  <Icon icon="lucide:trash" />
+                </Button>
               </div>
-              <div class="flex h-8 items-center gap-3">
-                <div v-if="membersOf(team.id).length > 0" class="flex -space-x-2">
-                  <span
-                    v-for="member in previewOf(team.id)"
-                    :key="member.user_id"
-                    :title="member.username"
-                    class="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase ring-2 ring-card"
-                  >
-                    {{ member.username.charAt(0) }}
-                  </span>
-                </div>
-                <span class="text-sm text-muted-foreground">
-                  {{ t("admin.teams.members", { count: membersOf(team.id).length }) }}
+            </div>
+            <div class="flex h-8 items-center gap-3">
+              <div v-if="membersOf(team.id).length > 0" class="flex -space-x-2">
+                <span
+                  v-for="member in previewOf(team.id)"
+                  :key="member.user_id"
+                  :title="member.username"
+                  class="flex size-8 items-center justify-center rounded-full bg-muted text-xs font-medium uppercase ring-2 ring-card"
+                >
+                  {{ member.username.charAt(0) }}
                 </span>
               </div>
-            </CardContent>
-            <CardFooter class="mt-auto">
-              <Button variant="outline" size="sm" @click="openManageMembers(team)">
-                <Icon icon="lucide:users" />
-                <span>{{ t("admin.teams.manageDialog.title") }}</span>
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-
-        <Pagination
-          v-if="showPagination"
-          :page="page"
-          :per-page="perPage"
-          :total="paginationTotal"
-          :disabled="isLoading"
-          @prev="goPrev"
-          @next="goNext"
-        >
-          <template #range> {{ start }}–{{ end }} </template>
-        </Pagination>
+              <span class="text-sm text-muted-foreground">
+                {{ t("admin.teams.members", { count: membersOf(team.id).length }) }}
+              </span>
+            </div>
+          </CardContent>
+          <CardFooter class="mt-auto">
+            <Button variant="outline" size="sm" @click="openManageMembers(team)">
+              <Icon icon="lucide:users" />
+              <span>{{ t("admin.teams.manageDialog.title") }}</span>
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
-    </main>
+
+      <Pagination
+        v-if="showPagination"
+        :page="page"
+        :per-page="perPage"
+        :total="paginationTotal"
+        :known-pages="knownPages"
+        :has-more="hasMore"
+        :disabled="isLoading"
+        @prev="goPrev"
+        @next="goNext"
+        @goto="goTo"
+      />
+    </div>
 
     <!-- Create team dialog -->
     <DialogRoot v-model:open="createOpen">

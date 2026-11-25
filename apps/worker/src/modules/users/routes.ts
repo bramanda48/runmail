@@ -6,9 +6,9 @@ import { createUserBodySchema, patchUserBodySchema } from "@/modules/users/valid
 import type { IdCursorPayload } from "@runmail/shared";
 import {
   API_ERROR_CODES,
-  cursorQuerySchema,
   decodeCursor,
   PAGINATION_DEFAULT_LIMIT,
+  usersQuerySchema,
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -19,7 +19,7 @@ userRoutes.use("*", jwtAuth, requireAdmin);
 
 userRoutes.get("/", async (c) => {
   const query = c.req.query();
-  const parsed = cursorQuerySchema.safeParse(query);
+  const parsed = usersQuerySchema.safeParse(query);
 
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
@@ -36,7 +36,11 @@ userRoutes.get("/", async (c) => {
     cursorId = payload.id;
   }
 
-  const { users, meta } = await service.listUsers(c, limit, cursorId);
+  const { users, meta } = await service.listUsers(c, limit, cursorId, {
+    search: parsed.data.search,
+    role: parsed.data.role,
+    status: parsed.data.status,
+  });
   return c.json({ data: { users }, meta }, 200);
 });
 
@@ -125,4 +129,32 @@ userRoutes.patch("/:user_id", async (c) => {
     );
   }
   return c.json({ data: { user: result.user } }, 200);
+});
+
+userRoutes.delete("/:user_id", async (c) => {
+  const userId = c.req.param("user_id");
+  if (c.get("auth").user_id === userId) {
+    return c.json(
+      {
+        error: {
+          code: "CANNOT_DELETE_SELF",
+          message: "Tidak dapat menghapus akun sendiri",
+        },
+      },
+      400,
+    );
+  }
+  const result = await service.deleteUser(c, userId);
+  if ("error" in result) {
+    return c.json(
+      {
+        error: {
+          code: API_ERROR_CODES.NOT_FOUND,
+          message: "Pengguna tidak ditemukan",
+        },
+      },
+      404,
+    );
+  }
+  return c.json({ data: { ok: true } }, 200);
 });

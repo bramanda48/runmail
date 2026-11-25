@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import MailboxWorkspace from "@/components/layouts/MailboxWorkspace.vue";
 import ComposeModal from "@/components/email/compose/ComposeModal.vue";
+import MailboxWorkspace from "@/components/layouts/MailboxWorkspace.vue";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -65,7 +65,7 @@ watchSyncStatus();
     :unread-counts="unreadCounts"
     @compose="composeOpen = true"
   >
-    <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-4 lg:p-8">
+    <div class="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">

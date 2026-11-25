@@ -77,11 +77,14 @@ const {
   end,
   showPagination,
   paginationTotal,
+  knownPages,
+  hasMore,
   isLoading,
   error,
   load,
   goNext,
   goPrev,
+  goTo,
   reload,
 } = useCursorPagination<Mailbox>(
   async (cursor, limit) => {
@@ -486,99 +489,98 @@ async function unlinkTeam(team: MailboxLinkedTeam) {
 
 <template>
   <AdminShell>
-    <main class="p-4 lg:p-8">
-      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div class="flex flex-col gap-1">
-          <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">
-            {{ t("admin.mailboxes.title") }}
-          </h1>
-          <p class="text-sm text-muted-foreground">{{ t("admin.mailboxes.description") }}</p>
-        </div>
-        <Button @click="openCreateDialog">
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div class="flex flex-col gap-1">
+        <h1 class="scroll-m-20 text-2xl font-bold tracking-tight text-foreground">
+          {{ t("admin.mailboxes.title") }}
+        </h1>
+        <p class="text-sm text-muted-foreground">{{ t("admin.mailboxes.description") }}</p>
+      </div>
+      <Button @click="openCreateDialog">
+        <Icon icon="lucide:plus" />
+        <span>{{ t("admin.mailboxes.create") }}</span>
+      </Button>
+    </div>
+
+    <div v-if="isLoading" class="flex flex-col gap-4">
+      <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
+    </div>
+
+    <div v-else-if="error" class="flex flex-col gap-4">
+      <Alert variant="destructive">{{ error }}</Alert>
+      <Button variant="ghost" @click="retry">{{ t("common.actions.retry") }}</Button>
+    </div>
+
+    <EmptyState
+      v-else-if="mailboxes.length === 0"
+      icon="lucide:mail"
+      :heading="t('admin.mailboxes.empty.title')"
+      :description="t('admin.mailboxes.empty.description')"
+    >
+      <template #action>
+        <Button class="mt-4" @click="openCreateDialog">
           <Icon icon="lucide:plus" />
           <span>{{ t("admin.mailboxes.create") }}</span>
         </Button>
+      </template>
+    </EmptyState>
+
+    <div v-else class="flex flex-col gap-4">
+      <div class="rounded-lg border bg-card p-4">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{{ t("admin.mailboxes.table.address") }}</TableHead>
+              <TableHead>{{ t("admin.mailboxes.table.status") }}</TableHead>
+              <TableHead class="w-28">{{ t("admin.mailboxes.table.actions") }}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-for="mailbox in mailboxes" :key="mailbox.id">
+              <TableCell class="font-medium">{{ mailbox.address }}</TableCell>
+              <TableCell>
+                <Badge :variant="mailbox.is_active ? 'secondary' : 'outline'">
+                  {{ mailbox.is_active ? t("admin.status.active") : t("admin.status.inactive") }}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <div class="flex items-center gap-2">
+                  <Button
+                    :aria-label="t('admin.mailboxes.editAria', { address: mailbox.address })"
+                    variant="outline"
+                    size="icon"
+                    @click="openEdit(mailbox)"
+                  >
+                    <Icon icon="lucide:pencil" />
+                  </Button>
+                  <Button
+                    :aria-label="t('admin.mailboxes.manageAria', { address: mailbox.address })"
+                    variant="outline"
+                    size="icon"
+                    @click="openManageUsers(mailbox)"
+                  >
+                    <Icon icon="lucide:users" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </div>
 
-      <div v-if="isLoading" class="flex flex-col gap-4">
-        <Skeleton v-for="n in 4" :key="n" class="h-16 w-full" />
-      </div>
-
-      <div v-else-if="error" class="flex flex-col gap-4">
-        <Alert variant="destructive">{{ error }}</Alert>
-        <Button variant="ghost" @click="retry">{{ t("common.actions.retry") }}</Button>
-      </div>
-
-      <EmptyState
-        v-else-if="mailboxes.length === 0"
-        icon="lucide:mail"
-        :heading="t('admin.mailboxes.empty.title')"
-        :description="t('admin.mailboxes.empty.description')"
-      >
-        <template #action>
-          <Button class="mt-4" @click="openCreateDialog">
-            <Icon icon="lucide:plus" />
-            <span>{{ t("admin.mailboxes.create") }}</span>
-          </Button>
-        </template>
-      </EmptyState>
-
-      <div v-else class="flex flex-col gap-4">
-        <div class="rounded-lg border bg-card p-4">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{{ t("admin.mailboxes.table.address") }}</TableHead>
-                <TableHead>{{ t("admin.mailboxes.table.status") }}</TableHead>
-                <TableHead class="w-28">{{ t("admin.mailboxes.table.actions") }}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <TableRow v-for="mailbox in mailboxes" :key="mailbox.id">
-                <TableCell class="font-medium">{{ mailbox.address }}</TableCell>
-                <TableCell>
-                  <Badge :variant="mailbox.is_active ? 'secondary' : 'outline'">
-                    {{ mailbox.is_active ? t("admin.status.active") : t("admin.status.inactive") }}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div class="flex items-center gap-1">
-                    <Button
-                      :aria-label="t('admin.mailboxes.editAria', { address: mailbox.address })"
-                      variant="ghost"
-                      size="icon"
-                      @click="openEdit(mailbox)"
-                    >
-                      <Icon icon="lucide:pencil" />
-                    </Button>
-                    <Button
-                      :aria-label="t('admin.mailboxes.manageAria', { address: mailbox.address })"
-                      variant="ghost"
-                      size="icon"
-                      @click="openManageUsers(mailbox)"
-                    >
-                      <Icon icon="lucide:users" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </div>
-
-        <Pagination
-          v-if="showPagination"
-          :page="page"
-          :per-page="perPage"
-          :total="paginationTotal"
-          :disabled="isLoading"
-          @prev="goPrev"
-          @next="goNext"
-        >
-          <template #range> {{ start }}–{{ end }} </template>
-        </Pagination>
-      </div>
-    </main>
+      <Pagination
+        v-if="showPagination"
+        :page="page"
+        :per-page="perPage"
+        :total="paginationTotal"
+        :known-pages="knownPages"
+        :has-more="hasMore"
+        :disabled="isLoading"
+        @prev="goPrev"
+        @next="goNext"
+        @goto="goTo"
+      />
+    </div>
 
     <!-- Create mailbox dialog -->
     <DialogRoot v-model:open="createOpen">

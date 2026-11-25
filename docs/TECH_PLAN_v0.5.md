@@ -606,7 +606,7 @@ Environment hanya `development` dan `production`. D1 dan R2 terpisah untuk masin
 | `JWT_ACCESS_TTL_SECONDS`    | 15 menit.                       | Semua                 |
 | `REFRESH_TOKEN_TTL_SECONDS` | 30 hari.                        | Semua                 |
 | `DB`                        | D1 binding environment terkait. | Semua                 |
-| `RAW_EMAIL_BUCKET`          | R2 binding environment terkait. | Semua                 |
+| `R2`                        | R2 binding environment terkait. | Semua                 |
 | `CLOUDFLARE_ACCOUNT_ID`     | Cloudflare integration.         | Semua                 |
 | `CLOUDFLARE_API_TOKEN`      | Scoped API credential.          | Semua, secret         |
 | `MAX_EMAIL_BYTES`           | 25 MB.                          | Semua                 |

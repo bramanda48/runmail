@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { mailboxes } from "./mailboxes";
 
@@ -34,6 +35,15 @@ export const rulesets = sqliteTable("rulesets", {
   updated_at: integer("updated_at").notNull(),
 });
 
+export const rulesetsRelation = relations(rulesets, ({ many, one }) => ({
+  mailbox: one(mailboxes, {
+    fields: [rulesets.mailbox_id],
+    references: [mailboxes.id],
+  }),
+  conditions: many(rulesetConditions),
+  actions: many(rulesetActions),
+}));
+
 export type Ruleset = typeof rulesets.$inferSelect;
 export type NewRuleset = typeof rulesets.$inferInsert;
 
@@ -48,6 +58,13 @@ export const rulesetConditions = sqliteTable("ruleset_conditions", {
   condition_order: integer("condition_order").notNull(),
 });
 
+export const rulesetConditionsRelation = relations(rulesetConditions, ({ one }) => ({
+  ruleset: one(rulesets, {
+    fields: [rulesetConditions.ruleset_id],
+    references: [rulesets.id],
+  }),
+}));
+
 export type RulesetCondition = typeof rulesetConditions.$inferSelect;
 export type NewRulesetCondition = typeof rulesetConditions.$inferInsert;
 
@@ -60,6 +77,13 @@ export const rulesetActions = sqliteTable("ruleset_actions", {
   action_value: text("action_value"),
   action_order: integer("action_order").notNull(),
 });
+
+export const rulesetActionsRelation = relations(rulesetActions, ({ one }) => ({
+  ruleset: one(rulesets, {
+    fields: [rulesetActions.ruleset_id],
+    references: [rulesets.id],
+  }),
+}));
 
 export type RulesetAction = typeof rulesetActions.$inferSelect;
 export type NewRulesetAction = typeof rulesetActions.$inferInsert;
