@@ -1,6 +1,7 @@
 import type { AppEnv } from "@/lib/env";
 import { errorCodeForStatus } from "@/lib/error";
 import { notFound } from "@/lib/http-error";
+import { fail } from "@/lib/http-response";
 import { createLogger } from "@/lib/logger";
 import { requestLogger } from "@/middleware/logging";
 import { authRoutes } from "@/modules/auth";
@@ -45,30 +46,14 @@ app.onError((err, c) => {
       status: err.status,
       message: err.message,
     });
-    return c.json(
-      {
-        error: {
-          code: errorCodeForStatus(err.status),
-          message: err.message,
-        },
-      },
-      err.status,
-    );
+    return fail(c, errorCodeForStatus(err.status), err.message, err.status);
   }
 
   logger.error("Unhandled error", err, {
     path: c.req.path,
   });
 
-  return c.json(
-    {
-      error: {
-        code: API_ERROR_CODES.INTERNAL_ERROR,
-        message: "An unexpected error occurred.",
-      },
-    },
-    500,
-  );
+  return fail(c, API_ERROR_CODES.INTERNAL_ERROR, "An unexpected error occurred.", 500);
 });
 
 app.notFound((c) => c.json(notFound(`The route '${c.req.path}' could not be found.`)));

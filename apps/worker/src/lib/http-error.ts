@@ -1,20 +1,9 @@
-import { API_ERROR_CODES } from "@runmail/shared";
+import { API_ERROR_CODES, apiError } from "@runmail/shared";
 
 export function badRequest(details: Record<string, unknown>) {
-  return {
-    error: {
-      code: API_ERROR_CODES.VALIDATION_ERROR,
-      message: "Validasi gagal",
-      details,
-    },
-  };
+  return apiError(API_ERROR_CODES.VALIDATION_ERROR, "Validasi gagal", details);
 }
 
 export function notFound(message: string) {
-  return {
-    error: {
-      code: API_ERROR_CODES.NOT_FOUND,
-      message,
-    },
-  };
+  return apiError(API_ERROR_CODES.NOT_FOUND, message);
 }

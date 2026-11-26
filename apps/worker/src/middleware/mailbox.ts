@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import type { AppEnv } from "@/lib/env";
+import { fail } from "@/lib/http-response";
 import { mailboxes, mailboxTeams, mailboxUsers, teamMembers } from "@runmail/db";
 import { API_ERROR_CODES } from "@runmail/shared";
 import { and, eq } from "drizzle-orm";
@@ -9,15 +10,7 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
   const auth = c.get("auth");
   const mailboxId = c.req.param("mailbox_id");
   if (!mailboxId) {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan",
-        },
-      },
-      404,
-    );
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
   }
   const db = getDb(c);
 
@@ -28,27 +21,11 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
     .limit(1);
 
   if (!mailbox) {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan",
-        },
-      },
-      404,
-    );
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
   }
 
   if (!mailbox.is_active) {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.FORBIDDEN,
-          message: "Mailbox tidak aktif",
-        },
-      },
-      403,
-    );
+    return fail(c, API_ERROR_CODES.FORBIDDEN, "Mailbox tidak aktif", 403);
   }
 
   // Union access: direct link OR membership in a team the mailbox is shared to.
@@ -70,15 +47,7 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
   }
 
   if (!allowed) {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.NOT_FOUND,
-          message: "Mailbox tidak ditemukan",
-        },
-      },
-      404,
-    );
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
   }
 
   c.set("mailbox", { mailbox_id: mailboxId });

@@ -1,5 +1,6 @@
 // contracts
 
+export { apiSuccess } from "./contracts/envelope";
 export type { ApiError, ApiMeta, ApiSuccess } from "./contracts/envelope";
 export { API_ERROR_CODES, apiError } from "./contracts/errors";
 export type { ApiErrorCode } from "./contracts/errors";

@@ -1,6 +1,7 @@
 import { CloudflareOAuthNotConfiguredError } from "@/lib/cloudflare";
 import type { AppEnv } from "@/lib/env";
 import { badRequest } from "@/lib/http-error";
+import { fail, ok } from "@/lib/http-response";
 import { jwtAuth, requireAdmin } from "@/middleware/auth";
 import {
   disconnectCloudflare,
@@ -32,25 +33,10 @@ cloudflare.post("/cloudflare/callback", async (c) => {
   const result = await handleCloudflareCallback(c, { code, state });
 
   if (!result.success) {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.VALIDATION_ERROR,
-          message: result.error,
-        },
-      },
-      400,
-    );
+    return fail(c, API_ERROR_CODES.VALIDATION_ERROR, result.error, 400);
   }
 
-  return c.json(
-    {
-      data: {
-        message: "OAuth connected successfully",
-      },
-    },
-    200,
-  );
+  return ok(c, { message: "OAuth connected successfully" });
 });
 
 cloudflare.all("/cloudflare/proxy/*", async (c) => {
@@ -75,14 +61,10 @@ cloudflare.all("/cloudflare/proxy/*", async (c) => {
     });
   } catch (err) {
     if (err instanceof CloudflareOAuthNotConfiguredError) {
-      return c.json(
-        {
-          error: {
-            code: API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
-            message:
-              "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu.",
-          },
-        },
+      return fail(
+        c,
+        API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
+        "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu.",
         400,
       );
     }
@@ -92,11 +74,7 @@ cloudflare.all("/cloudflare/proxy/*", async (c) => {
 
 cloudflare.get("/cloudflare/status", async (c) => {
   const configured = await isCloudflareConfigured(c);
-  return c.json({
-    data: {
-      configured,
-    },
-  });
+  return ok(c, { configured });
 });
 
 // Cloudflare callbacks to the frontend, so redirect_uri comes from the request body.
@@ -110,22 +88,13 @@ cloudflare.post("/cloudflare/authorize", async (c) => {
 
   const { url, state } = await getAuthorizationUrl(c, parsed.data.redirect_uri);
 
-  return c.json({
-    data: {
-      authorization_url: url,
-      state,
-    },
-  });
+  return ok(c, { authorization_url: url, state });
 });
 
 cloudflare.delete("/cloudflare/disconnect", async (c) => {
   await disconnectCloudflare(c);
 
-  return c.json({
-    data: {
-      message: "OAuth disconnected successfully",
-    },
-  });
+  return ok(c, { message: "OAuth disconnected successfully" });
 });
 
 export default cloudflare;

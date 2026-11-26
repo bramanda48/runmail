@@ -1,5 +1,6 @@
 import type { AppEnv } from "@/lib/env";
 import { badRequest, notFound } from "@/lib/http-error";
+import { fail, ok } from "@/lib/http-response";
 import { jwtAuth } from "@/middleware/auth";
 import { requireMailboxAccess } from "@/middleware/mailbox";
 import * as service from "@/modules/rulesets/service";
@@ -13,34 +14,6 @@ import {
 } from "@runmail/shared";
 import { Hono } from "hono";
 import { z } from "zod";
-
-function mapServiceError(result: service.RulesetError) {
-  if (result.error === "RULESET_INVALID_REGEX") {
-    return {
-      status: 400 as const,
-      body: {
-        error: {
-          code: API_ERROR_CODES.RULESET_INVALID_REGEX,
-          message: "Ekspresi regex tidak valid",
-          details: result.details ?? {},
-        },
-      },
-    };
-  }
-  if (result.error === "FOLDER_NOT_FOUND") {
-    return {
-      status: 400 as const,
-      body: {
-        error: {
-          code: API_ERROR_CODES.RULESET_INVALID_DEPENDENCY,
-          message: "Folder tujuan tidak ditemukan pada mailbox ini",
-          details: result.details ?? {},
-        },
-      },
-    };
-  }
-  return { status: 404 as const, body: notFound("Ruleset tidak ditemukan") };
-}
 
 export const rulesetRoutes = new Hono<AppEnv>();
 
@@ -69,7 +42,7 @@ rulesetRoutes.get("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async 
     limit,
     cursorId,
   );
-  return c.json({ data: { rulesets }, meta }, 200);
+  return ok(c, { rulesets }, meta);
 });
 
 rulesetRoutes.post("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async (c) => {
@@ -82,10 +55,27 @@ rulesetRoutes.post("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async
 
   const result = await service.createRuleset(c, c.get("mailbox").mailbox_id, parsed.data);
   if ("error" in result) {
-    const mapped = mapServiceError(result);
-    return c.json(mapped.body, mapped.status);
+    if (result.error === "RULESET_INVALID_REGEX") {
+      return fail(
+        c,
+        API_ERROR_CODES.RULESET_INVALID_REGEX,
+        "Ekspresi regex tidak valid",
+        400,
+        result.details ?? {},
+      );
+    }
+    if (result.error === "FOLDER_NOT_FOUND") {
+      return fail(
+        c,
+        API_ERROR_CODES.RULESET_INVALID_DEPENDENCY,
+        "Folder tujuan tidak ditemukan pada mailbox ini",
+        400,
+        result.details ?? {},
+      );
+    }
+    return c.json(notFound("Ruleset tidak ditemukan"), 404);
   }
-  return c.json({ data: { ruleset: result.ruleset } }, 201);
+  return ok(c, { ruleset: result.ruleset }, undefined, 201);
 });
 
 rulesetRoutes.get("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAccess, async (c) => {
@@ -97,7 +87,7 @@ rulesetRoutes.get("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
   if ("error" in result) {
     return c.json(notFound("Ruleset tidak ditemukan"), 404);
   }
-  return c.json({ data: { ruleset: result.ruleset } }, 200);
+  return ok(c, { ruleset: result.ruleset });
 });
 
 rulesetRoutes.put("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAccess, async (c) => {
@@ -115,10 +105,27 @@ rulesetRoutes.put("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
     parsed.data,
   );
   if ("error" in result) {
-    const mapped = mapServiceError(result);
-    return c.json(mapped.body, mapped.status);
+    if (result.error === "RULESET_INVALID_REGEX") {
+      return fail(
+        c,
+        API_ERROR_CODES.RULESET_INVALID_REGEX,
+        "Ekspresi regex tidak valid",
+        400,
+        result.details ?? {},
+      );
+    }
+    if (result.error === "FOLDER_NOT_FOUND") {
+      return fail(
+        c,
+        API_ERROR_CODES.RULESET_INVALID_DEPENDENCY,
+        "Folder tujuan tidak ditemukan pada mailbox ini",
+        400,
+        result.details ?? {},
+      );
+    }
+    return c.json(notFound("Ruleset tidak ditemukan"), 404);
   }
-  return c.json({ data: { ruleset: result.ruleset } }, 200);
+  return ok(c, { ruleset: result.ruleset });
 });
 
 rulesetRoutes.delete(
@@ -134,6 +141,6 @@ rulesetRoutes.delete(
     if ("error" in result) {
       return c.json(notFound("Ruleset tidak ditemukan"), 404);
     }
-    return c.json({ data: { ok: true } }, 200);
+    return ok(c, { ok: true });
   },
 );
