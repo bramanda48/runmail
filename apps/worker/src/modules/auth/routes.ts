@@ -1,6 +1,6 @@
 import { accessTokenTTL } from "@/config/auth";
 import type { AppEnv } from "@/lib/env";
-import { badRequest } from "@/lib/http-error";
+import { badRequest, fail, ok } from "@/lib/response";
 import { jwtAuth } from "@/middleware/auth";
 import * as service from "@/modules/auth/service";
 import {
@@ -20,21 +20,13 @@ authRoutes.get("/me", jwtAuth, async (c) => {
   const auth = c.get("auth");
   const me = await service.getMe(c, auth.user_id);
   if (!me) {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.NOT_FOUND,
-          message: "Pengguna tidak ditemukan",
-        },
-      },
-      404,
-    );
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Pengguna tidak ditemukan", 404);
   }
 
-  return c.json({ data: { user: me } }, 200, {
-    "Cache-Control": `private, max-age=${accessTokenTTL}`,
-    Vary: "Authorization",
-  });
+  c.header("Cache-Control", `private, max-age=${accessTokenTTL}`);
+  c.header("Vary", "Authorization");
+
+  return ok(c, { user: me });
 });
 
 authRoutes.post("/login", async (c) => {
@@ -42,23 +34,15 @@ authRoutes.post("/login", async (c) => {
   const parsed = loginSchema.safeParse(body);
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
 
   const result = await service.login(c, parsed.data.username, parsed.data.password);
   if (!result) {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.INVALID_CREDENTIALS,
-          message: "Username atau password salah",
-        },
-      },
-      401,
-    );
+    return fail(c, API_ERROR_CODES.INVALID_CREDENTIALS, "Username atau password salah", 401);
   }
 
-  return c.json({ data: result }, 200);
+  return ok(c, result);
 });
 
 authRoutes.post("/setup", async (c) => {
@@ -66,45 +50,26 @@ authRoutes.post("/setup", async (c) => {
   const parsed = setupBodySchema.safeParse(body);
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
 
   const result = await service.setup(c, parsed.data);
   if ("error" in result) {
     if (result.error === "KEYPAIR_UNAVAILABLE") {
-      return c.json(
-        {
-          error: {
-            code: API_ERROR_CODES.INTERNAL_ERROR,
-            message: "Gagal menyiapkan kunci keamanan, silakan coba lagi",
-          },
-        },
+      return fail(
+        c,
+        API_ERROR_CODES.INTERNAL_ERROR,
+        "Gagal menyiapkan kunci keamanan, silakan coba lagi",
         500,
       );
     }
     if (result.error === "SETUP_COMPLETE") {
-      return c.json(
-        {
-          error: {
-            code: API_ERROR_CODES.FORBIDDEN,
-            message: "Setup sudah selesai",
-          },
-        },
-        403,
-      );
+      return fail(c, API_ERROR_CODES.FORBIDDEN, "Setup sudah selesai", 403);
     }
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.USERNAME_ALREADY_EXISTS,
-          message: "Username sudah digunakan",
-        },
-      },
-      409,
-    );
+    return fail(c, API_ERROR_CODES.USERNAME_ALREADY_EXISTS, "Username sudah digunakan", 409);
   }
 
-  return c.json({ data: result }, 201);
+  return ok(c, result, undefined, 201);
 });
 
 authRoutes.post("/refresh", async (c) => {
@@ -112,7 +77,7 @@ authRoutes.post("/refresh", async (c) => {
   const parsed = refreshBodySchema.safeParse(body);
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
 
   const result = await service.refresh(c, parsed.data.refresh_token);
@@ -128,10 +93,10 @@ authRoutes.post("/refresh", async (c) => {
       TOKEN_REUSED: "Token sudah digunakan, silakan login kembali",
       UNAUTHORIZED: "Sesi tidak valid, silakan login kembali",
     };
-    return c.json({ error: { code, message: messages[result.error] ?? code } }, 401);
+    return fail(c, code, messages[result.error] ?? code, 401);
   }
 
-  return c.json({ data: result }, 200);
+  return ok(c, result);
 });
 
 authRoutes.post("/logout", jwtAuth, async (c) => {
@@ -139,12 +104,12 @@ authRoutes.post("/logout", jwtAuth, async (c) => {
   const parsed = logoutBodySchema.safeParse(body);
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
 
   const authUser = c.get("auth");
   await service.logout(c, authUser.user_id, parsed.data.refresh_token);
-  return c.json({ data: { ok: true } }, 200);
+  return ok(c, { ok: true });
 });
 
 authRoutes.post("/change-password", jwtAuth, async (c) => {
@@ -152,7 +117,7 @@ authRoutes.post("/change-password", jwtAuth, async (c) => {
   const parsed = changePasswordBodySchema.safeParse(body);
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
 
   const authUser = c.get("auth");
@@ -163,16 +128,8 @@ authRoutes.post("/change-password", jwtAuth, async (c) => {
     parsed.data.new_password,
   );
   if ("error" in result) {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.INVALID_CREDENTIALS,
-          message: "Kata sandi saat ini salah",
-        },
-      },
-      401,
-    );
+    return fail(c, API_ERROR_CODES.INVALID_CREDENTIALS, "Kata sandi saat ini salah", 401);
   }
 
-  return c.json({ data: result }, 200);
+  return ok(c, result);
 });

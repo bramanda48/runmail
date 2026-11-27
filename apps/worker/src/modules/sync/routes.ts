@@ -1,5 +1,5 @@
 import type { AppEnv } from "@/lib/env";
-import { badRequest } from "@/lib/http-error";
+import { badRequest, ok } from "@/lib/response";
 import { jwtAuth } from "@/middleware/auth";
 import { requireMailboxAccess } from "@/middleware/mailbox";
 import * as messageService from "@/modules/messages";
@@ -20,36 +20,26 @@ syncRoutes.get("/:mailbox_id/sync", jwtAuth, requireMailboxAccess, async (c) => 
 
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
   const delta = await messageService.getSyncDelta(c, c.get("mailbox").mailbox_id, {
     last_sync_version: parsed.data.last_sync_version,
     last_sync_timestamp: parsed.data.last_sync_timestamp,
   });
   if (delta.full_resync_required) {
-    return c.json(
-      {
-        data: {
-          events: delta.events,
-          last_sync_version: delta.last_sync_version,
-          has_more: delta.has_more,
-          full_resync_required: true,
-          min_version: delta.min_version,
-        },
-      },
-      200,
-    );
+    return ok(c, {
+      events: delta.events,
+      last_sync_version: delta.last_sync_version,
+      has_more: delta.has_more,
+      full_resync_required: true,
+      min_version: delta.min_version,
+    });
   }
-  return c.json(
-    {
-      data: {
-        events: delta.events,
-        last_sync_version: delta.last_sync_version,
-        has_more: delta.has_more,
-      },
-    },
-    200,
-  );
+  return ok(c, {
+    events: delta.events,
+    last_sync_version: delta.last_sync_version,
+    has_more: delta.has_more,
+  });
 });
 
 syncRoutes.post("/:mailbox_id/sync/mutations", jwtAuth, requireMailboxAccess, async (c) => {
@@ -57,12 +47,12 @@ syncRoutes.post("/:mailbox_id/sync/mutations", jwtAuth, requireMailboxAccess, as
   const parsed = mutationsBodySchema.safeParse(body);
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
   const { results } = await messageService.processMutations(
     c,
     c.get("mailbox").mailbox_id,
     parsed.data.mutations,
   );
-  return c.json({ data: { results } }, 200);
+  return ok(c, { results });
 });

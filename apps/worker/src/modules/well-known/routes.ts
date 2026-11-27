@@ -1,4 +1,5 @@
 import type { AppEnv } from "@/lib/env";
+import { fail } from "@/lib/response";
 import { publicJwk } from "@/modules/auth/keypair";
 import { API_ERROR_CODES } from "@runmail/shared";
 import { Hono } from "hono";
@@ -13,14 +14,6 @@ wellKnownRoutes.get("/jwks.json", async (c) => {
       "Cache-Control": "private, max-age=900, stale-while-revalidate=3600",
     });
   } catch {
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.INTERNAL_ERROR,
-          message: "Kunci keamanan tidak tersedia",
-        },
-      },
-      500,
-    );
+    return fail(c, API_ERROR_CODES.INTERNAL_ERROR, "Kunci keamanan tidak tersedia", 500);
   }
 });

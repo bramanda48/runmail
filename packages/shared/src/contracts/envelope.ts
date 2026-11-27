@@ -18,3 +18,7 @@ export interface ApiMeta {
   has_more: boolean;
   total?: number;
 }
+
+export function apiSuccess<T>(data: T, meta?: ApiMeta): ApiSuccess<T> {
+  return meta ? { data, meta } : { data };
+}

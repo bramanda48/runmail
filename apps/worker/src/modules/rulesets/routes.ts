@@ -1,5 +1,5 @@
 import type { AppEnv } from "@/lib/env";
-import { badRequest, notFound } from "@/lib/http-error";
+import { badRequest, fail, notFound, ok } from "@/lib/response";
 import { jwtAuth } from "@/middleware/auth";
 import { requireMailboxAccess } from "@/middleware/mailbox";
 import * as service from "@/modules/rulesets/service";
@@ -14,34 +14,6 @@ import {
 import { Hono } from "hono";
 import { z } from "zod";
 
-function mapServiceError(result: service.RulesetError) {
-  if (result.error === "RULESET_INVALID_REGEX") {
-    return {
-      status: 400 as const,
-      body: {
-        error: {
-          code: API_ERROR_CODES.RULESET_INVALID_REGEX,
-          message: "Ekspresi regex tidak valid",
-          details: result.details ?? {},
-        },
-      },
-    };
-  }
-  if (result.error === "FOLDER_NOT_FOUND") {
-    return {
-      status: 400 as const,
-      body: {
-        error: {
-          code: API_ERROR_CODES.RULESET_INVALID_DEPENDENCY,
-          message: "Folder tujuan tidak ditemukan pada mailbox ini",
-          details: result.details ?? {},
-        },
-      },
-    };
-  }
-  return { status: 404 as const, body: notFound("Ruleset tidak ditemukan") };
-}
-
 export const rulesetRoutes = new Hono<AppEnv>();
 
 rulesetRoutes.get("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async (c) => {
@@ -50,7 +22,7 @@ rulesetRoutes.get("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async 
 
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -58,7 +30,7 @@ rulesetRoutes.get("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async 
   if (parsed.data.cursor) {
     const payload = decodeCursor<IdCursorPayload>(parsed.data.cursor);
     if (!payload) {
-      return c.json(badRequest({ cursor: ["Invalid cursor"] }), 400);
+      return badRequest(c, { cursor: ["Invalid cursor"] });
     }
     cursorId = payload.id;
   }
@@ -69,7 +41,7 @@ rulesetRoutes.get("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async 
     limit,
     cursorId,
   );
-  return c.json({ data: { rulesets }, meta }, 200);
+  return ok(c, { rulesets }, meta);
 });
 
 rulesetRoutes.post("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async (c) => {
@@ -77,15 +49,32 @@ rulesetRoutes.post("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async
   const parsed = rulesetSchema.safeParse(body);
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
 
   const result = await service.createRuleset(c, c.get("mailbox").mailbox_id, parsed.data);
   if ("error" in result) {
-    const mapped = mapServiceError(result);
-    return c.json(mapped.body, mapped.status);
+    if (result.error === "RULESET_INVALID_REGEX") {
+      return fail(
+        c,
+        API_ERROR_CODES.RULESET_INVALID_REGEX,
+        "Ekspresi regex tidak valid",
+        400,
+        result.details ?? {},
+      );
+    }
+    if (result.error === "FOLDER_NOT_FOUND") {
+      return fail(
+        c,
+        API_ERROR_CODES.RULESET_INVALID_DEPENDENCY,
+        "Folder tujuan tidak ditemukan pada mailbox ini",
+        400,
+        result.details ?? {},
+      );
+    }
+    return notFound(c, "Ruleset tidak ditemukan");
   }
-  return c.json({ data: { ruleset: result.ruleset } }, 201);
+  return ok(c, { ruleset: result.ruleset }, undefined, 201);
 });
 
 rulesetRoutes.get("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAccess, async (c) => {
@@ -95,9 +84,9 @@ rulesetRoutes.get("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
     c.req.param("ruleset_id") ?? "",
   );
   if ("error" in result) {
-    return c.json(notFound("Ruleset tidak ditemukan"), 404);
+    return notFound(c, "Ruleset tidak ditemukan");
   }
-  return c.json({ data: { ruleset: result.ruleset } }, 200);
+  return ok(c, { ruleset: result.ruleset });
 });
 
 rulesetRoutes.put("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAccess, async (c) => {
@@ -105,7 +94,7 @@ rulesetRoutes.put("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
   const parsed = rulesetSchema.safeParse(body);
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
 
   const result = await service.updateRuleset(
@@ -115,10 +104,27 @@ rulesetRoutes.put("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
     parsed.data,
   );
   if ("error" in result) {
-    const mapped = mapServiceError(result);
-    return c.json(mapped.body, mapped.status);
+    if (result.error === "RULESET_INVALID_REGEX") {
+      return fail(
+        c,
+        API_ERROR_CODES.RULESET_INVALID_REGEX,
+        "Ekspresi regex tidak valid",
+        400,
+        result.details ?? {},
+      );
+    }
+    if (result.error === "FOLDER_NOT_FOUND") {
+      return fail(
+        c,
+        API_ERROR_CODES.RULESET_INVALID_DEPENDENCY,
+        "Folder tujuan tidak ditemukan pada mailbox ini",
+        400,
+        result.details ?? {},
+      );
+    }
+    return notFound(c, "Ruleset tidak ditemukan");
   }
-  return c.json({ data: { ruleset: result.ruleset } }, 200);
+  return ok(c, { ruleset: result.ruleset });
 });
 
 rulesetRoutes.delete(
@@ -132,8 +138,8 @@ rulesetRoutes.delete(
       c.req.param("ruleset_id") ?? "",
     );
     if ("error" in result) {
-      return c.json(notFound("Ruleset tidak ditemukan"), 404);
+      return notFound(c, "Ruleset tidak ditemukan");
     }
-    return c.json({ data: { ok: true } }, 200);
+    return ok(c, { ok: true });
   },
 );
