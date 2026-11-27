@@ -54,7 +54,7 @@ userRoutes.post("/", async (c) => {
 
   const result = await service.createUser(c, parsed.data);
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.USERNAME_ALREADY_EXISTS, "Username sudah digunakan", 409);
+    return fail(c, API_ERROR_CODES.USERNAME_ALREADY_EXISTS, "Username is already taken", 409);
   }
 
   return ok(c, { user: result.user }, undefined, 201);
@@ -63,7 +63,7 @@ userRoutes.post("/", async (c) => {
 userRoutes.get("/:user_id", async (c) => {
   const user = await service.getUserById(c, c.req.param("user_id"));
   if (!user) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Pengguna tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "User not found", 404);
   }
   return ok(c, { user });
 });
@@ -89,14 +89,14 @@ userRoutes.patch("/:user_id", async (c) => {
     return fail(
       c,
       API_ERROR_CODES.VALIDATION_ERROR,
-      "Tidak dapat menonaktifkan atau menurunkan peran akun sendiri",
+      "You cannot deactivate or demote your own account",
       400,
     );
   }
 
   const result = await service.updateUser(c, userId, parsed.data);
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Pengguna tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "User not found", 404);
   }
   return ok(c, { user: result.user });
 });
@@ -104,11 +104,11 @@ userRoutes.patch("/:user_id", async (c) => {
 userRoutes.delete("/:user_id", async (c) => {
   const userId = c.req.param("user_id");
   if (c.get("auth").user_id === userId) {
-    return fail(c, API_ERROR_CODES.CANNOT_DELETE_SELF, "Tidak dapat menghapus akun sendiri", 400);
+    return fail(c, API_ERROR_CODES.CANNOT_DELETE_SELF, "You cannot delete your own account", 400);
   }
   const result = await service.deleteUser(c, userId);
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Pengguna tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "User not found", 404);
   }
   return ok(c, { ok: true });
 });

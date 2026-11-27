@@ -84,18 +84,18 @@ mailboxRoutes.post("/", jwtAuth, requireAdmin, async (c) => {
   const result = await service.createMailbox(c, parsed.data);
   if ("error" in result) {
     if (result.error === "NOT_FOUND") {
-      return fail(c, API_ERROR_CODES.DOMAIN_NOT_FOUND, "Domain tidak ditemukan", 404);
+      return fail(c, API_ERROR_CODES.DOMAIN_NOT_FOUND, "Domain not found", 404);
     }
     if (result.error === "MAILBOX_ADDRESS_ALREADY_EXISTS") {
       return fail(
         c,
         API_ERROR_CODES.MAILBOX_ADDRESS_ALREADY_EXISTS,
-        "Alamat mailbox sudah digunakan",
+        "Mailbox address is already taken",
         409,
         { field: "local_part" },
       );
     }
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox not found", 404);
   }
 
   return ok(c, { mailbox: result.mailbox }, undefined, 201);
@@ -104,7 +104,7 @@ mailboxRoutes.post("/", jwtAuth, requireAdmin, async (c) => {
 mailboxRoutes.get("/:mailbox_id", jwtAuth, requireMailboxAccess, async (c) => {
   const mailbox = await service.getMailboxDetail(c, c.get("mailbox").mailbox_id);
   if (!mailbox) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox not found", 404);
   }
   return ok(c, { mailbox });
 });
@@ -126,12 +126,12 @@ mailboxRoutes.patch("/:mailbox_id", jwtAuth, requireAdmin, async (c) => {
       return fail(
         c,
         API_ERROR_CODES.MAILBOX_ADDRESS_ALREADY_EXISTS,
-        "Alamat mailbox sudah digunakan",
+        "Mailbox address is already taken",
         409,
         { field: "local_part" },
       );
     }
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox not found", 404);
   }
   return ok(c, { mailbox: result.mailbox });
 });
@@ -161,7 +161,7 @@ mailboxRoutes.get("/:mailbox_id/users", jwtAuth, requireAdmin, async (c) => {
     cursorId,
   );
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox not found", 404);
   }
   return ok(c, { users: result.users }, result.meta);
 });
@@ -177,9 +177,14 @@ mailboxRoutes.post("/:mailbox_id/users", jwtAuth, requireAdmin, async (c) => {
   const result = await service.linkUser(c, c.req.param("mailbox_id") ?? "", parsed.data.user_id);
   if ("error" in result) {
     if (result.error === "ALREADY_LINKED") {
-      return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "User sudah terhubung ke mailbox ini", 409);
+      return fail(
+        c,
+        API_ERROR_CODES.VALIDATION_ERROR,
+        "User is already linked to this mailbox",
+        409,
+      );
     }
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox atau user tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox or user not found", 404);
   }
   return ok(c, { ok: true }, undefined, 201);
 });
@@ -191,7 +196,7 @@ mailboxRoutes.delete("/:mailbox_id/users/:user_id", jwtAuth, requireAdmin, async
     c.req.param("user_id") ?? "",
   );
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Kaitan user tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "User link not found", 404);
   }
   return ok(c, { ok: true });
 });
@@ -221,7 +226,7 @@ mailboxRoutes.get("/:mailbox_id/teams", jwtAuth, requireAdmin, async (c) => {
     cursorId,
   );
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox not found", 404);
   }
   return ok(c, { teams: result.teams }, result.meta);
 });
@@ -237,9 +242,14 @@ mailboxRoutes.post("/:mailbox_id/teams", jwtAuth, requireAdmin, async (c) => {
   const result = await service.linkTeam(c, c.req.param("mailbox_id") ?? "", parsed.data.team_id);
   if ("error" in result) {
     if (result.error === "ALREADY_LINKED") {
-      return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "Team sudah terhubung ke mailbox ini", 409);
+      return fail(
+        c,
+        API_ERROR_CODES.VALIDATION_ERROR,
+        "Team is already linked to this mailbox",
+        409,
+      );
     }
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox atau team tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox or team not found", 404);
   }
   return ok(c, { ok: true }, undefined, 201);
 });
@@ -251,7 +261,7 @@ mailboxRoutes.delete("/:mailbox_id/teams/:team_id", jwtAuth, requireAdmin, async
     c.req.param("team_id") ?? "",
   );
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Kaitan team tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Team link not found", 404);
   }
   return ok(c, { ok: true });
 });

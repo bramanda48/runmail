@@ -30,14 +30,14 @@ folderRoutes.post("/:mailbox_id/folders", jwtAuth, requireMailboxAccess, async (
       return fail(
         c,
         API_ERROR_CODES.FOLDER_IS_SYSTEM,
-        "Nama folder tidak boleh sama dengan folder sistem",
+        "Folder name cannot match a system folder",
         400,
       );
     }
     if (result.error === "FOLDER_NAME_CONFLICT") {
-      return fail(c, API_ERROR_CODES.FOLDER_NAME_CONFLICT, "Nama folder sudah digunakan", 409);
+      return fail(c, API_ERROR_CODES.FOLDER_NAME_CONFLICT, "Folder name is already taken", 409);
     }
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Folder tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Folder not found", 404);
   }
 
   return ok(c, { folder: result.folder }, undefined, 201);
@@ -51,9 +51,9 @@ folderRoutes.delete("/:mailbox_id/folders/:folder_id", jwtAuth, requireMailboxAc
   );
   if ("error" in result) {
     if (result.error === "FOLDER_IS_SYSTEM") {
-      return fail(c, API_ERROR_CODES.FOLDER_IS_SYSTEM, "Folder sistem tidak dapat dihapus", 400);
+      return fail(c, API_ERROR_CODES.FOLDER_IS_SYSTEM, "System folders cannot be deleted", 400);
     }
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Folder tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Folder not found", 404);
   }
   return ok(c, { ok: true });
 });
@@ -74,17 +74,12 @@ folderRoutes.patch("/:mailbox_id/folders/:folder_id", jwtAuth, requireMailboxAcc
   );
   if ("error" in result) {
     if (result.error === "FOLDER_IS_SYSTEM") {
-      return fail(
-        c,
-        API_ERROR_CODES.FOLDER_IS_SYSTEM,
-        "Folder sistem tidak dapat diubah namanya",
-        400,
-      );
+      return fail(c, API_ERROR_CODES.FOLDER_IS_SYSTEM, "System folders cannot be renamed", 400);
     }
     if (result.error === "FOLDER_NAME_CONFLICT") {
-      return fail(c, API_ERROR_CODES.FOLDER_NAME_CONFLICT, "Nama folder sudah digunakan", 409);
+      return fail(c, API_ERROR_CODES.FOLDER_NAME_CONFLICT, "Folder name is already taken", 409);
     }
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Folder tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Folder not found", 404);
   }
 
   return ok(c, { folder: result.folder });

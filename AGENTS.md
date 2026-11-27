@@ -143,6 +143,12 @@ bun run seed:admin [--username] [--password] [--remote --yes]
 - **Import organization:** otomatis via prettier-plugin-organize-imports
 - **Indent:** 2 spaces untuk semua file
 
+### Language Convention
+- **Prompt boleh non-Inggris:** instruksi user bisa datang dalam bahasa Indonesia atau bahasa lain; itu tidak mengubah konvensi kode di bawah.
+- **Source code wajib bahasa Inggris:** semua teks yang ditulis ke file source WAJIB Inggris — response/error message API (`message` di envelope `{ error: { code, message } }`), komentar, JSDoc, log message, nama variabel/fungsi/tipe, dan nama file.
+- **Copy UI tetap i18n:** teks yang dilihat end user tetap lewat `t()` di `apps/web/src/i18n/locales/{en,id}/`; aturan ini mengatur isi file source, bukan terjemahan UI.
+- **Pengecualian:** dokumen internal berbahasa Indonesia (AGENTS.md, DESIGN.md) dan balasan chat ke user boleh tetap Indonesia.
+
 ### Cloudflare API
 - **SDK mutlak:** semua query ke Cloudflare API (worker maupun web) WAJIB via Cloudflare SDK (`cloudflare`); `fetch` mentah ke `api.cloudflare.com` DILARANG di code manapun.
 - **Worker tree-shakable:** import dari `cloudflare/resources` + `createClient` dari `cloudflare/tree-shakable` dengan `resources` eksplisit (mis. `[Zones, EmailRouting]`), `logLevel: "off"`, `timeout: 10_000`; helper reusable per-resource (mis. `getZone`) tinggal di `apps/worker/src/lib/cloudflare.ts`, return `null` bila tidak ditemukan (throw hanya untuk OAuth belum dikonfigurasi).
@@ -319,6 +325,6 @@ Tunggu approval sebelum menulis perubahan ke AGENTS.md.
 
 ---
 
-**Versi:** 1.3
-**Terakhir Update:** 21 Oktober 2026 (tambah theme switcher light/dark/system)
+**Versi:** 1.4
+**Terakhir Update:** 27 November 2026 (tambah Language Convention: source code wajib Inggris)
 **Maintainer:** Project team

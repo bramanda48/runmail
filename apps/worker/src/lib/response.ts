@@ -23,7 +23,7 @@ export function fail(
 }
 
 export function badRequest(c: Context, details: Record<string, unknown>) {
-  return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "Validasi gagal", 400, details);
+  return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "Validation failed", 400, details);
 }
 
 export function notFound(c: Context, message: string) {

@@ -48,7 +48,7 @@ teamRoutes.post("/", jwtAuth, requireAdmin, async (c) => {
 
   const result = await service.createTeam(c, { name: parsed.data.name });
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "Nama team sudah digunakan", 409);
+    return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "Team name is already taken", 409);
   }
   return ok(c, { team: result.team }, undefined, 201);
 });
@@ -66,9 +66,9 @@ teamRoutes.patch("/:team_id", jwtAuth, requireAdmin, async (c) => {
   });
   if ("error" in result) {
     if (result.error === "TEAM_NAME_ALREADY_EXISTS") {
-      return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "Nama team sudah digunakan", 409);
+      return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "Team name is already taken", 409);
     }
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Team tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Team not found", 404);
   }
   return ok(c, { team: result.team });
 });
@@ -76,7 +76,7 @@ teamRoutes.patch("/:team_id", jwtAuth, requireAdmin, async (c) => {
 teamRoutes.delete("/:team_id", jwtAuth, requireAdmin, async (c) => {
   const result = await service.deleteTeam(c, c.req.param("team_id") ?? "");
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Team tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Team not found", 404);
   }
   return ok(c, { ok: true });
 });
@@ -102,7 +102,7 @@ teamRoutes.get("/:team_id/users", jwtAuth, requireAdmin, async (c) => {
 
   const result = await service.listTeamMembers(c, c.req.param("team_id") ?? "", limit, cursorId);
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Team tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Team not found", 404);
   }
   return ok(c, { users: result.users }, result.meta);
 });
@@ -118,9 +118,14 @@ teamRoutes.post("/:team_id/users", jwtAuth, requireAdmin, async (c) => {
   const result = await service.addTeamMember(c, c.req.param("team_id") ?? "", parsed.data.user_id);
   if ("error" in result) {
     if (result.error === "ALREADY_MEMBER") {
-      return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "User sudah menjadi anggota team ini", 409);
+      return fail(
+        c,
+        API_ERROR_CODES.VALIDATION_ERROR,
+        "User is already a member of this team",
+        409,
+      );
     }
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Team atau user tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Team or user not found", 404);
   }
   return ok(c, { ok: true }, undefined, 201);
 });
@@ -132,7 +137,7 @@ teamRoutes.delete("/:team_id/users/:user_id", jwtAuth, requireAdmin, async (c) =
     c.req.param("user_id") ?? "",
   );
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Keanggotaan tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Membership not found", 404);
   }
   return ok(c, { ok: true });
 });

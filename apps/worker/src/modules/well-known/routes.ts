@@ -14,6 +14,6 @@ wellKnownRoutes.get("/jwks.json", async (c) => {
       "Cache-Control": "private, max-age=900, stale-while-revalidate=3600",
     });
   } catch {
-    return fail(c, API_ERROR_CODES.INTERNAL_ERROR, "Kunci keamanan tidak tersedia", 500);
+    return fail(c, API_ERROR_CODES.INTERNAL_ERROR, "Security key unavailable", 500);
   }
 });
