@@ -51,7 +51,7 @@ messageRoutes.get("/:mailbox_id/messages/:message_id", jwtAuth, requireMailboxAc
     c.req.param("message_id") ?? "",
   );
   if ("error" in result) {
-    return notFound(c, "Pesan tidak ditemukan");
+    return notFound(c, "Message not found");
   }
   return ok(c, { message: result.message });
 });
@@ -67,7 +67,7 @@ messageRoutes.get(
       c.req.param("message_id") ?? "",
     );
     if ("error" in result) {
-      return notFound(c, "Pesan tidak ditemukan");
+      return notFound(c, "Message not found");
     }
     return result.response;
   },
@@ -91,7 +91,7 @@ messageRoutes.patch(
       parsed.data.is_read,
     );
     if ("error" in result) {
-      return notFound(c, "Pesan tidak ditemukan");
+      return notFound(c, "Message not found");
     }
     return ok(c, { message: result.message });
   },
@@ -115,7 +115,7 @@ messageRoutes.patch(
       parsed.data.is_starred,
     );
     if ("error" in result) {
-      return notFound(c, "Pesan tidak ditemukan");
+      return notFound(c, "Message not found");
     }
     return ok(c, { message: result.message });
   },
@@ -140,9 +140,9 @@ messageRoutes.patch(
     );
     if ("error" in result) {
       if (result.error === "INVALID_FOLDER") {
-        return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "Folder tujuan tidak valid", 400);
+        return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "Invalid destination folder", 400);
       }
-      return notFound(c, "Pesan tidak ditemukan");
+      return notFound(c, "Message not found");
     }
     return ok(c, { message: result.message });
   },
@@ -164,11 +164,11 @@ messageRoutes.delete(
         return fail(
           c,
           API_ERROR_CODES.VALIDATION_ERROR,
-          "Pesan hanya dapat dihapus permanen dari Trash",
+          "Messages can only be permanently deleted from Trash",
           400,
         );
       }
-      return notFound(c, "Pesan tidak ditemukan");
+      return notFound(c, "Message not found");
     }
     return ok(c, { ok: true });
   },

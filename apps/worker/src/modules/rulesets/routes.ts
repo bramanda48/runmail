@@ -58,7 +58,7 @@ rulesetRoutes.post("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async
       return fail(
         c,
         API_ERROR_CODES.RULESET_INVALID_REGEX,
-        "Ekspresi regex tidak valid",
+        "Invalid regular expression",
         400,
         result.details ?? {},
       );
@@ -67,12 +67,12 @@ rulesetRoutes.post("/:mailbox_id/rulesets", jwtAuth, requireMailboxAccess, async
       return fail(
         c,
         API_ERROR_CODES.RULESET_INVALID_DEPENDENCY,
-        "Folder tujuan tidak ditemukan pada mailbox ini",
+        "Destination folder not found in this mailbox",
         400,
         result.details ?? {},
       );
     }
-    return notFound(c, "Ruleset tidak ditemukan");
+    return notFound(c, "Ruleset not found");
   }
   return ok(c, { ruleset: result.ruleset }, undefined, 201);
 });
@@ -84,7 +84,7 @@ rulesetRoutes.get("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
     c.req.param("ruleset_id") ?? "",
   );
   if ("error" in result) {
-    return notFound(c, "Ruleset tidak ditemukan");
+    return notFound(c, "Ruleset not found");
   }
   return ok(c, { ruleset: result.ruleset });
 });
@@ -108,7 +108,7 @@ rulesetRoutes.put("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
       return fail(
         c,
         API_ERROR_CODES.RULESET_INVALID_REGEX,
-        "Ekspresi regex tidak valid",
+        "Invalid regular expression",
         400,
         result.details ?? {},
       );
@@ -117,12 +117,12 @@ rulesetRoutes.put("/:mailbox_id/rulesets/:ruleset_id", jwtAuth, requireMailboxAc
       return fail(
         c,
         API_ERROR_CODES.RULESET_INVALID_DEPENDENCY,
-        "Folder tujuan tidak ditemukan pada mailbox ini",
+        "Destination folder not found in this mailbox",
         400,
         result.details ?? {},
       );
     }
-    return notFound(c, "Ruleset tidak ditemukan");
+    return notFound(c, "Ruleset not found");
   }
   return ok(c, { ruleset: result.ruleset });
 });
@@ -138,7 +138,7 @@ rulesetRoutes.delete(
       c.req.param("ruleset_id") ?? "",
     );
     if ("error" in result) {
-      return notFound(c, "Ruleset tidak ditemukan");
+      return notFound(c, "Ruleset not found");
     }
     return ok(c, { ok: true });
   },

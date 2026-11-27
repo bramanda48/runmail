@@ -20,7 +20,7 @@ authRoutes.get("/me", jwtAuth, async (c) => {
   const auth = c.get("auth");
   const me = await service.getMe(c, auth.user_id);
   if (!me) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Pengguna tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "User not found", 404);
   }
 
   c.header("Cache-Control", `private, max-age=${accessTokenTTL}`);
@@ -39,7 +39,7 @@ authRoutes.post("/login", async (c) => {
 
   const result = await service.login(c, parsed.data.username, parsed.data.password);
   if (!result) {
-    return fail(c, API_ERROR_CODES.INVALID_CREDENTIALS, "Username atau password salah", 401);
+    return fail(c, API_ERROR_CODES.INVALID_CREDENTIALS, "Incorrect username or password", 401);
   }
 
   return ok(c, result);
@@ -59,14 +59,14 @@ authRoutes.post("/setup", async (c) => {
       return fail(
         c,
         API_ERROR_CODES.INTERNAL_ERROR,
-        "Gagal menyiapkan kunci keamanan, silakan coba lagi",
+        "Failed to set up the security key, please try again",
         500,
       );
     }
     if (result.error === "SETUP_COMPLETE") {
-      return fail(c, API_ERROR_CODES.FORBIDDEN, "Setup sudah selesai", 403);
+      return fail(c, API_ERROR_CODES.FORBIDDEN, "Setup has already been completed", 403);
     }
-    return fail(c, API_ERROR_CODES.USERNAME_ALREADY_EXISTS, "Username sudah digunakan", 409);
+    return fail(c, API_ERROR_CODES.USERNAME_ALREADY_EXISTS, "Username is already taken", 409);
   }
 
   return ok(c, result, undefined, 201);
@@ -89,9 +89,9 @@ authRoutes.post("/refresh", async (c) => {
     };
     const code = errors[result.error] ?? API_ERROR_CODES.UNAUTHORIZED;
     const messages: Record<string, string> = {
-      TOKEN_EXPIRED: "Sesi kedaluwarsa, silakan login kembali",
-      TOKEN_REUSED: "Token sudah digunakan, silakan login kembali",
-      UNAUTHORIZED: "Sesi tidak valid, silakan login kembali",
+      TOKEN_EXPIRED: "Session expired, please sign in again",
+      TOKEN_REUSED: "Token has already been used, please sign in again",
+      UNAUTHORIZED: "Invalid session, please sign in again",
     };
     return fail(c, code, messages[result.error] ?? code, 401);
   }
@@ -128,7 +128,7 @@ authRoutes.post("/change-password", jwtAuth, async (c) => {
     parsed.data.new_password,
   );
   if ("error" in result) {
-    return fail(c, API_ERROR_CODES.INVALID_CREDENTIALS, "Kata sandi saat ini salah", 401);
+    return fail(c, API_ERROR_CODES.INVALID_CREDENTIALS, "Current password is incorrect", 401);
   }
 
   return ok(c, result);

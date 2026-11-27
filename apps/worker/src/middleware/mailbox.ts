@@ -10,7 +10,7 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
   const auth = c.get("auth");
   const mailboxId = c.req.param("mailbox_id");
   if (!mailboxId) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox not found", 404);
   }
   const db = getDb(c);
 
@@ -21,11 +21,11 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
     .limit(1);
 
   if (!mailbox) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox not found", 404);
   }
 
   if (!mailbox.is_active) {
-    return fail(c, API_ERROR_CODES.FORBIDDEN, "Mailbox tidak aktif", 403);
+    return fail(c, API_ERROR_CODES.FORBIDDEN, "Mailbox is inactive", 403);
   }
 
   // Union access: direct link OR membership in a team the mailbox is shared to.
@@ -47,7 +47,7 @@ export const requireMailboxAccess: MiddlewareHandler<AppEnv> = async (c, next) =
   }
 
   if (!allowed) {
-    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox tidak ditemukan", 404);
+    return fail(c, API_ERROR_CODES.NOT_FOUND, "Mailbox not found", 404);
   }
 
   c.set("mailbox", { mailbox_id: mailboxId });

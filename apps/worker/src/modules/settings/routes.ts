@@ -19,7 +19,7 @@ settingsRoutes.get("/", jwtAuth, async (c) => {
 settingsRoutes.get("/:key", async (c) => {
   const key = c.req.param("key");
   if (!(PUBLIC_SETTING_KEYS as readonly string[]).includes(key)) {
-    return notFound(c, "Pengaturan tidak ditemukan");
+    return notFound(c, "Setting not found");
   }
   const value = await getPublicSettingValue(c, key as (typeof PUBLIC_SETTING_KEYS)[number]);
   return ok(c, { key, value });

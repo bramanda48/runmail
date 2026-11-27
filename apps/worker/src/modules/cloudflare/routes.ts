@@ -63,7 +63,7 @@ cloudflare.all("/cloudflare/proxy/*", async (c) => {
       return fail(
         c,
         API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
-        "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu.",
+        "Cloudflare OAuth is not configured. Connect a Cloudflare account first.",
         400,
       );
     }

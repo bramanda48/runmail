@@ -100,7 +100,7 @@ describe("badRequest", () => {
     expect(body).toEqual({
       error: {
         code: API_ERROR_CODES.VALIDATION_ERROR,
-        message: "Validasi gagal",
+        message: "Validation failed",
         details: { username: ["too short"] },
       },
     });
@@ -111,7 +111,7 @@ describe("badRequest", () => {
     expect(body).toEqual({
       error: {
         code: API_ERROR_CODES.VALIDATION_ERROR,
-        message: "Validasi gagal",
+        message: "Validation failed",
         details: {},
       },
     });
@@ -120,10 +120,10 @@ describe("badRequest", () => {
 
 describe("notFound", () => {
   it("returns a 404 NOT_FOUND envelope with the given message", () => {
-    const { body, status } = capture((c) => notFound(c, "Mailbox tidak ditemukan"));
+    const { body, status } = capture((c) => notFound(c, "Mailbox not found"));
     expect(status).toBe(404);
     expect(body).toEqual({
-      error: { code: API_ERROR_CODES.NOT_FOUND, message: "Mailbox tidak ditemukan" },
+      error: { code: API_ERROR_CODES.NOT_FOUND, message: "Mailbox not found" },
     });
   });
 
