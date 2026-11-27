@@ -1,7 +1,6 @@
 import type { AppEnv } from "@/lib/env";
-import { errorCodeForStatus } from "@/lib/error";
-import { notFound } from "@/lib/http-error";
 import { createLogger } from "@/lib/logger";
+import { errorCodeForStatus, fail, notFound, ok } from "@/lib/response";
 import { requestLogger } from "@/middleware/logging";
 import { authRoutes } from "@/modules/auth";
 import { cloudflareRoutes } from "@/modules/cloudflare";
@@ -22,7 +21,7 @@ import { HTTPException } from "hono/http-exception";
 const app = new Hono<AppEnv>();
 
 app.use("*", requestLogger);
-app.get("/api/v1/health", (c) => c.json({ data: { status: "ok" } }));
+app.get("/api/v1/health", (c) => ok(c, { status: "ok" }));
 
 app.route("/api/v1/auth", authRoutes);
 app.route("/api/v1/users", userRoutes);
@@ -45,32 +44,16 @@ app.onError((err, c) => {
       status: err.status,
       message: err.message,
     });
-    return c.json(
-      {
-        error: {
-          code: errorCodeForStatus(err.status),
-          message: err.message,
-        },
-      },
-      err.status,
-    );
+    return fail(c, errorCodeForStatus(err.status), err.message, err.status);
   }
 
   logger.error("Unhandled error", err, {
     path: c.req.path,
   });
 
-  return c.json(
-    {
-      error: {
-        code: API_ERROR_CODES.INTERNAL_ERROR,
-        message: "An unexpected error occurred.",
-      },
-    },
-    500,
-  );
+  return fail(c, API_ERROR_CODES.INTERNAL_ERROR, "An unexpected error occurred.", 500);
 });
 
-app.notFound((c) => c.json(notFound(`The route '${c.req.path}' could not be found.`)));
+app.notFound((c) => notFound(c, `The route '${c.req.path}' could not be found.`));
 
 export { app };

@@ -1,5 +1,5 @@
 import type { AppEnv } from "@/lib/env";
-import { badRequest } from "@/lib/http-error";
+import { badRequest, fail, ok } from "@/lib/response";
 import { jwtAuth, requireAdmin } from "@/middleware/auth";
 import * as service from "@/modules/domains/service";
 import { createDomainBodySchema } from "@/modules/domains/validation";
@@ -23,7 +23,7 @@ domainRoutes.get("/", async (c) => {
 
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -31,13 +31,13 @@ domainRoutes.get("/", async (c) => {
   if (parsed.data.cursor) {
     const payload = decodeCursor<IdCursorPayload>(parsed.data.cursor);
     if (!payload) {
-      return c.json(badRequest({ cursor: ["Invalid cursor"] }), 400);
+      return badRequest(c, { cursor: ["Invalid cursor"] });
     }
     cursorId = payload.id;
   }
 
   const { domains, meta } = await service.listDomains(c, limit, cursorId);
-  return c.json({ data: { domains }, meta }, 200);
+  return ok(c, { domains }, meta);
 });
 
 domainRoutes.post("/", async (c) => {
@@ -45,45 +45,26 @@ domainRoutes.post("/", async (c) => {
   const parsed = createDomainBodySchema.safeParse(body);
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
 
   const result = await service.addDomain(c, parsed.data.zone_id);
   if ("error" in result) {
     if (result.error === "DOMAIN_EXISTS") {
-      return c.json(
-        {
-          error: {
-            code: API_ERROR_CODES.DOMAIN_ALREADY_EXISTS,
-            message: "Domain sudah terdaftar",
-            details: { field: "zone_id" },
-          },
-        },
-        409,
-      );
+      return fail(c, API_ERROR_CODES.DOMAIN_ALREADY_EXISTS, "Domain sudah terdaftar", 409, {
+        field: "zone_id",
+      });
     }
     if (result.error === "OAUTH_NOT_CONFIGURED") {
-      return c.json(
-        {
-          error: {
-            code: API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
-            message:
-              "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu.",
-          },
-        },
+      return fail(
+        c,
+        API_ERROR_CODES.OAUTH_NOT_CONFIGURED,
+        "Cloudflare OAuth belum dikonfigurasi. Silakan hubungkan akun Cloudflare terlebih dahulu.",
         400,
       );
     }
-    return c.json(
-      {
-        error: {
-          code: API_ERROR_CODES.DOMAIN_NOT_FOUND,
-          message: "Zone tidak ditemukan di Cloudflare",
-        },
-      },
-      404,
-    );
+    return fail(c, API_ERROR_CODES.DOMAIN_NOT_FOUND, "Zone tidak ditemukan di Cloudflare", 404);
   }
 
-  return c.json({ data: { domain: result.domain } }, 201);
+  return ok(c, { domain: result.domain }, undefined, 201);
 });

@@ -1,5 +1,5 @@
 import type { AppEnv } from "@/lib/env";
-import { badRequest, notFound } from "@/lib/http-error";
+import { badRequest, fail, notFound, ok } from "@/lib/response";
 import { jwtAuth } from "@/middleware/auth";
 import { requireMailboxAccess } from "@/middleware/mailbox";
 import * as service from "@/modules/messages/service";
@@ -22,7 +22,7 @@ messageRoutes.get("/:mailbox_id/messages", jwtAuth, requireMailboxAccess, async 
 
   if (!parsed.success) {
     const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-    return c.json(badRequest(fieldErrors), 400);
+    return badRequest(c, fieldErrors);
   }
   const limit = parsed.data.limit ?? PAGINATION_DEFAULT_LIMIT;
 
@@ -30,7 +30,7 @@ messageRoutes.get("/:mailbox_id/messages", jwtAuth, requireMailboxAccess, async 
   if (parsed.data.cursor) {
     const payload = decodeCursor<MessageCursorPayload>(parsed.data.cursor);
     if (!payload) {
-      return c.json(badRequest({ cursor: ["Invalid cursor"] }), 400);
+      return badRequest(c, { cursor: ["Invalid cursor"] });
     }
     cursor = payload;
   }
@@ -41,7 +41,7 @@ messageRoutes.get("/:mailbox_id/messages", jwtAuth, requireMailboxAccess, async 
     limit,
     cursor,
   );
-  return c.json({ data: { messages }, meta }, 200);
+  return ok(c, { messages }, meta);
 });
 
 messageRoutes.get("/:mailbox_id/messages/:message_id", jwtAuth, requireMailboxAccess, async (c) => {
@@ -51,9 +51,9 @@ messageRoutes.get("/:mailbox_id/messages/:message_id", jwtAuth, requireMailboxAc
     c.req.param("message_id") ?? "",
   );
   if ("error" in result) {
-    return c.json(notFound("Pesan tidak ditemukan"), 404);
+    return notFound(c, "Pesan tidak ditemukan");
   }
-  return c.json({ data: { message: result.message } }, 200);
+  return ok(c, { message: result.message });
 });
 
 messageRoutes.get(
@@ -67,7 +67,7 @@ messageRoutes.get(
       c.req.param("message_id") ?? "",
     );
     if ("error" in result) {
-      return c.json(notFound("Pesan tidak ditemukan"), 404);
+      return notFound(c, "Pesan tidak ditemukan");
     }
     return result.response;
   },
@@ -82,7 +82,7 @@ messageRoutes.patch(
     const parsed = readBodySchema.safeParse(body);
     if (!parsed.success) {
       const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-      return c.json(badRequest(fieldErrors), 400);
+      return badRequest(c, fieldErrors);
     }
     const result = await service.setMessageRead(
       c,
@@ -91,9 +91,9 @@ messageRoutes.patch(
       parsed.data.is_read,
     );
     if ("error" in result) {
-      return c.json(notFound("Pesan tidak ditemukan"), 404);
+      return notFound(c, "Pesan tidak ditemukan");
     }
-    return c.json({ data: { message: result.message } }, 200);
+    return ok(c, { message: result.message });
   },
 );
 
@@ -106,7 +106,7 @@ messageRoutes.patch(
     const parsed = starBodySchema.safeParse(body);
     if (!parsed.success) {
       const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-      return c.json(badRequest(fieldErrors), 400);
+      return badRequest(c, fieldErrors);
     }
     const result = await service.setMessageStarred(
       c,
@@ -115,9 +115,9 @@ messageRoutes.patch(
       parsed.data.is_starred,
     );
     if ("error" in result) {
-      return c.json(notFound("Pesan tidak ditemukan"), 404);
+      return notFound(c, "Pesan tidak ditemukan");
     }
-    return c.json({ data: { message: result.message } }, 200);
+    return ok(c, { message: result.message });
   },
 );
 
@@ -130,7 +130,7 @@ messageRoutes.patch(
     const parsed = moveBodySchema.safeParse(body);
     if (!parsed.success) {
       const fieldErrors = z.flattenError(parsed.error).fieldErrors;
-      return c.json(badRequest(fieldErrors), 400);
+      return badRequest(c, fieldErrors);
     }
     const result = await service.moveMessage(
       c,
@@ -140,19 +140,11 @@ messageRoutes.patch(
     );
     if ("error" in result) {
       if (result.error === "INVALID_FOLDER") {
-        return c.json(
-          {
-            error: {
-              code: API_ERROR_CODES.VALIDATION_ERROR,
-              message: "Folder tujuan tidak valid",
-            },
-          },
-          400,
-        );
+        return fail(c, API_ERROR_CODES.VALIDATION_ERROR, "Folder tujuan tidak valid", 400);
       }
-      return c.json(notFound("Pesan tidak ditemukan"), 404);
+      return notFound(c, "Pesan tidak ditemukan");
     }
-    return c.json({ data: { message: result.message } }, 200);
+    return ok(c, { message: result.message });
   },
 );
 
@@ -169,18 +161,15 @@ messageRoutes.delete(
     );
     if ("error" in result) {
       if (result.error === "NOT_IN_TRASH") {
-        return c.json(
-          {
-            error: {
-              code: API_ERROR_CODES.VALIDATION_ERROR,
-              message: "Pesan hanya dapat dihapus permanen dari Trash",
-            },
-          },
+        return fail(
+          c,
+          API_ERROR_CODES.VALIDATION_ERROR,
+          "Pesan hanya dapat dihapus permanen dari Trash",
           400,
         );
       }
-      return c.json(notFound("Pesan tidak ditemukan"), 404);
+      return notFound(c, "Pesan tidak ditemukan");
     }
-    return c.json({ data: { ok: true } }, 200);
+    return ok(c, { ok: true });
   },
 );

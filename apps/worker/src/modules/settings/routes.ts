@@ -1,5 +1,5 @@
 import type { AppEnv } from "@/lib/env";
-import { notFound } from "@/lib/http-error";
+import { notFound, ok } from "@/lib/response";
 import { jwtAuth } from "@/middleware/auth";
 import {
   getPublicSettings,
@@ -13,14 +13,14 @@ export const settingsRoutes = new Hono<AppEnv>();
 settingsRoutes.get("/", jwtAuth, async (c) => {
   // ensureSettings inside getPublicSettings auto-provisions on clean install.
   const projected = await getPublicSettings(c);
-  return c.json({ data: projected }, 200);
+  return ok(c, projected);
 });
 
 settingsRoutes.get("/:key", async (c) => {
   const key = c.req.param("key");
   if (!(PUBLIC_SETTING_KEYS as readonly string[]).includes(key)) {
-    return c.json(notFound("Pengaturan tidak ditemukan"), 404);
+    return notFound(c, "Pengaturan tidak ditemukan");
   }
   const value = await getPublicSettingValue(c, key as (typeof PUBLIC_SETTING_KEYS)[number]);
-  return c.json({ data: { key, value } }, 200);
+  return ok(c, { key, value });
 });
